@@ -1,0 +1,9 @@
+CFLAGS  = -O1 -g
+ASFLAGS = -g
+GENERIC_SRCS  = main.c delay.c assert.c led.c
+#debug.c assert.c clocksource.c timeout.c wdt.c delay.c frsky.c spi.c cc25xx.c 
+#GENERIC_SRCS += io.c storage.c failsafe.c ppm.c adc.c sbus.c apa102.c soft_spi.c soft_serial.c telemetry.c
+
+include Makefile.board
+
+all  : board
