@@ -20,7 +20,6 @@
 // http://pdf.masters.com.pl/SITRONIX/ST7567.PDF
 // http://edeca.net/wp/electronics/the-st7565-display-controller/
 // https://github.com/opentx/opentx/blob/dbd8abbfe8343b5d7f542304d47e232140307b95/radio/src/targets/stock/lcd_driver.cpp
-#define LCD_MODE 0
 
 #include "lcd.h"
 #include "delay.h"
@@ -87,30 +86,6 @@ static void lcd_init_gpio(void) {
 }
 
 static void lcd_write_command(uint8_t data) {
-#if LCD_MODE 
-    // make sure write is high (disabled)
-    LCD_RW_HI();
-    // command mode
-    LCD_RS_LO();
-    // select device
-    LCD_CS_LO();
-    
-    // write data to port d0...d7
-    LCD_DATA_SET(data);
-    
-    // execute write
-    LCD_RW_LO();
-    // wait some time
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
-    
-    // release write signal
-    LCD_RW_HI();
-    
-    // deselect device
-    LCD_CS_HI();
-#else
     // make sure write is high (disabled)
     LCD_CS_LO();
     // command mode
@@ -120,7 +95,6 @@ static void lcd_write_command(uint8_t data) {
     
     // write data to port d0...d7
     LCD_DATA_SET(data);
-delay_us(1);    
     // execute write
     LCD_RD_HI();
     LCD_RD_LO();
@@ -128,7 +102,6 @@ delay_us(1);
     
     // deselect device
     LCD_CS_HI();
-#endif
 }
 
 
@@ -194,32 +167,6 @@ void lcd_send_data(uint8_t *buf, uint32_t len){
     lcd_write_command(LCD_CMD_SET_COL_LO + 0);
     lcd_write_command(LCD_CMD_SET_COL_HI + 0);
 
-#if LCD_MODE 
-    // make sure write is high (disabled)
-    LCD_RW_HI();
-    // data mode 
-    LCD_RS_HI();
-    // select device
-    LCD_CS_LO();
-    
-    while(len--){
-        //prepare RW line status
-        LCD_RW_HI();
-        // write data to port d0...d7
-        LCD_DATA_SET(*buf++);
-        // execute write
-        LCD_RW_LO();
-        // wait some time
-        asm volatile("nop");
-    }
-    
-    // release write signal
-    LCD_RW_HI();
-    
-    // deselect device
-    LCD_CS_HI();
-#else
-
   for (y=0; y < 8; y++) {
     //start on col 0
     lcd_write_command(LCD_CMD_SET_COL_LO + 0);
@@ -242,9 +189,6 @@ void lcd_send_data(uint8_t *buf, uint32_t len){
         LCD_DATA_SET(*buf++);
         // execute write
         LCD_RD_HI();
-        // wait some time
-        //asm volatile("nop");
-        //write
         LCD_RD_LO();
     }
   }
@@ -254,5 +198,4 @@ void lcd_send_data(uint8_t *buf, uint32_t len){
     // deselect device
     LCD_CS_HI();
     LCD_RW_HI();
-#endif
 }
