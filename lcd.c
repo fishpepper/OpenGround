@@ -20,6 +20,7 @@
 // http://pdf.masters.com.pl/SITRONIX/ST7567.PDF
 // http://edeca.net/wp/electronics/the-st7565-display-controller/
 // https://github.com/opentx/opentx/blob/dbd8abbfe8343b5d7f542304d47e232140307b95/radio/src/targets/stock/lcd_driver.cpp
+#define LCD_MODE 0
 
 #include "lcd.h"
 #include "delay.h"
@@ -53,7 +54,14 @@ static void lcd_init_gpio(void) {
     // set individual pins
     // data
     gpio_init.GPIO_Pin   = 0xFF; // D0..D7
+    //gpio_init.GPIO_Mode  = GPIO_Mode_IN;
+    //gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
     GPIO_Init(LCD_DATA_GPIO, &gpio_init);
+
+    //gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+    //gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
+
+
     // rw
     gpio_init.GPIO_Pin   = LCD_RW_PIN;
     GPIO_Init(LCD_RW_GPIO, &gpio_init);
@@ -79,7 +87,7 @@ static void lcd_init_gpio(void) {
 }
 
 static void lcd_write_command(uint8_t data) {
-#if 0
+#if LCD_MODE 
     // make sure write is high (disabled)
     LCD_RW_HI();
     // command mode
@@ -104,22 +112,17 @@ static void lcd_write_command(uint8_t data) {
     LCD_CS_HI();
 #else
     // make sure write is high (disabled)
-    LCD_RW_LO();
+    LCD_CS_LO();
     // command mode
     LCD_RS_LO();
-    // select device
-    LCD_CS_LO();
+    // 
+    LCD_RW_LO();
     
     // write data to port d0...d7
     LCD_DATA_SET(data);
-    
+delay_us(1);    
     // execute write
     LCD_RD_HI();
-    // wait some time
-    asm volatile("nop");
-    asm volatile("nop");
-    asm volatile("nop");
-    //write
     LCD_RD_LO();
     LCD_RS_HI();
     
@@ -130,6 +133,9 @@ static void lcd_write_command(uint8_t data) {
 
 
 static void lcd_reset(void) {
+    //wait for voltages to be stable
+    delay_us(1000*1000);
+
     // trigger hw reset
     LCD_RST_LO();
     delay_us(10); // at least 5us
@@ -149,8 +155,9 @@ static void lcd_reset(void) {
     lcd_write_command(LCD_CMD_BIAS_1_7); //opentx uses LCD_CMD_BIAS_1_9
     
     //set seg and com directions
-    lcd_write_command(LCD_CMD_COM_INVERSE);
-    lcd_write_command(LCD_CMD_SEG_NORMAL);
+    lcd_write_command(LCD_CMD_COM_NORMAL); //INVERSE);
+    //normal or inverted?
+    lcd_write_command(LCD_CMD_SEG_INVERSE); //NORMAL);
 
     //power control -> all boosters on
     lcd_write_command(LCD_CMD_POWERCTRL_ALL_ON);
@@ -160,7 +167,7 @@ static void lcd_reset(void) {
     
     //set EV (contrast?), this is  2byte command
     lcd_write_command(LCD_CMD_EV);
-    lcd_write_command(34); //dynamic contrast 0...63
+    lcd_write_command(50); //dynamic contrast 0...63
 
     //set startline to 0
     lcd_write_command(LCD_CMD_SET_STARTLINE + 0);
@@ -177,17 +184,17 @@ static void lcd_reset(void) {
 }
 
 void lcd_send_data(uint8_t *buf, uint32_t len){
-    uint32_t i;
+    uint32_t i, x,y;
     
     //set start to 0,0
     lcd_write_command(LCD_CMD_SET_STARTLINE + 0);
-    lcd_write_command(LCD_CMD_SET_PAGESTART + 0);
+    lcd_write_command(LCD_CMD_SET_PAGESTART + 2);
     
     //set col address of ram to 0
     lcd_write_command(LCD_CMD_SET_COL_LO + 0);
     lcd_write_command(LCD_CMD_SET_COL_HI + 0);
 
-#if 0    
+#if LCD_MODE 
     // make sure write is high (disabled)
     LCD_RW_HI();
     // data mode 
@@ -212,16 +219,26 @@ void lcd_send_data(uint8_t *buf, uint32_t len){
     // deselect device
     LCD_CS_HI();
 #else
-    // make sure write is high (disabled)
-    LCD_RW_HI();
-    // select device
+
+  for (y=0; y < 8; y++) {
+    //start on col 0
+    lcd_write_command(LCD_CMD_SET_COL_LO + 0);
+    lcd_write_command(LCD_CMD_SET_COL_HI + 0);
+    //page start    
+    lcd_write_command(LCD_CMD_SET_PAGESTART + y);
+
     LCD_CS_LO();
-    
-    // data mode 
     LCD_RS_HI();
     LCD_RW_LO();
-    while(len--){
-        // write data to port d0...d7
+
+    //send 4 dummy bytes (132-128)
+    for(x=4; x>0; --x){
+        LCD_DATA_SET(0x00);
+        LCD_RD_HI();
+	LCD_RD_LO();
+    }
+
+    for (x=128; x>0; --x) {
         LCD_DATA_SET(*buf++);
         // execute write
         LCD_RD_HI();
@@ -230,6 +247,7 @@ void lcd_send_data(uint8_t *buf, uint32_t len){
         //write
         LCD_RD_LO();
     }
+  }
     
     LCD_RD_HI();
     

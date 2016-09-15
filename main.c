@@ -9,11 +9,8 @@
 int main(void) {
     delay_init();
     led_init();
-    
-    led_on();
-    delay_us(500*1000);
-    led_off();
-    
+   
+    led_on(); 
     lcd_init();
     screen_init();
     

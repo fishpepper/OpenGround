@@ -33,7 +33,7 @@
 // CS
 #define LCD_CS_GPIO          GPIOD
 #define LCD_CS_GPIO_CLK      RCC_AHBPeriph_GPIOD
-#define LCD_CS_PIN           GPIO_Pin_6
+#define LCD_CS_PIN           GPIO_Pin_2
 
 
 #endif // __PIN_CONFIG_H__

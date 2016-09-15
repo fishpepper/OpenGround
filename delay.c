@@ -24,7 +24,7 @@ void delay_init(void) {
 
 inline void delay_us(uint32_t us) {
     //based on https://github.com/leaflabs/libmaple
-    us *= 8;
+    us *= 12;
 
     //fudge for function call overhead
     us--;

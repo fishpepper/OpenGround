@@ -23,10 +23,9 @@ static uint8_t screen_buffer[SCREEN_BUFFER_SIZE];
 
 void screen_init(void) {
     screen_clear();
-    
-    screen_draw_line(0,15,30,15,1);
-    //screen_set_pixels(0,0,100,50,1);
-    //screen_fill_round_rect(0,0, 127, 17, 3, 1);
+    //screen_draw_line(0,8,32,8,1);
+    //screen_set_pixels(8,8,16,64,1);
+    screen_fill_round_rect(128/2-60/2,64/2-30/2, 60, 30, 6, 1);
     screen_update();
 }
 
