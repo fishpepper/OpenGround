@@ -21,14 +21,14 @@ void led_init(void) {
     GPIO_InitTypeDef gpio_init;
 
     // clock enable
-    RCC_AHBPeriphClockCmd(LED_GPIO_CLK, ENABLE);
+    RCC_AHBPeriphClockCmd(LED_BACKLIGHT_GPIO_CLK, ENABLE);
 
     //set led pin as output
-    gpio_init.GPIO_Pin   = LED_PIN;
+    gpio_init.GPIO_Pin   = LED_BACKLIGHT_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
     gpio_init.GPIO_OType = GPIO_OType_PP;
     gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    GPIO_Init(LED_GPIO, &gpio_init);
+    GPIO_Init(LED_BACKLIGHT_GPIO, &gpio_init);
 }
 

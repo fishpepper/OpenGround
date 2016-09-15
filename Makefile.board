@@ -92,7 +92,7 @@ ALL_DEPS := $(patsubst %.c,%.d,$(BOARD_SRCS))
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) $< -o $@
 
 clean:
-	rm -f *.o *.d *.elf *.bin
+	rm -f *.o *.d $(RESULT).elf $(RESULT).bin
 
 debug: $(RESULT).elf
 	openocd -f /usr/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/share/openocd/scripts/target/stm32f1x.cfg & echo $$! > $(OPENOCD_PIDFILE)

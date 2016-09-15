@@ -5,9 +5,9 @@
 
 void led_init(void);
 
-#define led_on()   { LED_GPIO->BSRR = (LED_PIN); }
-#define led_off()  { LED_GPIO->BRR = (LED_PIN); }
-#define led_toggle(){ LED_GPIO->BSRR = (LED_GPIO->ODR ^ LED_PIN) | (LED_PIN << 16);}
+#define led_on()   { LED_BACKLIGHT_GPIO->BSRR = (LED_BACKLIGHT_PIN); }
+#define led_off()  { LED_BACKLIGHT_GPIO->BRR = (LED_BACKLIGHT_PIN); }
+#define led_toggle(){ LED_BACKLIGHT_GPIO->BSRR = (LED_BACKLIGHT_GPIO->ODR ^ LED_BACKLIGHT_PIN) | (LED_BACKLIGHT_PIN << 16);}
 
 #endif //__LED__H_
 
