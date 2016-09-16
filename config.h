@@ -10,6 +10,18 @@
 #define LED_BACKLIGHT_GPIO_CLK              RCC_AHBPeriph_GPIOF
 #define LED_BACKLIGHT_PIN                   GPIO_Pin_3
 
+//L BUTTON BLUE = PD10
+//R BUTTON BLUE = PD11
+#define LED_BUTTON_R_GPIO      GPIOD
+#define LED_BUTTON_R_GPIO_CLK  RCC_AHBPeriph_GPIOD
+#define LED_BUTTON_R_PIN       GPIO_Pin_11
+
+// POWERDOWN TRIGGER
+#define POWERDOWN_GPIO      GPIOB
+#define POWERDOWN_GPIO_CLK  RCC_AHBPeriph_GPIOB
+#define POWERDOWN_PIN       GPIO_Pin_15
+
+
 // LCD
 // data lines
 #define LCD_DATA_GPIO        GPIOE

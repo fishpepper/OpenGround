@@ -14,30 +14,36 @@
 
    author: fishpepper <AT> gmail.com
 */
-#include "led.h"
+
+#include "io.h"
+#include "debug.h"
+#include "config.h"
 #include  "stm32f0xx_rcc.h"
 
-void led_init(void) {
+
+void io_init(void) {
+    debug("io: init\n"); debug_flush();
+    io_init_gpio();
+}
+
+void io_init_gpio(void) {
     GPIO_InitTypeDef gpio_init;
 
     // clock enable
-    RCC_AHBPeriphClockCmd(LED_BACKLIGHT_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(LED_BUTTON_R_GPIO_CLK, ENABLE);
+    RCC_AHBPeriphClockCmd(POWERDOWN_GPIO_CLK, ENABLE);
 
-    //set led pin as output
-    gpio_init.GPIO_Pin   = LED_BACKLIGHT_PIN;
+    //set high:
+    POWERDOWN_GPIO->BSRR = (POWERDOWN_PIN); 
+
+    //set pin as output
+    gpio_init.GPIO_Pin   = POWERDOWN_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
     gpio_init.GPIO_OType = GPIO_OType_PP;
     gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    GPIO_Init(LED_BACKLIGHT_GPIO, &gpio_init);
-
-    gpio_init.GPIO_Pin   = LED_BUTTON_R_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    GPIO_Init(LED_BUTTON_R_GPIO, &gpio_init);
-
+    GPIO_Init(POWERDOWN_GPIO, &gpio_init);
 }
 
+void io_powerdown(void){
+    POWERDOWN_GPIO->BRR = (POWERDOWN_PIN); 
+}

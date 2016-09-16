@@ -28,13 +28,7 @@ static uint32_t screen_font_y;
 static uint8_t  screen_font_color;
 
 void screen_init(void) {
-    uint32_t i;
-    
     screen_clear();
-    //screen_draw_line(0,8,32,8,1);
-    //screen_set_pixels(8,8,16,64,1);
-    screen_fill_round_rect(128/2-60/2,64/2-30/2, 60, 30, 6, 1);
-    delay_us(1000*1000);
 }
 
 void screen_clear(void) {
