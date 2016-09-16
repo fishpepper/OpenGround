@@ -65,6 +65,7 @@ void console_puts(uint8_t *str){
 }
 
 void console_putc(uint8_t c){
+    uint32_t x=0;
     //print one char to our screen, this function 
     //handles the screen layout etc
     
@@ -86,7 +87,9 @@ void console_putc(uint8_t c){
     if (console_write_x >= (CONSOLE_BUFFER_SIZE_X)){
         //switch and clear next line
         console_write_y = (console_write_y + 1) % CONSOLE_BUFFER_SIZE_Y;
-        console_buffer[console_write_y][0] = 0;
+        for(x=0; x<CONSOLE_BUFFER_SIZE_X; x++){
+            console_buffer[console_write_y][x] = 0;
+        }
         console_write_x = 0;
     }
 }

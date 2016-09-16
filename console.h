@@ -4,7 +4,7 @@
 
 
 //rendering color for text, background is the inverse (allowed: 0,1)
-#define CONSOLE_TEXTCOLOR 0
+#define CONSOLE_TEXTCOLOR 1
 
 void console_init(void);
 
