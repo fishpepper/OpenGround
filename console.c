@@ -34,14 +34,6 @@ void console_init(void) {
         console_buffer[i][CONSOLE_BUFFER_SIZE_X] = 0;
     }
 
-    //testing:
-    uint8_t c = 'A';
-    while(1){
-        console_putc(c++);
-        console_render();
-        if (c >= 'z') c = 'A';
-        delay_us(100*1000);
-    }
 }
 
 
@@ -76,7 +68,8 @@ void console_putc(uint8_t c){
     }
     
     if(c == '\n'){
-        //newline, skip to next line
+        //newline, this will trigger a skip to next line
+        console_write_x = 100;
     }else{
         //output char:
         console_buffer[console_write_y][console_write_x] = c;

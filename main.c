@@ -15,12 +15,16 @@ int main(void) {
     lcd_init();
     screen_init();
     console_init();
+    debug_init();
     
 
     led_on();
     while(1){
-	led_toggle();
-	delay_us(1000*1000);
+        console_render();
+	led_off();
+	delay_us(10*1000);
+        led_on();
+        delay_us(1000*1000);
     }
 }
 
