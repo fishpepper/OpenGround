@@ -12,39 +12,33 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-   author: fishpepper <AT> gmail.com
+author: fishpepper <AT> gmail.com
 */
 
 //lcd drawing functions based on openglcd: https://bitbucket.org/bperrybap/openglcd/src
 
 #include "screen.h"
+#include "font.h"
+#include "delay.h"
 
 static uint8_t screen_buffer[SCREEN_BUFFER_SIZE];
+static const uint8_t *screen_font_ptr;
+static uint32_t screen_font_x;
+static uint32_t screen_font_y;
+static uint8_t  screen_font_color;
 
 void screen_init(void) {
     uint32_t i;
-
+    
     screen_clear();
     //screen_draw_line(0,8,32,8,1);
     //screen_set_pixels(8,8,16,64,1);
     screen_fill_round_rect(128/2-60/2,64/2-30/2, 60, 30, 6, 1);
-
-while(1){
-    i++;
-    if (i>= SCREEN_BUFFER_SIZE) i=0;
-    screen_buffer[i] = 0xFF;
-    if (i>10) screen_buffer[i-10] = 0;
-    screen_update();
-    delay_us(10*1000);
-}
-
+    delay_us(1000*1000);
 }
 
 void screen_clear(void) {
-    uint32_t i;
-    for(i=0; i<SCREEN_BUFFER_SIZE; i++){
-        screen_buffer[i] = 0;
-    }
+    screen_fill(0);
     screen_update();
 }
 
@@ -252,3 +246,328 @@ void screen_fill_round_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height,
     }
 }
 
+uint8_t screen_put_char(uint8_t c){
+    uint8_t thielefont = 0;
+    uint8_t width      = 0;
+    uint8_t height     = screen_font_ptr[FONT_HEIGHT];
+    uint8_t bytes      = (height+7)/8; //calculates height in rounded up bytes
+    uint8_t firstChar  = screen_font_ptr[FONT_FIRST_CHAR];
+    uint8_t charCount  = screen_font_ptr[FONT_CHAR_COUNT];
+    uint32_t index     = 0;
+    uint32_t i;
+    
+    if(c < firstChar || c >= (firstChar+charCount)){
+        return 0; // invalid char
+    }
+    c-= firstChar;
+
+
+    if(font_is_fixed_width(screen_font_ptr)){
+        thielefont = 0;
+        width = screen_font_ptr[FONT_FIXED_WIDTH]; 
+        index = c*bytes*width+FONT_WIDTH_TABLE;
+    }else{
+        // variable width font, read width data, to get the index
+        thielefont = 1;
+        /*
+        * Because there is no table for the offset of where the data
+        * for each character glyph starts, run the table and add up all the
+        * widths of all the characters prior to the character we
+        * need to locate.
+        */
+        for(i=0; i<c; i++){
+            index += screen_font_ptr[FONT_WIDTH_TABLE+i];
+        }
+
+        /*
+        * Calculate the offset of where the font data
+        * for our character starts.
+        * The index value from above has to be adjusted because
+        * there is potentialy more than 1 byte per column in the glyph,
+        * when the characgter is taller than 8 bits.
+        * To account for this, index has to be multiplied
+        * by the height in bytes because there is one byte of font
+        * data for each vertical 8 pixels.
+        * The index is then adjusted to skip over the font width data
+        * and the font header information.
+        */
+
+        index = index*bytes+charCount+FONT_WIDTH_TABLE;
+
+        /*
+        * Finally, fetch the width of our character
+        */
+        width = screen_font_ptr[FONT_WIDTH_TABLE+c];
+    }
+
+
+    if(!width){
+        // no glyph definition for character?
+        return(0);
+    }
+
+    // last but not least, draw the character
+
+    /*
+    * Paint font data bits and write them to LCD memory 1 LCD page at a time.
+    * This is very different from simply reading 1 byte of font data
+    * and writing all 8 bits to LCD memory and expecting the write data routine
+    * to fragement the 8 bits across LCD 2 memory pages when necessary.
+    * That method (really doesn't work) and reads and writes the same LCD page 
+    * more than once as well as not do sequential writes to memory.
+    *
+    * This method of rendering while much more complicated, somewhat scrambles the font 
+    * data reads to ensure that all writes to LCD pages are always sequential and a given LCD
+    * memory page is never read or written more than once.
+    * And reads of LCD pages are only done at the top or bottom of the font data rendering
+    * when necessary. 
+    * i.e it ensures the absolute minimum number of LCD page accesses
+    * as well as does the sequential writes as much as possible.
+    *
+    */
+
+    uint32_t pixels = height;
+    uint32_t p;
+    uint32_t dy;
+    uint32_t tfp;
+    uint32_t dp;
+    uint32_t dbyte;
+    uint32_t fdata;
+    uint32_t j;
+
+    if(!font_is_nopad_fixed_font(screen_font_ptr)){
+        pixels++; // extra pixel on bottom for spacing on all fonts but NoPadFixed fonts
+    }
+
+
+    for(p = 0; p < pixels;){
+        dy = screen_font_y + p;
+
+        //Align to proper Column and page in LCD memory
+        uint32_t screen_dpos = ((dy & ~7)/8)*128 + screen_font_x;
+        
+        uint32_t page = p/8 * width; // page must be 16 bit to prevent overflow
+
+        /* each column of font data */
+        for(j=0; j<width; j++){
+            
+            /*
+            * Fetch proper byte of font data.
+            * Note:
+            * This code "cheats" to add the horizontal space/pixel row
+            * below the font.
+            * It essentially creates a font pixel of 0/off when the pixels are
+            * out of the defined pixel map.
+            *
+            * fake a fondata read read when we are on the very last
+            * bottom "pixel". This lets the loop logic continue to run
+            * with the extra fake pixel. If the loop is not the
+            * the last pixel the pixel will come from the actual
+            * font data, but that is ok as it is 0 padded.
+            *
+            */
+
+            if(p >= height){
+                /*
+                * fake a font data read for padding below character.
+                */
+                fdata = 0;
+            } else {
+                fdata = screen_font_ptr[index + page + j];
+                /*
+                * Have to shift font data because Thiele shifted residual
+                * font bits the wrong direction for LCD memory.
+                *
+                * The real solution to this is to fix the variable width font format to
+                * not shift the residual bits the wrong direction!!!!
+                */
+                if(thielefont && (height - (p&~7)) < 8){
+                    fdata >>= 8 - (height & 7);
+                }
+            }
+
+            if(!screen_font_color){
+                fdata ^= 0xff;  /* inverted data for "white" font color */
+            }
+
+            /*
+            * Check to see if a quick full byte write of font
+            * data can be done.
+            */
+            if(!(dy & 7) && !(p & 7) && ((pixels -p) >= 8)){
+                /*
+                * destination pixel is on a page boundary
+                * Font data is on byte boundary
+                * And there are 8 or more pixels left
+                * to paint so a full byte write can be done.
+                */
+                screen_buffer_write(screen_dpos, fdata);
+                screen_dpos++;
+                continue;
+            }else{
+                /*
+                * No, so must fetch byte from LCD memory.
+                */
+                dbyte = screen_buffer_read(screen_dpos);
+            }
+
+            /*
+            * At this point there is either not a full page of data
+            * left to be painted  or the font data spans multiple font
+            * data bytes. (or both) So, the font data bits will be painted
+            * into a byte and then written to the LCD memory.page.
+            */
+
+
+            tfp = p;    /* font pixel bit position    */
+            dp = dy & 7;  /* data byte pixel bit position */
+
+            /*
+            * paint bits until we hit bottom of page/byte
+            * or run out of pixels to paint.
+            */
+            while((dp <= 7) && (tfp) < pixels){
+                if(fdata & (1<<(tfp & 7))){
+                    dbyte |= (1<<dp);
+                } else {
+                    dbyte &= ~(1<<dp);
+                }
+
+                /*
+                * Check for crossing font data bytes
+                */
+                if((tfp & 7)== 7){
+                    fdata = screen_font_ptr[index + page + j + width];
+
+                    /*
+                    * Have to shift font data because Thiele shifted residual
+                    * font bits the wrong direction for LCD memory.
+                    *
+                    * Note: the 8+1 is there vs 8 because we are fetching the font
+                    * data byte for the next pixel, but tfp has not yet incremented yet
+                    * so it is one less then it should be. We add 1 to the 8
+                    * to account for this.
+                    */
+                    
+                    if((thielefont) && ((height - tfp) < (8+1))){
+                        fdata >>= (8 - (height & 7));
+                    }
+
+                    if(!screen_font_color){
+                        fdata ^= 0xff;  /* inverted data for "white" color  */
+                    }
+                }
+                tfp++;
+                dp++;
+            }
+            /*
+            * Now flush out the painted byte.
+            */
+            screen_buffer_write(screen_dpos, dbyte);
+            screen_dpos++;
+        }
+
+        /*
+        * now create a horizontal gap (vertical line of pixels) between characters.
+        * Since this gap is "white space", the pixels painted are oposite of the
+        * font color.
+        *
+        * Since full LCD pages are being written, there are 4 combinations of filling
+        * in the this gap page.
+        *  - pixels start at bit 0 and go down less than 8 bits
+        *  - pixels don't start at 0 but go down through bit 7
+        *  - pixels don't start at 0 and don't go down through bit 7 (fonts shorter than 6 hi)
+        *  - pixels start at bit 0 and go down through bit 7 (full byte)
+        *
+        * The code below creates a mask of the bits that should not be painted.
+        *
+        * Then it is easy to paint the desired bits since if the color is WHITE,
+        * the paint bits are set, and if the coloer is not WHITE the paint bits are stripped.
+        * and the paint bits are the inverse of the desired bits mask.
+        */
+
+
+        if(!font_is_nopad_fixed_font(screen_font_ptr)){
+            // extra pixel on right for spacing on all fonts but NoPadFixed fonts
+            if((dy & 7) || (pixels - p < 8)){
+                uint8_t mask = 0;
+                screen_dpos = ((dy & ~7)/8)*128 + screen_font_x;
+                dbyte =  screen_buffer_read(screen_dpos);
+
+                if(dy & 7){
+                    mask |= (1<<(dy & 7)) -1;
+                }
+
+                if((pixels-p) < 8){
+                mask |= ~((1<<(pixels - p)) -1);
+                }
+
+                if(!screen_font_color){
+                    dbyte |= ~mask; 
+                }else{
+                    dbyte &= mask;
+                }
+            }else{
+                if(!screen_font_color){
+                    dbyte = 0xff;
+                }else{
+                    dbyte = 0;
+                }
+            }
+
+            screen_buffer_write(screen_dpos, dbyte);
+        }
+        /*
+        * advance the font pixel for the pixels
+        * just painted.
+        */
+        p += 8 - (dy & 7);
+    }
+
+    /*
+    * Since this rendering code always starts off with a GotoXY() it really isn't necessary
+    * to do a real GotoXY() to set the h/w location after rendering a character.
+    * We can get away with only setting the s/w version of X & Y.
+    *
+    * Since y didn't change while rendering, it is still correct.
+    * But update x for the pixels rendered.
+    *
+    */
+    screen_font_x += width; // pixels rendered in character glyph
+
+    if(!font_is_nopad_fixed_font(screen_font_ptr)){
+        screen_font_x++; // skip over pad pixel we rendered
+    }
+
+    return 1; // valid char
+}
+
+void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str){
+    screen_font_x = x;
+    screen_font_y = y;
+    screen_font_color = color;
+    
+    while(*str){
+        screen_put_char(*str);
+        str++;
+    }
+}
+
+
+void screen_set_font(const uint8_t *font) {
+    screen_font_ptr = font;
+}
+
+void screen_fill(uint8_t color) {
+    uint32_t i;
+    //this is optimized for runtime, do not move the if into the for loop!
+    if (color){
+        for(i=0; i<SCREEN_BUFFER_SIZE; i++){
+            screen_buffer[i] = 0xFF;
+        }
+    }else{
+        for(i=0; i<SCREEN_BUFFER_SIZE; i++){
+            screen_buffer[i] = 0;
+        }
+    }
+}

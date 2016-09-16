@@ -5,6 +5,7 @@
 #include "led.h"
 #include "lcd.h"
 #include "screen.h"
+#include "console.h"
 
 int main(void) {
     delay_init();
@@ -13,6 +14,7 @@ int main(void) {
     led_on(); 
     lcd_init();
     screen_init();
+    console_init();
     
 
     led_on();

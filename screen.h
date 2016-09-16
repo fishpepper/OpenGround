@@ -24,6 +24,21 @@ void screen_draw_vline(uint8_t x, uint8_t y, uint8_t height, uint8_t color);
 void screen_set_pixels(uint8_t x, uint8_t y,uint8_t x2, uint8_t y2, uint8_t color);
 void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
 
+
+void screen_set_font(const uint8_t *font);
+void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str);
+void screen_fill(uint8_t color);
+
+#define screen_buffer_read(_addr) (screen_buffer[_addr])
+#define screen_buffer_write(_addr, _val) {\
+    if (_addr >= SCREEN_BUFFER_SIZE){ \
+        /*Serial.write("ERROR: "); Serial.print(_addr); Serial.write("\r\n");*/ \
+    }else{ \
+        screen_buffer[_addr] = _val; \
+    } \
+}
+
+
 #define _screen_absDiff(x,y) (((x)>(y)) ?  ((x)-(y)) : ((y)-(x)))
 #define _screen_swap(a,b) {uint8_t t; t=(a); a=(b);  b=t;}
 
