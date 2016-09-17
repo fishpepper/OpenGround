@@ -24,9 +24,10 @@ int main(void) {
 
 
     led_on();
-    uint8_t countdown = 5;
+    uint8_t countdown = 10;
     debug("main: starting loop\n"); debug_flush();
     while(1){
+#if 1
         console_clear();
         debug("ADC TEST\n\n");
         uint32_t i;
@@ -43,8 +44,8 @@ int main(void) {
         console_render();
 
         delay_us(10*1000);
-
-        /* debug("power down in ");
+#else
+        debug("power down in ");
         debug_put_uint8(countdown--);
         debug("s\n");
 
@@ -54,7 +55,8 @@ int main(void) {
 
         if(countdown == 0){
             io_powerdown();
-        }*/
+        }
+#endif
     }
 }
 

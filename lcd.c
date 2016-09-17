@@ -43,13 +43,13 @@ static void lcd_init_rcc(void) {
 
 static void lcd_init_gpio(void) {
     GPIO_InitTypeDef gpio_init;
-    
+
     // set all gpio directions to output
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
     gpio_init.GPIO_OType = GPIO_OType_PP;
     gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    
+
     // set individual pins
     // data
     gpio_init.GPIO_Pin   = 0xFF; // D0..D7
@@ -76,7 +76,7 @@ static void lcd_init_gpio(void) {
     // cs
     gpio_init.GPIO_Pin   = LCD_CS_PIN;
     GPIO_Init(LCD_CS_GPIO, &gpio_init);
-    
+
     // set default pin levels:
     LCD_RST_LO();
     LCD_CS_HI();
@@ -90,16 +90,16 @@ static void lcd_write_command(uint8_t data) {
     LCD_CS_LO();
     // command mode
     LCD_RS_LO();
-    // 
+    //
     LCD_RW_LO();
-    
+
     // write data to port d0...d7
     LCD_DATA_SET(data);
     // execute write
     LCD_RD_HI();
     LCD_RD_LO();
     LCD_RS_HI();
-    
+
     // deselect device
     LCD_CS_HI();
 }
@@ -114,19 +114,19 @@ static void lcd_reset(void) {
     delay_us(10); // at least 5us
     LCD_RST_HI();
     delay_us(1500); // at least 5us?
-    
+
     //send software reset command
     lcd_write_command(LCD_CMD_RESET);
-    
+
     //switch display off
     lcd_write_command(LCD_CMD_DISPLAY_OFF);
-    
+
     //do not set all pixels to black (..._ALLBLACK)
     lcd_write_command(LCD_CMD_MODE_RAM);
-    
+
     //set to 1/7 bias:
     lcd_write_command(LCD_CMD_BIAS_1_7); //opentx uses LCD_CMD_BIAS_1_9
-    
+
     //set seg and com directions
     lcd_write_command(LCD_CMD_COM_NORMAL); //INVERSE);
     //normal or inverted?
@@ -134,35 +134,35 @@ static void lcd_reset(void) {
 
     //power control -> all boosters on
     lcd_write_command(LCD_CMD_POWERCTRL_ALL_ON);
-    
-    //regulator ratio 
-    lcd_write_command(LCD_CMD_REG_RATIO_010); ////opentx uses LCD_CMD_REG_RATIO_101 ?
-    
+
+    //regulator ratio
+    lcd_write_command(LCD_CMD_REG_RATIO_011); ////opentx uses LCD_CMD_REG_RATIO_101 ?
+
     //set EV (contrast?), this is  2byte command
     lcd_write_command(LCD_CMD_EV);
-    lcd_write_command(50); //dynamic contrast 0...63
+    lcd_write_command(35); //dynamic contrast 0...63
 
     //set startline to 0
     lcd_write_command(LCD_CMD_SET_STARTLINE + 0);
     //set start page to 0
     lcd_write_command(LCD_CMD_SET_PAGESTART + 0);
-    
+
     //set col address of ram to 0
     lcd_write_command(LCD_CMD_SET_COL_LO + 0);
     lcd_write_command(LCD_CMD_SET_COL_HI + 0);
-    
+
     //switch display on
     lcd_write_command(LCD_CMD_DISPLAY_ON);
-    
+
 }
 
 void lcd_send_data(uint8_t *buf, uint32_t len){
     uint32_t i, x,y;
-    
+
     //set start to 0,0
     lcd_write_command(LCD_CMD_SET_STARTLINE + 0);
     lcd_write_command(LCD_CMD_SET_PAGESTART + 2);
-    
+
     //set col address of ram to 0
     lcd_write_command(LCD_CMD_SET_COL_LO + 0);
     lcd_write_command(LCD_CMD_SET_COL_HI + 0);
@@ -171,7 +171,7 @@ void lcd_send_data(uint8_t *buf, uint32_t len){
     //start on col 0
     lcd_write_command(LCD_CMD_SET_COL_LO + 0);
     lcd_write_command(LCD_CMD_SET_COL_HI + 0);
-    //page start    
+    //page start
     lcd_write_command(LCD_CMD_SET_PAGESTART + y);
 
     LCD_CS_LO();
@@ -182,7 +182,7 @@ void lcd_send_data(uint8_t *buf, uint32_t len){
     for(x=4; x>0; --x){
         LCD_DATA_SET(0x00);
         LCD_RD_HI();
-	LCD_RD_LO();
+    LCD_RD_LO();
     }
 
     for (x=128; x>0; --x) {
@@ -192,9 +192,9 @@ void lcd_send_data(uint8_t *buf, uint32_t len){
         LCD_RD_LO();
     }
   }
-    
+
     LCD_RD_HI();
-    
+
     // deselect device
     LCD_CS_HI();
     LCD_RW_HI();
