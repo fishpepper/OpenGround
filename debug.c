@@ -204,3 +204,7 @@ void debug_put_uint16(uint16_t c){
 void debug_put_newline(void){
     debug_putc('\n');
 }
+
+uint32_t debug_is_initialized(void) {
+    return debug_init_done;
+}

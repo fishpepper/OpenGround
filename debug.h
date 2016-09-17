@@ -2,8 +2,8 @@
 #define __DEBUG__H_
 #include <stdint.h>
 
-#define debug_is_initialized() (debug_init_done)
 
+uint32_t debug_is_initialized(void);
 void debug_init(void);
 void debug_putc(uint8_t ch);
 void debug_flush(void);

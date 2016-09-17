@@ -26,11 +26,11 @@
 // data lines
 #define LCD_DATA_GPIO        GPIOE
 #define LCD_DATA_GPIO_CLK    RCC_AHBPeriph_GPIOE
-// RW 
+// RW
 #define LCD_RW_GPIO          GPIOB
 #define LCD_RW_GPIO_CLK      RCC_AHBPeriph_GPIOB
 #define LCD_RW_PIN           GPIO_Pin_5
-// RST 
+// RST
 #define LCD_RST_GPIO         GPIOB
 #define LCD_RST_GPIO_CLK     RCC_AHBPeriph_GPIOB
 #define LCD_RST_PIN          GPIO_Pin_4

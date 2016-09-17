@@ -22,7 +22,7 @@
 void assert_failed(uint8_t* filename, uint32_t line){
     //todo: add own implementation to report the file name and line number,
     //eg  : printf("Wrong parameters value: file %s on line %d\r\n", file, line)
-    /*if (debug_is_initialized()) {
+    if (debug_is_initialized()) {
         debug("assert failed: ");
         debug(filename);
         debug(" line ");
@@ -30,7 +30,7 @@ void assert_failed(uint8_t* filename, uint32_t line){
         debug_put_newline();
 
         debug_flush();
-    }*/
+    }
 
     //infinite loop
     led_on();

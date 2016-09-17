@@ -7,6 +7,7 @@
 #define CONSOLE_TEXTCOLOR 1
 
 void console_init(void);
+void console_clear(void);
 
 static void console_render_str(uint8_t line, uint8_t color, uint8_t *str);
 void console_puts(uint8_t *str);
