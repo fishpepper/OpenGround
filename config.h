@@ -47,5 +47,11 @@
 #define LCD_CS_GPIO_CLK      RCC_AHBPeriph_GPIOD
 #define LCD_CS_PIN           GPIO_Pin_2
 
+//speaker
+#define SPEAKER_GPIO         GPIOA
+#define SPEAKER_GPIO_CLK     RCC_AHBPeriph_GPIOA
+#define SPEAKER_PIN          GPIO_Pin_8
+#define SPEAKER_PIN_SOURCE   8
+
 
 #endif // __PIN_CONFIG_H__

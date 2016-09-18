@@ -8,6 +8,7 @@
 #include "screen.h"
 #include "console.h"
 #include "adc.h"
+#include "sound.h"
 
 int main(void) {
     delay_init();
@@ -19,8 +20,8 @@ int main(void) {
     screen_init();
     console_init();
     debug_init();
-
     adc_init();
+    sound_init();
 
 
     led_on();

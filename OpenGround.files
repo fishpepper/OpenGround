@@ -75,3 +75,5 @@ screen.c
 screen.h
 adc.c
 adc.h
+sound.c
+sound.h
