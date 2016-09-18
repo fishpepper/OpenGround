@@ -1,4 +1,5 @@
 #include "main.h"
+    #include "timeout.h"
 #include "stm32f0xx_gpio.h"
 #include "config.h"
 #include "delay.h"
@@ -10,17 +11,19 @@
 #include "adc.h"
 #include "sound.h"
 
+
+
 int main(void) {
     delay_init();
     led_init();
     io_init();
-
     led_on();
     lcd_init();
     screen_init();
     console_init();
     debug_init();
     adc_init();
+    timeout_init();
     sound_init();
 
 
@@ -45,8 +48,10 @@ int main(void) {
             }
         }
         console_render();
+        led_button_r_toggle();
 
-        delay_us(10*1000);
+        //delay_us(10*1000);
+        timeout_delay_ms(100);
 #else
         debug("power down in ");
         debug_put_uint8(countdown--);

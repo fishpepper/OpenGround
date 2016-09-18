@@ -53,5 +53,6 @@
 #define SPEAKER_PIN          GPIO_Pin_8
 #define SPEAKER_PIN_SOURCE   8
 
+#define NVIC_PRIO_SYSTICK 0
 
 #endif // __PIN_CONFIG_H__

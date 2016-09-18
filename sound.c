@@ -22,17 +22,42 @@
 #include  "stm32f0xx_gpio.h"
 #include  "stm32f0xx_tim.h"
 
+
+typedef struct {
+    uint16_t frequency;
+    uint16_t duration_ms;
+} tone_t;
+
+#define SOUND_QUEUE_SIZE 10
+static tone_t sound_queue[SOUND_QUEUE_SIZE];
+uint32_t sound_queue_state;
+
+
 void sound_init(void) {
     debug("sound: init\n"); debug_flush();
     sound_init_rcc();
     sound_init_gpio();
 
-    uint32_t i;
+    /*uint32_t i;
     for(i=1; i<10; i++){
         sound_set_frequency(i*100);
         delay_us(1000*1000);
-    }
+    }*/
+    sound_queue_state = 0;
     sound_set_frequency(0);
+
+    sound_queue[0].frequency   = 500;
+    sound_queue[0].duration_ms = 80;
+    sound_queue[1].frequency   = 890;
+    sound_queue[1].duration_ms = 80;
+    sound_queue[2].frequency   = 1000;
+    sound_queue[2].duration_ms = 80;
+    sound_queue[3].frequency   = 0;
+    sound_queue[3].duration_ms = 0;
+    sound_queue_state = 1;
+
+    sound_tone_duration = 0;
+
 }
 
 static void sound_init_rcc(void) {
@@ -101,3 +126,42 @@ void sound_set_frequency(uint32_t freq){
     TIM_CtrlPWMOutputs(TIM1, ENABLE);
 }
 
+void sound_play_sample(tone_t *tone){
+    uint8_t i;
+    //add this sound sample to the playback queue:
+    for(i=0; i<SOUND_QUEUE_SIZE; i++){
+        sound_queue[i] = *tone;
+        if ((tone->duration_ms == 0) && (tone->frequency == 0)){
+            //done, this was the last sample
+            break;
+        }else{
+            tone++;
+        }
+    }
+    sound_queue_state = 0;
+}
+
+void sound_handle_playback(void){
+    if (sound_queue_state == 0){
+        //off, return
+        return;
+    }
+
+    if (sound_tone_duration == 0){
+        //next sample
+        uint32_t id = sound_queue_state - 1;
+        if ((id == SOUND_QUEUE_SIZE) || (sound_queue[id].duration_ms == 0)){
+            //no more samples, switch off:
+            sound_set_frequency(0);
+            sound_queue_state = 0;
+        }else{
+            //fetch next sample
+            sound_tone_duration = 10*sound_queue[id].duration_ms;
+            sound_set_frequency(sound_queue[id].frequency);
+            sound_queue_state++;
+        }
+
+    }else{
+        sound_tone_duration--;
+    }
+}

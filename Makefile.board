@@ -1,5 +1,5 @@
 # object files
-DRIVER_SRCS   = system_stm32f0xx.c stm32f0xx_gpio.c stm32f0xx_rcc.c stm32f0xx_adc.c stm32f0xx_dma.c stm32f0xx_tim.c
+DRIVER_SRCS   = system_stm32f0xx.c stm32f0xx_gpio.c stm32f0xx_rcc.c stm32f0xx_adc.c stm32f0xx_dma.c stm32f0xx_tim.c 
 BOARD_SRCS    = $(DRIVER_SRCS) $(GENERIC_SRCS)
 
 #crystal frequency
@@ -23,6 +23,7 @@ LD=$(TOOLROOT)/arm-none-eabi-gcc
 AR=$(TOOLROOT)/arm-none-eabi-ar
 AS=$(TOOLROOT)/arm-none-eabi-as
 OBJ=$(TOOLROOT)/arm-none-eabi-objcopy
+OBJDUMP=$(TOOLROOT)/arm-none-eabi-objdump
 
 # Code Paths
 DEVICE=device
@@ -72,6 +73,8 @@ $(RESULT).elf: $(LINK_OBJS) $(STARTUP_OBJS)
 	@echo $(LINK_OBJS)
 	@echo prereqs that are newer than test: $?
 	$(LD) $(LDFLAGS) -o $@ $(LINK_OBJS)  $(STARTUP_OBJS) $(LDLIBS) --specs=nosys.specs
+	$(OBJDUMP) -D $(RESULT).elf > $(RESULT).lst
+
 
 %.bin: %.elf
 	$(OBJ) -O binary $< $@
