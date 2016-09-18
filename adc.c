@@ -71,10 +71,16 @@ static void adc_init_gpio(void) {
 
     GPIO_InitTypeDef gpio_init;
 
-    // set up analog inputs, ADC0...ADC9 (PA0...PA9) are used
-    gpio_init.GPIO_Pin  = 0b1111111111;
+    // set up analog inputs ADC0...ADC7 (PA0...PA7)
+    gpio_init.GPIO_Pin  = 0b11111111;
     gpio_init.GPIO_Mode = GPIO_Mode_AN;
     GPIO_Init(GPIOA, &gpio_init);
+
+    // set up analog inputs ADC8, ADC9 (PB0, PB1)
+    gpio_init.GPIO_Pin  = 0b11;
+    gpio_init.GPIO_Mode = GPIO_Mode_AN;
+    GPIO_Init(GPIOB, &gpio_init);
+
 
     // battery voltage is on PC0 (ADC10)
     gpio_init.GPIO_Pin  = 0b1;
