@@ -15,5 +15,6 @@ void debug_put_uint8(uint8_t c);
 void debug_put_int8(int8_t c);
 void debug_put_uint16(uint16_t c);
 void debug_put_newline(void);
+void debug_put_fixed2(uint16_t c);
 
 #endif

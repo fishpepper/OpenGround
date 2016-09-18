@@ -12,6 +12,7 @@ static void adc_init_dma(void);
 static void adc_dma_arm(void);
 void adc_process(void);
 uint16_t adc_get_channel(uint32_t id);
+uint32_t adc_get_battery_voltage(void);
 
 #define ADC_DMA_CHANNEL           DMA1_Channel1
 #define ADC_DMA_TC_FLAG           DMA1_FLAG_TC1

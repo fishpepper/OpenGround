@@ -144,8 +144,6 @@ void debug_put_uint8(uint8_t c){
 }
 
 //output an unsigned 16-bit number to uart
-//FIXME: this routine is somewhat buggy when used with the ISR fifo debug_putc
-//       it is still unclear why this is causing problems?!
 void debug_put_uint16(uint16_t c){
     uint8_t tmp;
     uint8_t l=0;
@@ -189,6 +187,46 @@ void debug_put_uint16(uint16_t c){
         l=1;
     }
     if (l || (tmp != 0)) debug_putc('0' + tmp);
+
+    tmp = 0;
+    while(c>=10){
+        c-=10;
+        tmp++;
+        l=1;
+    }
+    if (l || (tmp != 0)) debug_putc('0' + tmp);
+
+    debug_putc('0' + (uint8_t)c);
+}
+
+void debug_put_fixed2(uint16_t c){
+    uint8_t tmp;
+    uint8_t l=0;
+    tmp = 0;
+    while(c>=10000L){
+        c-=10000L;
+        tmp++;
+        l=1;
+    }
+    if (tmp != 0) debug_putc('0' + tmp);
+
+    tmp = 0;
+    while(c>=1000L){
+        c-=1000L;
+        tmp++;
+        l=1;
+    }
+    if (l || (tmp != 0)) debug_putc('0' + tmp);
+
+    tmp = 0;
+    while(c>=100){
+        c-=100;
+        tmp++;
+        l=1;
+    }
+    if (l || (tmp != 0)) debug_putc('0' + tmp);
+
+    debug_putc('.');
 
     tmp = 0;
     while(c>=10){

@@ -88,6 +88,21 @@ static void adc_init_gpio(void) {
     GPIO_Init(GPIOC, &gpio_init);
 }
 
+uint32_t adc_get_battery_voltage(void) {
+    //return a fixed point number of the battery voltage
+    //123 = 12.3 V
+    //raw data is 0 .. 4095 ~ 0 .. 3300mV
+    //Vadc = raw * 3300 / 4095
+    uint32_t raw = adc_data[10];
+    //the voltage divider is 5.1k / 10k
+    //Vadc = Vbat * R2 / (R1+R2) = Vbat * 51/151
+    //-> Vbat = Vadc * (R1-R2) / R2
+    //-> Vout = raw * 3300 * (151 / 51) / 4095
+    //        = (raw * (3300 * 151) ) / (4095 * 51)
+    uint32_t mv = (raw * (3300 * 151) ) / (4095 * 51);
+    return mv / 10;
+}
+
 static void adc_init_mode(void) {
     debug("adc: init mode\n"); debug_flush();
 

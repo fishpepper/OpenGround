@@ -29,7 +29,9 @@ int main(void) {
     while(1){
 #if 1
         console_clear();
-        debug("ADC TEST\n\n");
+        debug("ADC TEST  BAT: ");
+        debug_put_fixed2(adc_get_battery_voltage());
+        debug(" V\n");
         uint32_t i;
         adc_process();
         for(i=0; i<ADC_CHANNEL_COUNT; i++){
