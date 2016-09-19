@@ -56,6 +56,8 @@ static void touch_init_i2c_rcc(void) {
     RCC_AHBPeriphClockCmd(TOUCH_I2C_GPIO_CLK, ENABLE);
     RCC_AHBPeriphClockCmd(TOUCH_INT_GPIO_CLK, ENABLE);
     RCC_AHBPeriphClockCmd(TOUCH_RESET_GPIO_CLK, ENABLE);
+
+    RCC_I2CCLKConfig(RCC_I2C1CLK_HSI);
 }
 
 static void touch_init_i2c_gpio(void) {
@@ -69,12 +71,19 @@ static void touch_init_i2c_gpio(void) {
 
     GPIO_StructInit(&gpio_init);
 
+    //set up alternate function
+    GPIO_PinAFConfig(TOUCH_I2C_GPIO, GPIO_PinSource8, GPIO_AF_1);
+    GPIO_PinAFConfig(TOUCH_I2C_GPIO, GPIO_PinSource9, GPIO_AF_1);
+
     //SDA & SCL
-    gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN | TOUCH_I2C_SCL_PIN;
+    gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_AF;
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     gpio_init.GPIO_OType = GPIO_OType_OD;
     gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
+    GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
+
+    gpio_init.GPIO_Pin   = TOUCH_I2C_SCL_PIN;
     GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
 
     //INT pin
@@ -227,7 +236,7 @@ static void touch_init_i2c_mode(void) {
     i2c_init.I2C_Timing        = 0x50330309; // 400KHz | 8MHz-0x00310309; 16MHz-0x10320309; 48MHz-50330309
     i2c_init.I2C_AnalogFilter  = I2C_AnalogFilter_Enable;
     i2c_init.I2C_DigitalFilter = 0x00;
-    i2c_init.I2C_OwnAddress1   = TOUCH_FT6236_I2C_ADDRESS;
+    i2c_init.I2C_OwnAddress1   = 0x00;
     i2c_init.I2C_Ack           = I2C_Ack_Enable;
     i2c_init.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
 
@@ -337,6 +346,8 @@ static uint32_t touch_i2c_read(uint8_t address, uint8_t *data, uint8_t len){
     while(I2C_GetFlagStatus(TOUCH_I2C, I2C_ISR_TXIS) == RESET){
         if (timeout_timed_out()) {
             debug("touch: start error... timeout!\n");
+            debug_flush();
+            delay_ms(5000);
             return 0;
         }
     }
