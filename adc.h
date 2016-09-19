@@ -4,6 +4,7 @@
 #include <stdint.h>
 
 void adc_init(void);
+void adc_test(void);
 
 static void adc_init_rcc(void);
 static void adc_init_gpio(void);

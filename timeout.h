@@ -4,7 +4,8 @@
 #include "stm32f0xx.h"
 
 void timeout_init(void);
-void timeout_set(__IO uint32_t ms);
+//void timeout_set(__IO uint32_t ms);
+#define timeout_set(x) timeout_set_100us(10*(x));
 void timeout_set_100us(__IO uint32_t hus);
 
 uint8_t timeout_timed_out(void);

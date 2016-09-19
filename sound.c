@@ -23,11 +23,6 @@
 #include  "stm32f0xx_tim.h"
 
 
-typedef struct {
-    uint16_t frequency;
-    uint16_t duration_ms;
-} tone_t;
-
 #define SOUND_QUEUE_SIZE 10
 static tone_t sound_queue[SOUND_QUEUE_SIZE];
 uint32_t sound_queue_state;
@@ -45,7 +40,7 @@ void sound_init(void) {
     }*/
     sound_queue_state = 0;
     sound_set_frequency(0);
-
+/*
     sound_queue[0].frequency   = 500;
     sound_queue[0].duration_ms = 80;
     sound_queue[1].frequency   = 890;
@@ -55,7 +50,7 @@ void sound_init(void) {
     sound_queue[3].frequency   = 0;
     sound_queue[3].duration_ms = 0;
     sound_queue_state = 1;
-
+*/
     sound_tone_duration = 0;
 
 }
@@ -104,10 +99,6 @@ void sound_set_frequency(uint32_t freq){
     tim_init.TIM_ClockDivision = 0;
     tim_init.TIM_CounterMode   = TIM_CounterMode_Up;
     TIM_TimeBaseInit(TIM1, &tim_init);
-
-    debug_put_hex32(SystemCoreClock); debug_flush(); debug_put_newline();
-    debug("presc = "); debug_put_uint16(prescaler);
-    debug("\nperi = "); debug_put_uint16(period); debug_flush();
 
     //PWM1 Mode configuration: Channel1
     TIM_OCStructInit(&tim_oc_init);

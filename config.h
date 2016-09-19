@@ -53,6 +53,29 @@
 #define SPEAKER_PIN          GPIO_Pin_8
 #define SPEAKER_PIN_SOURCE   8
 
-#define NVIC_PRIO_SYSTICK 0
+#define NVIC_PRIO_SYSTICK    0
+
+//touch
+#define TOUCH_FT6236_I2C_ADDRESS      0x38
+#define TOUCH_I2C                     I2C1
+#define TOUCH_I2C_CLK                 RCC_APB1Periph_I2C1
+#define TOUCH_I2C_GPIO_CLK            RCC_AHBPeriph_GPIOB
+#define TOUCH_I2C_GPIO                GPIOB
+#define TOUCH_I2C_SDA_PIN             GPIO_Pin_9
+#define TOUCH_I2C_SCL_PIN             GPIO_Pin_8
+
+#define TOUCH_RESET_GPIO              GPIOA
+#define TOUCH_RESET_GPIO_CLK          RCC_AHBPeriph_GPIOA
+#define TOUCH_RESET_PIN               GPIO_Pin_15
+
+#define TOUCH_INT_GPIO                GPIOC
+#define TOUCH_INT_GPIO_CLK            RCC_AHBPeriph_GPIOC
+#define TOUCH_INT_PIN                 GPIO_Pin_12
+
+#define TOUCH_INT_EXTI_SOURCE         EXTI_PortSourceGPIOC
+#define TOUCH_INT_EXTI_SOURCE_PIN     EXTI_PinSource12
+#define TOUCH_INT_EXTI_SOURCE_LINE    EXTI_Line12
+#define TOUCH_INT_EXTI_IRQN           EXTI4_15_IRQn
+
 
 #endif // __PIN_CONFIG_H__

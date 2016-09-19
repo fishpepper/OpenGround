@@ -6,5 +6,5 @@
 void io_init(void);
 void io_init_gpio(void);
 void io_powerdown(void);
-
+void io_powerdown_test(void);
 #endif // __IO_H__

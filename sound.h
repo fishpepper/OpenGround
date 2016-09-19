@@ -14,4 +14,9 @@ static void sound_init_rcc(void);
 static void sound_init_gpio(void);
 void sound_handle_playback(void);
 
+typedef struct {
+    uint16_t frequency;
+    uint16_t duration_ms;
+} tone_t;
+
 #endif // __SOUND_H__

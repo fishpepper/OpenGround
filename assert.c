@@ -16,7 +16,7 @@
 */
 
 #include <stdint.h>
-//#include "debug.h"
+#include "debug.h"
 #include "led.h"
 
 void assert_failed(uint8_t* filename, uint32_t line){

@@ -17,6 +17,9 @@
 
 #include "adc.h"
 #include "debug.h"
+#include "console.h"
+#include "led.h"
+#include "delay.h"
 #include "stm32f0xx_rcc.h"
 #include "stm32f0xx_gpio.h"
 #include "stm32f0xx_adc.h"
@@ -200,4 +203,28 @@ void adc_process(void) {
 
 
 
+void adc_test(void){
+    while(1){
+        console_clear();
+        debug("ADC TEST  BAT: ");
+        debug_put_fixed2(adc_get_battery_voltage());
+        debug(" V\n");
+        uint32_t i;
+        adc_process();
+        for(i=0; i<ADC_CHANNEL_COUNT; i++){
+            debug_put_uint8(i+0); debug_putc('=');
+            debug_put_hex16(adc_get_channel(i+0));
+            if (i&1){
+                debug_put_newline();
+            }else{
+                debug(" ");
+            }
+        }
+        console_render();
+        led_button_r_toggle();
+
+        //delay_us(10*1000);
+        delay_ms(100);
+    }
+}
 

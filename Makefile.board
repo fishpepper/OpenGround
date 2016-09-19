@@ -1,5 +1,5 @@
 # object files
-DRIVER_SRCS   = system_stm32f0xx.c stm32f0xx_gpio.c stm32f0xx_rcc.c stm32f0xx_adc.c stm32f0xx_dma.c stm32f0xx_tim.c 
+DRIVER_SRCS   = system_stm32f0xx.c stm32f0xx_gpio.c stm32f0xx_rcc.c stm32f0xx_adc.c stm32f0xx_dma.c stm32f0xx_tim.c stm32f0xx_i2c.c stm32f0xx_exti.c stm32f0xx_syscfg.c stm32f0xx_misc.c
 BOARD_SRCS    = $(DRIVER_SRCS) $(GENERIC_SRCS)
 
 #crystal frequency

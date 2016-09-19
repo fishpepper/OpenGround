@@ -79,3 +79,5 @@ sound.c
 sound.h
 timeout.c
 timeout.h
+touch.c
+touch.h

@@ -18,6 +18,9 @@
 #include "io.h"
 #include "debug.h"
 #include "config.h"
+#include "console.h"
+#include "led.h"
+#include "delay.h"
 #include  "stm32f0xx_rcc.h"
 
 
@@ -33,7 +36,7 @@ void io_init_gpio(void) {
     RCC_AHBPeriphClockCmd(POWERDOWN_GPIO_CLK, ENABLE);
 
     //set high:
-    POWERDOWN_GPIO->BSRR = (POWERDOWN_PIN); 
+    POWERDOWN_GPIO->BSRR = (POWERDOWN_PIN);
 
     //set pin as output
     gpio_init.GPIO_Pin   = POWERDOWN_PIN;
@@ -45,5 +48,23 @@ void io_init_gpio(void) {
 }
 
 void io_powerdown(void){
-    POWERDOWN_GPIO->BRR = (POWERDOWN_PIN); 
+    POWERDOWN_GPIO->BRR = (POWERDOWN_PIN);
 }
+
+void io_powerdown_test(void){
+    uint8_t countdown = 10;
+    while(1){
+        debug("power down in ");
+        debug_put_uint8(countdown--);
+        debug("s\n");
+
+        console_render();
+        delay_us(1000*1000);
+        led_button_r_toggle();
+
+        if(countdown == 0){
+            io_powerdown();
+        }
+    }
+}
+
