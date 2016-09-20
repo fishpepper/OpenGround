@@ -81,3 +81,4 @@ timeout.c
 timeout.h
 touch.c
 touch.h
+fonts/tomthumb3x5.h

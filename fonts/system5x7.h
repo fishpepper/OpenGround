@@ -1,7 +1,8 @@
+/*
+ * based on the openglcd system 5x7 font
+ */
 #ifndef __FONT_SYSTEM5x7_H__
 #define __FONT_SYSTEM5x7_H__
-
-//based on openglcd font
 
 #include <stdint.h>
 
@@ -11,9 +12,9 @@ const uint8_t font_system5x7 [] = {
     0x07, // height
     0x20, // first char
     0x61, // char count
-    
-    // Fixed width; char width table not used !!!!
-    
+
+    // Fixed width; char width table not used
+
     // font data
     0x00, 0x00, 0x00, 0x00, 0x00,// (space)
     0x00, 0x00, 0x5F, 0x00, 0x00,// !
@@ -112,7 +113,7 @@ const uint8_t font_system5x7 [] = {
     0x08, 0x08, 0x2A, 0x1C, 0x08,// ->
     0x08, 0x1C, 0x2A, 0x08, 0x08, // <-
     0x00, 0x06, 0x09, 0x09, 0x06 // degree symbol
-    
+
 };
 
 #endif

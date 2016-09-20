@@ -56,7 +56,7 @@
 #define NVIC_PRIO_SYSTICK    0
 
 //touch
-#define TOUCH_FT6236_I2C_ADDRESS      0x38
+#define TOUCH_FT6236_I2C_ADDRESS      0x70
 #define TOUCH_I2C                     I2C1
 #define TOUCH_I2C_CLK                 RCC_APB1Periph_I2C1
 #define TOUCH_I2C_GPIO_CLK            RCC_AHBPeriph_GPIOB

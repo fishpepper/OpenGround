@@ -31,6 +31,7 @@ void io_init(void) {
 
 void io_init_gpio(void) {
     GPIO_InitTypeDef gpio_init;
+    GPIO_StructInit(&gpio_init);
 
     // clock enable
     RCC_AHBPeriphClockCmd(POWERDOWN_GPIO_CLK, ENABLE);

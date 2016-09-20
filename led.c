@@ -19,6 +19,7 @@
 
 void led_init(void) {
     GPIO_InitTypeDef gpio_init;
+    GPIO_StructInit(&gpio_init);
 
     // clock enable
     RCC_AHBPeriphClockCmd(LED_BACKLIGHT_GPIO_CLK, ENABLE);

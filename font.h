@@ -16,5 +16,6 @@
 #define font_is_nopad_fixed_font(_f)  ((_f[FONT_LENGTH] == 0) && (_f[FONT_LENGTH+1] == 1))
 
 extern const uint8_t font_system5x7[];
+extern const uint8_t font_tomthumb3x5[];
 
 #endif // __FONT_H__

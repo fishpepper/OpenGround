@@ -4,13 +4,13 @@
 #include "lcd.h"
 #include <stdint.h>
 
-#define SCREEN_BUFFER_SIZE ((LCD_WIDTH * LCD_HEIGHT) / 8) 
+#define SCREEN_BUFFER_SIZE ((LCD_WIDTH * LCD_HEIGHT) / 8)
 static uint8_t screen_buffer[SCREEN_BUFFER_SIZE];
 
 void screen_init(void);
 void screen_clear(void);
 void screen_update(void);
-
+void screen_test(void);
 
 void screen_fill_round_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t radius, uint8_t color);
 void screen_fill_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
@@ -49,8 +49,8 @@ void screen_fill(uint8_t color);
   }else{ \
     screen_buffer[((y)/8)*128 + (x)] &= ~(1<<((y)%8)); \
   } \
-} 
-        
+}
+
 
 #endif //__SCREEN__H_
 

@@ -26,7 +26,7 @@
 #include "stm32f0xx_exti.h"
 #include "stm32f0xx_syscfg.h"
 
-#define TOUCH_I2C_DEBUG 1
+#define TOUCH_I2C_DEBUG         0
 #define TOUCH_I2C_TIMEOUT      20
 #define TOUCH_I2C_FLAG_TIMEOUT 10
 
@@ -37,7 +37,14 @@ void touch_init(void) {
 
     touch_deinit_i2c();
     touch_init_i2c_rcc();
+
+    //free bus with pulse train
+    touch_init_i2c_free_bus();
+
     touch_init_i2c_gpio();
+    touch_init_i2c_mode();
+
+
     touch_ft6236_init();
 
     touch_init_isr();
@@ -50,40 +57,36 @@ static void touch_deinit_i2c(void){
 }
 
 static void touch_init_i2c_rcc(void) {
-    // peripheral clock for i2c
-    RCC_APB1PeriphClockCmd(TOUCH_I2C_CLK, ENABLE);
+    //I2C CLK source
+    RCC_I2CCLKConfig(RCC_I2C1CLK_HSI);
+
     // gpio clocks
     RCC_AHBPeriphClockCmd(TOUCH_I2C_GPIO_CLK, ENABLE);
     RCC_AHBPeriphClockCmd(TOUCH_INT_GPIO_CLK, ENABLE);
     RCC_AHBPeriphClockCmd(TOUCH_RESET_GPIO_CLK, ENABLE);
 
-    RCC_I2CCLKConfig(RCC_I2C1CLK_HSI);
+    // peripheral clock for i2c
+    RCC_APB1PeriphClockCmd(TOUCH_I2C_CLK, ENABLE);
 }
 
 static void touch_init_i2c_gpio(void) {
     GPIO_InitTypeDef gpio_init;
-
-    //free bus with pulse train
-    touch_init_i2c_free_bus();
-
-    //init mode before setting to AF
-    touch_init_i2c_mode();
-
     GPIO_StructInit(&gpio_init);
 
     //set up alternate function
     GPIO_PinAFConfig(TOUCH_I2C_GPIO, GPIO_PinSource8, GPIO_AF_1);
     GPIO_PinAFConfig(TOUCH_I2C_GPIO, GPIO_PinSource9, GPIO_AF_1);
 
-    //SDA & SCL
-    gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN;
+    //SCL
+    gpio_init.GPIO_Pin   = TOUCH_I2C_SCL_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_AF;
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     gpio_init.GPIO_OType = GPIO_OType_OD;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
 
-    gpio_init.GPIO_Pin   = TOUCH_I2C_SCL_PIN;
+    //SDA
+    gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN;
     GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
 
     //INT pin
@@ -101,8 +104,6 @@ static void touch_init_i2c_gpio(void) {
     gpio_init.GPIO_OType = GPIO_OType_PP;
     gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
     GPIO_Init(TOUCH_RESET_GPIO, &gpio_init);
-
-
 }
 
 static void touch_init_isr(void) {
@@ -151,6 +152,7 @@ void EXTI4_15_IRQHandler(void) {
             debug_flush();
         }else{
             //fine, touch data arrived, process
+            //debug_put_newline(); debug_put_hex8(buf.gest_id);debug_put_newline();
             if (buf.gest_id & TOUCH_FT6236_GESTURE_MOVE_FLAG){
                 //gesture for us! -> overwrite clicks
                 touch_event.event_id = (buf.gest_id & 0x0F) + 1;
@@ -174,28 +176,27 @@ void EXTI4_15_IRQHandler(void) {
 }
 
 static void touch_init_i2c_free_bus(void) {
-    GPIO_InitTypeDef gpio_init;
     uint8_t i;
-
-    debug("touch: freeing i2c bus w clock train\n");
-    debug_flush();
-
-
+    GPIO_InitTypeDef gpio_init;
     GPIO_StructInit(&gpio_init);
 
+    debug("touch: freeing i2c bus\n");
+    debug_flush();
 
     //gpio init:
     // reset i2c bus by setting clk as output and sending manual clock pulses
     gpio_init.GPIO_Pin   = TOUCH_I2C_SCL_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
+    gpio_init.GPIO_OType = GPIO_OType_PP;
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
 
     gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_IN;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio_init.GPIO_OType = GPIO_OType_OD;
+    gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
+    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
 
     //send 100khz clock train for some 100ms
@@ -214,7 +215,7 @@ static void touch_init_i2c_free_bus(void) {
     //send stop condition:
     gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
     GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
 
     //clock is low
@@ -226,19 +227,23 @@ static void touch_init_i2c_free_bus(void) {
     //clock goes high
     TOUCH_I2C_GPIO->BSRR = TOUCH_I2C_SCL_PIN;
     delay_us(10);
+    //sda = hi
+    TOUCH_I2C_GPIO->BRR = TOUCH_I2C_SDA_PIN;
+    delay_us(10);
 }
 
 static void touch_init_i2c_mode(void) {
     I2C_InitTypeDef  i2c_init;
-
     I2C_StructInit(&i2c_init);
+
     i2c_init.I2C_Mode          = I2C_Mode_I2C;
-    i2c_init.I2C_Timing        = 0x50330309; // 400KHz | 8MHz-0x00310309; 16MHz-0x10320309; 48MHz-50330309
     i2c_init.I2C_AnalogFilter  = I2C_AnalogFilter_Enable;
     i2c_init.I2C_DigitalFilter = 0x00;
     i2c_init.I2C_OwnAddress1   = 0x00;
     i2c_init.I2C_Ack           = I2C_Ack_Enable;
     i2c_init.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+    // 400KHz | 8MHz-0x00310309; 16MHz-0x10320309; 48MHz-50330309
+    i2c_init.I2C_Timing        = 0x50330309;
 
     //apply I2C configuration
     I2C_Init(TOUCH_I2C, &i2c_init);
@@ -270,9 +275,7 @@ static void touch_ft6236_init(void) {
     }
 
     //show debug info:
-    if (TOUCH_I2C_DEBUG){
-        touch_ft6236_debug_info();
-    }
+    touch_ft6236_debug_info();
 }
 
 static uint8_t touch_i2c_read_byte(uint8_t reg) {
@@ -380,7 +383,7 @@ static uint32_t touch_i2c_read(uint8_t address, uint8_t *data, uint8_t len){
 
         //store data
         data[i] = I2C_ReceiveData(TOUCH_I2C);
-        if (TOUCH_I2C_DEBUG) debug("\nrx 0x"); debug_put_hex8(data[i]); debug_flush();
+        //if (TOUCH_I2C_DEBUG) debug("\nrx 0x"); debug_put_hex8(data[i]); debug_flush();
 
      }
 

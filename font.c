@@ -19,3 +19,5 @@
 //include fonts here and add an extern definition to font.h
 //DO NOT include them elsewhere
 #include "fonts/system5x7.h"
+#include "fonts/tomthumb3x5.h"
+

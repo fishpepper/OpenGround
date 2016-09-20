@@ -43,6 +43,7 @@ static void lcd_init_rcc(void) {
 
 static void lcd_init_gpio(void) {
     GPIO_InitTypeDef gpio_init;
+    GPIO_StructInit(&gpio_init);
 
     // set all gpio directions to output
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;

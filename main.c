@@ -27,13 +27,19 @@ int main(void) {
     sound_init();
     touch_init();
 
+    //screen_test();
+    touch_test();
 
     led_on();
     debug("main: starting loop\n"); debug_flush();
+
+
     while(1){
         //adc_test();
         //io_powerdown_test();
-        touch_test();
+        //debug("ABCDEFGHIJKLMN\ni   .   !\n"); debug_flush();
+        //while(1);
+        //
     }
 
 }

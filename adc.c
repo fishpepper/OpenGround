@@ -71,8 +71,8 @@ static void adc_init_rcc(void) {
 static void adc_init_gpio(void) {
     debug("adc: init gpio\n"); debug_flush();
 
-
     GPIO_InitTypeDef gpio_init;
+    GPIO_StructInit(&gpio_init);
 
     // set up analog inputs ADC0...ADC7 (PA0...PA7)
     gpio_init.GPIO_Pin  = 0b11111111;
@@ -111,6 +111,7 @@ static void adc_init_mode(void) {
 
 
     ADC_InitTypeDef adc_init;
+    ADC_StructInit(&adc_init);
 
     //ADC configuration
     adc_init.ADC_ContinuousConvMode   = ENABLE; //! select continuous conversion mode
@@ -159,6 +160,7 @@ static void adc_init_dma(void) {
     debug("adc: init dma\n"); debug_flush();
 
     DMA_InitTypeDef  dma_init;
+    DMA_StructInit(&dma_init);
 
     //reset DMA1 channe1 to default values
     DMA_DeInit(ADC_DMA_CHANNEL);

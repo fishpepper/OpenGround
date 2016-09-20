@@ -40,11 +40,27 @@ void screen_update(void) {
     lcd_send_data(screen_buffer, SCREEN_BUFFER_SIZE);
 }
 
+void screen_test(void) {
+    uint32_t x,y;
+    while(1){
+        for(x=0; x<64; x++){
+            screen_clear();
+            screen_puts_xy( 0, x+0, 1, "0 ABC");
+            screen_puts_xy(30, x+1, 1, "1 ABC");
+            screen_puts_xy(60, x+2, 1, "2 ABC");
+            screen_puts_xy(90, x+3, 1, "3 ABC");
+            screen_update();
+            delay_ms(500);
+
+        }
+    }
+}
+
 void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color){
     uint8_t deltax, deltay, x,y, steep;
     int8_t error, ystep;
 
-    steep = _screen_absDiff(y1,y2) > _screen_absDiff(x1,x2);  
+    steep = _screen_absDiff(y1,y2) > _screen_absDiff(x1,x2);
 
     if (steep) {
         _screen_swap(x1, y1);
@@ -57,7 +73,7 @@ void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t co
     }
 
     deltax = x2 - x1;
-    deltay =_screen_absDiff(y2,y1);  
+    deltay =_screen_absDiff(y2,y1);
     error = deltax / 2;
     y = y1;
 
@@ -69,7 +85,7 @@ void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t co
 
     for(x = x1; x <= x2; x++){
         if (steep){
-            screen_set_dot(y,x, color); 
+            screen_set_dot(y,x, color);
         }else{
             screen_set_dot(x,y, color);
         }
@@ -84,13 +100,13 @@ void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t co
 
 
 // set pixels from upper left edge x,y to lower right edge x1,y1 to the given color
-// the width of the region is x1-x + 1, height is y1-y+1 
+// the width of the region is x1-x + 1, height is y1-y+1
 void screen_set_pixels(uint8_t x, uint8_t y,uint8_t x2, uint8_t y2, uint8_t color){
     uint8_t mask, pageOffset, h, i, data;
     uint8_t height = y2-y+1;
     uint8_t width = x2-x+1;
     uint16_t dpos = 0;
-        
+
     pageOffset = y%8;
     y -= pageOffset;
     mask = 0xFF;
@@ -125,7 +141,7 @@ void screen_set_pixels(uint8_t x, uint8_t y,uint8_t x2, uint8_t y2, uint8_t colo
         dpos++;
         }
     }
-    
+
     if(h < height){
         mask = ~(0xFF << (height-h));
         dpos = (y/8+1)*128 + x;
@@ -135,7 +151,7 @@ void screen_set_pixels(uint8_t x, uint8_t y,uint8_t x2, uint8_t y2, uint8_t colo
         }else{
             screen_buffer[dpos] &= ~mask;
         }
-        dpos++;      
+        dpos++;
         }
     }
 }
@@ -150,17 +166,17 @@ void screen_draw_hline(uint8_t x, uint8_t y, uint8_t width, uint8_t color){
 
 void screen_draw_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color){
     //top
-    screen_draw_hline(x, y, width, color);    
-    // bottom    
-    screen_draw_hline(x, y+height-1, width, color);   
+    screen_draw_hline(x, y, width, color);
+    // bottom
+    screen_draw_hline(x, y+height-1, width, color);
     // left
-    screen_draw_vline(x, y, height, color);   
+    screen_draw_vline(x, y, height, color);
     // right
     screen_draw_vline(x+width-1, y, height, color);   // right
 }
 
 void screen_draw_round_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t radius, uint8_t color){
-    int16_t tSwitch; 
+    int16_t tSwitch;
     uint8_t x1 = 0, y1 = radius;
     tSwitch = 3 - 2 * radius;
 
@@ -189,7 +205,7 @@ void screen_draw_round_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height,
         }
         x1++;
     }
-        
+
     screen_draw_hline(x+radius, y, width-(2*radius), color);      // top
     screen_draw_hline(x+radius, y+height-1, width-(2*radius), color); // bottom
     screen_draw_vline(x, y+radius, height-(2*radius), color);     // left
@@ -201,10 +217,10 @@ void screen_fill_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8
 }
 
 void screen_fill_round_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t radius, uint8_t color){
-    int16_t tSwitch; 
+    int16_t tSwitch;
     uint8_t x1 = 0, y1 = radius;
     tSwitch = 3 - 2 * radius;
-    
+
     // center block
     // filling center block first makes it apear to fill faster
     screen_fill_rect(x+radius, y, width-2*radius, height, color);
@@ -249,7 +265,7 @@ uint8_t screen_put_char(uint8_t c){
     uint8_t charCount  = screen_font_ptr[FONT_CHAR_COUNT];
     uint32_t index     = 0;
     uint32_t i;
-    
+
     if(c < firstChar || c >= (firstChar+charCount)){
         return 0; // invalid char
     }
@@ -258,7 +274,7 @@ uint8_t screen_put_char(uint8_t c){
 
     if(font_is_fixed_width(screen_font_ptr)){
         thielefont = 0;
-        width = screen_font_ptr[FONT_FIXED_WIDTH]; 
+        width = screen_font_ptr[FONT_FIXED_WIDTH];
         index = c*bytes*width+FONT_WIDTH_TABLE;
     }else{
         // variable width font, read width data, to get the index
@@ -285,7 +301,6 @@ uint8_t screen_put_char(uint8_t c){
         * The index is then adjusted to skip over the font width data
         * and the font header information.
         */
-
         index = index*bytes+charCount+FONT_WIDTH_TABLE;
 
         /*
@@ -307,14 +322,14 @@ uint8_t screen_put_char(uint8_t c){
     * This is very different from simply reading 1 byte of font data
     * and writing all 8 bits to LCD memory and expecting the write data routine
     * to fragement the 8 bits across LCD 2 memory pages when necessary.
-    * That method (really doesn't work) and reads and writes the same LCD page 
+    * That method (really doesn't work) and reads and writes the same LCD page
     * more than once as well as not do sequential writes to memory.
     *
-    * This method of rendering while much more complicated, somewhat scrambles the font 
+    * This method of rendering while much more complicated, somewhat scrambles the font
     * data reads to ensure that all writes to LCD pages are always sequential and a given LCD
     * memory page is never read or written more than once.
     * And reads of LCD pages are only done at the top or bottom of the font data rendering
-    * when necessary. 
+    * when necessary.
     * i.e it ensures the absolute minimum number of LCD page accesses
     * as well as does the sequential writes as much as possible.
     *
@@ -339,12 +354,12 @@ uint8_t screen_put_char(uint8_t c){
 
         //Align to proper Column and page in LCD memory
         uint32_t screen_dpos = ((dy & ~7)/8)*128 + screen_font_x;
-        
+
         uint32_t page = p/8 * width; // page must be 16 bit to prevent overflow
 
         /* each column of font data */
         for(j=0; j<width; j++){
-            
+
             /*
             * Fetch proper byte of font data.
             * Note:
@@ -442,7 +457,7 @@ uint8_t screen_put_char(uint8_t c){
                     * so it is one less then it should be. We add 1 to the 8
                     * to account for this.
                     */
-                    
+
                     if((thielefont) && ((height - tfp) < (8+1))){
                         fdata >>= (8 - (height & 7));
                     }
@@ -497,7 +512,7 @@ uint8_t screen_put_char(uint8_t c){
                 }
 
                 if(!screen_font_color){
-                    dbyte |= ~mask; 
+                    dbyte |= ~mask;
                 }else{
                     dbyte &= mask;
                 }
@@ -509,7 +524,8 @@ uint8_t screen_put_char(uint8_t c){
                 }
             }
 
-            screen_buffer_write(screen_dpos, dbyte);
+            //does not work with 3x5 font?!
+            if (width != 3) screen_buffer_write(screen_dpos, dbyte);
         }
         /*
         * advance the font pixel for the pixels
@@ -540,7 +556,7 @@ void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str){
     screen_font_x = x;
     screen_font_y = y;
     screen_font_color = color;
-    
+
     while(*str){
         screen_put_char(*str);
         str++;

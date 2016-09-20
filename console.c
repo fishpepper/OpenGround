@@ -41,12 +41,19 @@ void console_clear(void) {
 }
 
 static void console_render_str(uint8_t line, uint8_t color, uint8_t *str){
-    const uint8_t *font = font_system5x7;
+    const uint8_t *font = CONSOLE_FONT;
+
     screen_set_font(font);
 
     //write string to screen at position x,y
     uint8_t height = font[FONT_HEIGHT];
-    uint8_t y = (height+1) * line;
+
+    #if (CONSOLE_FONT_HEIGHT == 5)
+    //center image for 5px height font TODO: make this universal
+    uint8_t y = (height+1) * line + 2;
+    #else
+    uint8_t y = (height+1) * line + 0;
+    #endif
 
     //render to screen buffer
     screen_puts_xy(1, y, color, str);
@@ -102,11 +109,11 @@ void console_render(void) {
     uint8_t line_now = console_write_y;
     if (console_write_x == 0){
         //no chars on next line, use previous line!
-        line_now--;
+        //line_now--;
     }
 
     //calculate first line to print:
-    uint8_t line = (line_now + 1) % CONSOLE_BUFFER_SIZE_Y;
+    uint8_t line = (line_now+1) % CONSOLE_BUFFER_SIZE_Y;
     for(i=0; i<CONSOLE_BUFFER_SIZE_Y; i++){
         //print current line
         console_render_str(i, color, console_buffer[line]);

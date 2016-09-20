@@ -18,22 +18,24 @@
 #include <stdint.h>
 #include "debug.h"
 #include "led.h"
+#include "delay.h"
 
 void assert_failed(uint8_t* filename, uint32_t line){
     //todo: add own implementation to report the file name and line number,
     //eg  : printf("Wrong parameters value: file %s on line %d\r\n", file, line)
     if (debug_is_initialized()) {
-        debug("assert failed: ");
+        debug("!ASSERT: ");
         debug(filename);
-        debug(" line ");
+        debug("\n         l ");
         debug_put_uint16(line);
         debug_put_newline();
-
         debug_flush();
     }
 
     //infinite loop
-    led_on();
-    while (1){}
+    while (1){
+        led_toggle();
+        delay_us(50*1000);
+    }
 }
 
