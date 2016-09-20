@@ -19,6 +19,7 @@
 #include "delay.h"
 #include "debug.h"
 #include "timeout.h"
+#include "lcd.h"
 #include "stm32f0xx_gpio.h"
 #include "stm32f0xx_rcc.h"
 #include "stm32f0xx_misc.h"
@@ -412,7 +413,10 @@ touch_event_t touch_get_and_clear_last_event(void){
 void touch_test(void){
     debug("TOUCH TEST\n");
     debug_flush();
-    while(1){
+    //powerdown in 10seconds
+    uint32_t delay = 20;
+    uint32_t powerdown_counter = 10*(1000/delay);
+    while(powerdown_counter--){
         touch_event_t t = touch_get_and_clear_last_event();
         if (t.event_id){
             //detected touch event!
@@ -449,6 +453,10 @@ void touch_test(void){
             debug_put_newline();
             debug_flush();
         }
-        delay_ms(20);
+        delay_ms(delay);
     }
+    debug("will power down now\n"); debug_flush();
+
+    lcd_powerdown();
+    io_powerdown();
 }

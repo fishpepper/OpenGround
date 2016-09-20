@@ -10,7 +10,7 @@ static void lcd_init_rcc(void);
 static void lcd_reset(void);
 static void lcd_write_command(uint8_t data);
 void lcd_send_data(uint8_t *buf, uint32_t len);
-
+void lcd_powerdown(void);
 
 #define LCD_RW_HI()   { LCD_RW_GPIO->BSRR = (LCD_RW_PIN);  }
 #define LCD_RW_LO()   { LCD_RW_GPIO->BRR  = (LCD_RW_PIN); }
@@ -56,7 +56,7 @@ void lcd_send_data(uint8_t *buf, uint32_t len);
 #define LCD_CMD_SET_STARTLINE    0x40
 #define LCD_CMD_SET_PAGESTART    0xB0
 
-#define LCD_CMD_SET_COL_LO       0x00    
+#define LCD_CMD_SET_COL_LO       0x00
 #define LCD_CMD_SET_COL_HI       0x10
 
 #define LCD_CMD_DISPLAY_OFF      0xAE

@@ -31,6 +31,7 @@ void lcd_init(void) {
     lcd_reset();
 }
 
+
 static void lcd_init_rcc(void) {
     // enable all peripheral clocks:
     RCC_AHBPeriphClockCmd(LCD_DATA_GPIO_CLK, ENABLE);
@@ -105,6 +106,19 @@ static void lcd_write_command(uint8_t data) {
     LCD_CS_HI();
 }
 
+
+void lcd_powerdown(void) {
+    //switch display off
+    lcd_write_command(LCD_CMD_DISPLAY_OFF);
+
+    //all pixels on
+    lcd_write_command(LCD_CMD_MODE_ALLBLACK);
+
+    //wait
+    delay_ms(250);
+
+    //power off
+}
 
 static void lcd_reset(void) {
     //wait for voltages to be stable
