@@ -17,7 +17,7 @@ int main(void) {
     delay_init();
     led_init();
     io_init();
-    //io_test_prepare();
+
     led_on();
     lcd_init();
     screen_init();
@@ -30,7 +30,7 @@ int main(void) {
 
     //screen_test();
     touch_test();
-    io_test();
+
 
     led_on();
     debug("main: starting loop\n"); debug_flush();
