@@ -20,6 +20,7 @@
 #include "debug.h"
 #include "timeout.h"
 #include "lcd.h"
+#include "io.h"
 #include "stm32f0xx_gpio.h"
 #include "stm32f0xx_rcc.h"
 #include "stm32f0xx_misc.h"
@@ -145,28 +146,32 @@ static void touch_init_isr(void) {
 void EXTI4_15_IRQHandler(void) {
     if(EXTI_GetITStatus(TOUCH_INT_EXTI_SOURCE_LINE) != RESET){
         //interrupt (falling edge) on Touch INT line, event detected!
-        touch_ft6236_packet_t buf;
-        uint32_t res = touch_i2c_read(0x00, (uint8_t *)&buf, sizeof(buf));
+        if (touch_event.event_id == 0){
+            //last event was picked up, store new one
+            touch_ft6236_packet_t buf;
+            uint32_t res = touch_i2c_read(0x00, (uint8_t *)&buf, sizeof(buf));
 
-        if (!res){
-            debug("touch: error rd touchdata\n");
-            debug_flush();
-        }else{
-            //fine, touch data arrived, process
-            //debug_put_newline(); debug_put_hex8(buf.gest_id);debug_put_newline();
-            if (buf.gest_id & TOUCH_FT6236_GESTURE_MOVE_FLAG){
-                //gesture for us! -> overwrite clicks
-                touch_event.event_id = (buf.gest_id & 0x0F) + 1;
-                touch_event.x = 0;
-                touch_event.y = 0;
+            if (!res){
+                debug("touch: error rd touchdata\n");
+                debug_flush();
             }else{
-                //process clicks:
-                uint32_t touch_count = buf.touches & 0xf;
-                if (touch_count > 0) {
-                    //always use first touch point
-                    touch_event.event_id = TOUCH_GESTURE_CLICK;
-                    touch_event.x = (buf.points[0].xhi & 0x0F)<<8 | (buf.points[0].xlo);
-                    touch_event.y = (buf.points[0].yhi & 0x0F)<<8 | (buf.points[0].ylo);
+                //fine, touch data arrived, process
+                //debug_put_newline(); debug_put_hex8(buf.gest_id);debug_put_newline();
+                if (buf.gest_id & TOUCH_FT6236_GESTURE_MOVE_FLAG){
+                    //gesture for us! -> overwrite clicks
+                    touch_event.event_id = (buf.gest_id & 0x0F) + 1;
+                    touch_event.x = 0;
+                    touch_event.y = 0;
+                }else{
+                    //process clicks:
+                    uint32_t touch_count = buf.touches & 0xf;
+                    if (touch_count > 0) {
+                        //always use first touch point
+                        uint8_t ev = buf.points[0].event >> 6;
+                        touch_event.event_id = TOUCH_GESTURE_MOUSE_DOWN + ev;
+                        touch_event.x = (buf.points[0].xhi & 0x0F)<<8 | (buf.points[0].xlo);
+                        touch_event.y = (buf.points[0].yhi & 0x0F)<<8 | (buf.points[0].ylo);
+                    }
                 }
             }
         }
@@ -420,7 +425,7 @@ void touch_test(void){
         touch_event_t t = touch_get_and_clear_last_event();
         if (t.event_id){
             //detected touch event!
-            debug("touch: event ");
+            uint32_t ev_valid = 1;
             switch(t.event_id){
                 default:
                     debug("UNKNOWN 0x");
@@ -443,15 +448,24 @@ void touch_test(void){
                     debug("RIGHT!");
                     break;
 
-                case(TOUCH_GESTURE_CLICK):
+                case(TOUCH_GESTURE_MOUSE_DOWN):
                     debug("CLICK ");
                     debug_put_uint16(t.x);
                     debug_putc(' ');
                     debug_put_uint16(t.y);
                     break;
+
+                case(TOUCH_GESTURE_MOUSE_UP):
+                case(TOUCH_GESTURE_MOUSE_MOVE):
+                case(TOUCH_GESTURE_MOUSE_NONE):
+                    //ignore those for now
+                    ev_valid = 0;
+                    break;
             }
-            debug_put_newline();
-            debug_flush();
+            if (ev_valid){
+                debug_put_newline();
+                debug_flush();
+            }
         }
         delay_ms(delay);
     }

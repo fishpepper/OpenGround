@@ -48,24 +48,50 @@ void io_init_gpio(void) {
     GPIO_Init(POWERDOWN_GPIO, &gpio_init);
 }
 
-void io_powerdown(void){
-    POWERDOWN_GPIO->BRR = (POWERDOWN_PIN);
+
+void io_test_prepare(void){
+    //sett all ios to input
+    GPIO_InitTypeDef gpio_init;
+    GPIO_StructInit(&gpio_init);
+    gpio_init.GPIO_Pin   = 0xFFFF;
+    gpio_init.GPIO_Mode  = GPIO_Mode_IN;
+    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
+
+    GPIO_Init(GPIOA, &gpio_init);
+    GPIO_Init(GPIOB, &gpio_init);
+    GPIO_Init(GPIOC, &gpio_init);
+    GPIO_Init(GPIOD, &gpio_init);
+    GPIO_Init(GPIOE, &gpio_init);
+    GPIO_Init(GPIOF, &gpio_init);
 }
 
-void io_powerdown_test(void){
-    uint8_t countdown = 10;
+//show status of all gpios on screen
+void io_test(void){
+    uint32_t i,p;
     while(1){
-        debug("power down in ");
-        debug_put_uint8(countdown--);
-        debug("s\n");
-
-        console_render();
-        delay_us(1000*1000);
-        led_button_r_toggle();
-
-        if(countdown == 0){
-            io_powerdown();
+        console_clear();
+        debug("GPIO TEST\n\n");
+        debug("       FEDCBA9876543210\n");
+        for(p=0; p<6; p++){
+            debug("GPIO");
+            debug_putc('A'+p);
+            debug("  ");
+            for(i=0; i<16; i++){
+                if (GPIO_ReadInputDataBit(((GPIO_TypeDef *) (GPIOA_BASE + p*0x00000400)), (1<<i))){
+                    debug_putc('1');
+                }else{
+                    debug_putc('0');
+                }
+            }
+            debug_put_newline();
         }
+        debug_flush();
+        delay_ms(50);
     }
+}
+
+void io_powerdown(void){
+    POWERDOWN_GPIO->BRR = (POWERDOWN_PIN);
 }
 
