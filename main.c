@@ -12,6 +12,7 @@
 #include "adc.h"
 #include "sound.h"
 #include "touch.h"
+#include "cc2500.h"
 
 int main(void) {
     delay_init();
@@ -27,6 +28,7 @@ int main(void) {
     timeout_init();
     sound_init();
     touch_init();
+    cc2500_init();
 
     //screen_test();
     touch_test();

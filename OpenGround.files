@@ -82,3 +82,7 @@ timeout.h
 touch.c
 touch.h
 fonts/tomthumb3x5.h
+cc2500.c
+cc2500.h
+spi.c
+spi.h

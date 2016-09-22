@@ -78,7 +78,7 @@ void io_test(void){
             debug_putc('A'+p);
             debug("  ");
             for(i=0; i<16; i++){
-                if (GPIO_ReadInputDataBit(((GPIO_TypeDef *) (GPIOA_BASE + p*0x00000400)), (1<<i))){
+                if (GPIO_ReadInputDataBit(((GPIO_TypeDef *) (GPIOA_BASE + p*0x00000400)), (1<<(15-i)))){
                     debug_putc('1');
                 }else{
                     debug_putc('0');
