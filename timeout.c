@@ -23,6 +23,7 @@
 #include "stm32f0xx_rcc.h"
 
 volatile static __IO uint32_t timeout_100us;
+volatile static __IO uint32_t timeout2_100us;
 volatile static __IO uint32_t timeout_100us_delay;
 
 void timeout_init(void) {
@@ -40,6 +41,7 @@ void timeout_init(void) {
     //SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
 
     timeout_100us = 0;
+    timeout2_100us = 0;
     timeout_100us_delay = 0;
 }
 
@@ -47,8 +49,21 @@ void timeout_set_100us(__IO uint32_t hus) {
     timeout_100us = hus;
 }
 
+void timeout2_set_100us(__IO uint32_t hus) {
+    timeout2_100us = hus;
+}
+
 uint8_t timeout_timed_out(void) {
     return (timeout_100us == 0);
+}
+
+uint8_t timeout2_timed_out(void) {
+    return (timeout2_100us == 0);
+}
+
+void timeout2_delay_100us(uint16_t us){
+    timeout2_set_100us(us);
+    while(!timeout2_timed_out()){}
 }
 
 
@@ -63,6 +78,9 @@ void timeout_delay_ms(uint32_t timeout){
 void SysTick_Handler(void){
     if (timeout_100us != 0){
         timeout_100us--;
+    }
+    if (timeout2_100us != 0){
+        timeout2_100us--;
     }
     if (timeout_100us_delay != 0){
         timeout_100us_delay--;

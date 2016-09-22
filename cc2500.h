@@ -18,6 +18,9 @@ void cc2500_enter_txmode(void);
 #define cc2500_rx_sleep() { delay_us(1352); }
 #define cc2500_tx_sleep() { delay_us(1250); }
 
+#define cc2500_csn_lo() { CC2500_SPI_GPIO->BRR  = (CC2500_SPI_CSN_PIN); delay_us(1); }
+#define cc2500_csn_hi() { delay_us(1); CC2500_SPI_GPIO->BSRR = (CC2500_SPI_CSN_PIN); }
+
 // not used on d4rii
 #define cc2500_disable_rf_interrupt() {}
 #define cc2500_setup_rf_dma(mode) {}
@@ -161,15 +164,7 @@ uint8_t cc2500_transmission_completed(void);
 #define PA_TABLE0  0x3E
 
 // FIFO
-#define CC25XX_FIFO     0x3F
-
-
-#endif // __CC2500_H__
-
-#ifndef __CC25XX_H__
-#define __CC25XX_H__
-
-#include "cc2500.h"
+#define CC2500_FIFO     0x3F
 
 extern uint8_t cc25xx_current_antenna;
 

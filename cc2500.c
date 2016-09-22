@@ -86,61 +86,60 @@ inline uint32_t cc2500_set_antenna(uint8_t id){
 }
 #endif
 
-#if 0
 inline void cc2500_set_gdo_mode(void) {
-    CC2500_set_register(IOCFG0, 0x01); //6);
-    //CC2500_set_register(IOCFG1, ???);
-    CC2500_set_register(IOCFG2, 0x01); //6);
+    cc2500_set_register(IOCFG0, 0x01); //6);
+    //cc2500_set_register(IOCFG1, ???);
+    cc2500_set_register(IOCFG2, 0x01); //6);
 }
 
 inline void cc2500_set_register(uint8_t address, uint8_t data){
     //select device
-    hal_spi_csn_lo();
+    cc2500_csn_lo();
 
     //wait for ready signal
     while(GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1){}
 
-    hal_spi_tx(address);
-    hal_spi_tx(data);
+    spi_tx(address);
+    spi_tx(data);
 
     //deslect
-    hal_spi_csn_hi();
+    cc2500_csn_hi();
 }
 
 inline uint8_t cc2500_get_register(uint8_t address){
     uint8_t result;
 
     //select device:
-    hal_spi_csn_lo();
+    cc2500_csn_lo();
 
     //wait for RDY signal:
     while(GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1){}
 
     //request address (read request has bit7 set)
-    uint8_t status = hal_spi_tx(address | 0x80);
+    uint8_t status = spi_tx(address | 0x80);
     //debug_put_hex8(status);
 
     //fetch result:
-    result = hal_spi_rx();
+    result = spi_rx();
 
     //deselect device
-    hal_spi_csn_hi();
+    cc2500_csn_hi();
 
     //return result
     return(result);
 }
 
 inline void cc2500_strobe(uint8_t address){
-    hal_spi_csn_lo();
-    uint8_t status = hal_spi_tx(address);
+    cc2500_csn_lo();
+    uint8_t status = spi_tx(address);
     //debug("s"); debug_put_hex8(status); debug_put_newline();
-    hal_spi_csn_hi();
+    cc2500_csn_hi();
 }
 
 inline uint8_t cc2500_get_status(void) {
-    hal_spi_csn_lo();
-    uint8_t status = hal_spi_tx(0xFF);
-    hal_spi_csn_hi();
+    cc2500_csn_lo();
+    uint8_t status = spi_tx(0xFF);
+    cc2500_csn_hi();
     return status;
 }
 
@@ -155,7 +154,7 @@ inline void cc2500_enter_txmode(void) {
     //add pa/lna config bit setting here
     CC2500_LNA_SW_CRX_GPIO->BRR  = (CC2500_LNA_SW_CRX_PIN); //0
     delay_us(20);
-    CC2500_LNA_SW_CTX_GPIO->BSRR = (CC2500_ANT_SW_CTX_PIN); //1
+    CC2500_LNA_SW_CTX_GPIO->BSRR = (CC2500_LNA_SW_CTX_PIN); //1
     delay_us(5);
 }
 
@@ -180,44 +179,45 @@ inline void cc2500_read_fifo(uint8_t *buf, uint8_t len){
 
 inline void cc2500_register_read_multi(uint8_t address, uint8_t *buffer, uint8_t len){
     // select device:
-    hal_spi_csn_lo();
+    cc2500_csn_lo();
 
     // wait for ready signal
     while(GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1){}
 
     //debug("read "); debug_put_uint8(len); debug_flush();
     // request address (read request)
-    uint8_t status = hal_spi_tx(address);
+    uint8_t status = spi_tx(address);
 
     //fill buffer with read commands:
     memset(buffer, 0xFF, len);
 
-    hal_spi_dma_xfer(buffer, len);
+    spi_dma_xfer(buffer, len);
     /*
     while(len--){
-        *buf = hal_spi_rx();
+        *buf = spi_rx();
         buf++;
     }*/
 
     // deselect device
-    hal_spi_csn_hi();
+    cc2500_csn_hi();
 }
+
 
 inline void cc2500_register_write_multi(uint8_t address, uint8_t *buffer, uint8_t len){
     //s elect device:
-    hal_spi_csn_lo();
+    cc2500_csn_lo();
 
     // wait for RDY signal:
     while(GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1){}
 
     //request address (write request)
-    hal_spi_tx(address | BURST_FLAG);
+    spi_tx(address | BURST_FLAG);
 
     // send array
-    hal_spi_dma_xfer(buffer, len);
+    spi_dma_xfer(buffer, len);
 
     //deselect device
-    hal_spi_csn_hi();
+    cc2500_csn_hi();
 }
 
 inline void cc2500_process_packet(volatile uint8_t *packet_received, volatile uint8_t *buffer, uint8_t maxlen){
@@ -270,46 +270,8 @@ void cc2500_transmit_packet(volatile uint8_t *buffer, uint8_t len) {
     //and send!
     cc2500_strobe(RFST_STX);
 }
-/*
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-   author: fishpepper <AT> gmail.com
-*/
-
-#include "cc25xx.h"
-#include "debug.h"
-#include "timeout.h"
-
-uint8_t CC2500_current_antenna;
-
-void CC2500_init(void) {
-    debug("cc25xx: init\n"); debug_flush();
-    CC2500_current_antenna = 0;
-    cc2500_init();
-    cc2500_set_antenna(CC2500_current_antenna);
-}
-
-void CC2500_switch_antenna(void) {
-    // switch to next antenna
-    if (CC2500_current_antenna) {
-        CC2500_current_antenna = cc2500_set_antenna(0);
-    }else{
-        CC2500_current_antenna = cc2500_set_antenna(1);
-    }
-}
-
-void CC2500_wait_for_transmission_complete(void) {
+void cc2500_wait_for_transmission_complete(void) {
     //after STX we go back to RX state (see MCSM1 register)
     //so wait a maximum of 9ms for completion
     timeout2_set_100us(90);
@@ -324,4 +286,3 @@ void CC2500_wait_for_transmission_complete(void) {
     //if we reach this point, tx timed out:
     debug("!TX");
 }
-#endif

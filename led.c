@@ -33,7 +33,7 @@ void led_init(void) {
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     GPIO_Init(LED_BACKLIGHT_GPIO, &gpio_init);
 
-    gpio_init.GPIO_Pin   = LED_BUTTON_R_PIN;
+    gpio_init.GPIO_Pin   = LED_BUTTON_R_PIN | LED_BUTTON_L_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
     gpio_init.GPIO_OType = GPIO_OType_PP;
     gpio_init.GPIO_Speed = GPIO_Speed_50MHz;

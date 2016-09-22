@@ -13,6 +13,7 @@
 #include "sound.h"
 #include "touch.h"
 #include "cc2500.h"
+#include "frsky.h"
 
 int main(void) {
     delay_init();
@@ -29,6 +30,7 @@ int main(void) {
     sound_init();
     touch_init();
     cc2500_init();
+    frsky_init();
 
     //screen_test();
     touch_test();

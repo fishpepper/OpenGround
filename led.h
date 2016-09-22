@@ -13,6 +13,10 @@ void led_init(void);
 #define led_button_r_off()  { LED_BUTTON_R_GPIO->BRR = (LED_BUTTON_R_PIN); }
 #define led_button_r_toggle(){ LED_BUTTON_R_GPIO->BSRR = (LED_BUTTON_R_GPIO->ODR ^ LED_BUTTON_R_PIN) | (LED_BUTTON_R_PIN << 16);}
 
+#define led_button_l_on() { LED_BUTTON_L_GPIO->BSRR = (LED_BUTTON_L_PIN); }
+#define led_button_l_off()  { LED_BUTTON_L_GPIO->BRR = (LED_BUTTON_L_PIN); }
+#define led_button_l_toggle(){ LED_BUTTON_L_GPIO->BSRR = (LED_BUTTON_L_GPIO->ODR ^ LED_BUTTON_L_PIN) | (LED_BUTTON_L_PIN << 16);}
+
 
 #endif //__LED__H_
 

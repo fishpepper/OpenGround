@@ -3,7 +3,7 @@
 
 #include <stdint.h>
 #include "main.h"
-#include "hal_cc25xx.h"
+#include "cc2500.h"
 
 #define FRSKY_HOPTABLE_SIZE 47
 
@@ -11,25 +11,25 @@
 #define FRSKY_COUNT_RXSTATS 50
 
 //
-//extern EXTERNAL_MEMORY uint8_t frsky_txid[2];
-//extern EXTERNAL_MEMORY uint8_t frsky_hop_table[FRSKY_HOPTABLE_SIZE];
-//extern EXTERNAL_MEMORY int8_t frsky_freq_offset;
-extern EXTERNAL_MEMORY uint8_t frsky_current_ch_idx;
-extern EXTERNAL_MEMORY uint8_t frsky_diversity_count;
+//extern uint8_t frsky_txid[2];
+//extern uint8_t frsky_hop_table[FRSKY_HOPTABLE_SIZE];
+//extern int8_t frsky_freq_offset;
+extern uint8_t frsky_current_ch_idx;
+extern uint8_t frsky_diversity_count;
 //rssi
-extern EXTERNAL_MEMORY uint8_t frsky_rssi;
-extern EXTERNAL_MEMORY uint8_t frsky_link_quality;
+extern uint8_t frsky_rssi;
+extern uint8_t frsky_link_quality;
 //pll calibration
-extern EXTERNAL_MEMORY uint8_t frsky_calib_fscal1_table[FRSKY_HOPTABLE_SIZE];
-extern EXTERNAL_MEMORY uint8_t frsky_calib_fscal2;
-extern EXTERNAL_MEMORY uint8_t frsky_calib_fscal3;
-//extern EXTERNAL_MEMORY int16_t frsky_freq_offset_acc;
+extern uint8_t frsky_calib_fscal1_table[FRSKY_HOPTABLE_SIZE];
+extern uint8_t frsky_calib_fscal2;
+extern uint8_t frsky_calib_fscal3;
+//extern int16_t frsky_freq_offset_acc;
 
 #define FRSKY_PACKET_LENGTH 17
 #define FRSKY_PACKET_BUFFER_SIZE (FRSKY_PACKET_LENGTH+3)
-extern EXTERNAL_MEMORY volatile uint8_t frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE];
-extern EXTERNAL_MEMORY volatile uint8_t frsky_packet_received;
-extern EXTERNAL_MEMORY volatile uint8_t frsky_packet_sent;
+extern volatile uint8_t frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE];
+extern volatile uint8_t frsky_packet_received;
+extern volatile uint8_t frsky_packet_sent;
 
 
 void frsky_init(void);
