@@ -26,6 +26,7 @@
 
 
 void spi_init(void) {
+    debug("spi: init\n"); debug_flush();
     spi_init_rcc();
     spi_init_gpio();
     spi_init_mode();
@@ -57,6 +58,9 @@ static void spi_init_mode(void) {
     spi_init.SPI_FirstBit  = SPI_FirstBit_MSB;
     spi_init.SPI_CRCPolynomial = 7;
     SPI_Init(CC2500_SPI, &spi_init);
+
+    //Set fifo to quarter full (=1 byte)
+    SPI_RxFIFOThresholdConfig(CC2500_SPI, SPI_RxFIFOThreshold_QF);
 }
 
 
@@ -173,7 +177,7 @@ static void spi_init_gpio(void) {
 
     // configure MISO pin as Input floating
     gpio_init.GPIO_Pin  = CC2500_SPI_MISO_PIN;
-    gpio_init.GPIO_Mode = GPIO_Mode_IN;
+    gpio_init.GPIO_Mode = GPIO_Mode_AF;
     GPIO_Init(CC2500_SPI_GPIO, &gpio_init);
 
     // configure CSN as Push-Pull
@@ -185,14 +189,16 @@ static void spi_init_gpio(void) {
 }
 
 uint8_t spi_tx(uint8_t address){
+    //debug("spi: tx 0x"); debug_put_hex8(address); debug_put_newline(); debug_flush();
     // wait for SPI Tx buffer empty
     while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_TXE) == RESET);
     // send SPI data
     SPI_SendData8(CC2500_SPI, address);
 
     // read response
-    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_RXNE) == RESET);
+    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_RXNE) != SET);
     uint8_t result = SPI_ReceiveData8(CC2500_SPI);
+    //debug("spi: rx 0x"); debug_put_hex8(result); debug_put_newline(); debug_flush();
     return result;
 }
 

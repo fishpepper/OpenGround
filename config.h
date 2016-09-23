@@ -80,7 +80,15 @@
 #define TOUCH_INT_EXTI_SOURCE_LINE    EXTI_Line12
 #define TOUCH_INT_EXTI_IRQN           EXTI4_15_IRQn
 
-//cc2500 module
+//cc2500 module connection
+//SI = SDIO
+//SCK = SCK
+//MISO = GD1
+//GDO2 = GDO2
+//GDO0 = RF1
+//CSN = SCS
+//PA_EN = TX = TXW
+//LNA_EN = RX = RXW
 #define CC2500_SPI_GPIO             GPIOE
 //LABELED SCK
 #define CC2500_SPI_SCK_PIN          GPIO_Pin_13
@@ -91,10 +99,8 @@
 //LABELED GIO1
 #define CC2500_SPI_MISO_PIN         GPIO_Pin_14
 #define CC2500_SPI_MISO_PINSOURCE   GPIO_PinSource14
-//LABELED SCS
-#define CC2500_SPI_CSN_PIN          GPIO_Pin_4
-//LABELED RF1
-#define CC2500_SPI_GDO2_PIN         GPIO_Pin_11
+//LABELED RF2
+#define CC2500_SPI_CSN_PIN          GPIO_Pin_10
 #define CC2500_SPI                  SPI1
 #define CC2500_SPI_CLK              RCC_APB2Periph_SPI1
 #define CC2500_SPI_GPIO_CLK         RCC_AHBPeriph_GPIOE
@@ -104,20 +110,28 @@
 #define CC2500_SPI_RX_DMA_CHANNEL   DMA1_Channel2
 #define CC2500_SPI_RX_DMA_TC_FLAG   DMA1_FLAG_TC2
 
+
+//LABELED RF1
+#define CC2500_GDO1_PIN            GPIO_Pin_11
+#define CC2500_GDO1_GPIO           GPIOE
+#define CC2500_GDO1_GPIO_CLK       RCC_AHBPeriph_GPIOE
+
 //LABELED RX-W
-#define CC2500_LNA_SW_CTX_GPIO     GPIOE
-#define CC2500_LNA_SW_CTX_GPIO_CLK RCC_AHBPeriph_GPIOE
-#define CC2500_LNA_SW_CTX_PIN      GPIO_Pin_8
+#define CC2500_LNA_GPIO     GPIOE
+#define CC2500_LNA_GPIO_CLK RCC_AHBPeriph_GPIOE
+#define CC2500_LNA_PIN      GPIO_Pin_8
 
 //LABELED TX_W
-#define CC2500_LNA_SW_CRX_GPIO     GPIOE
-#define CC2500_LNA_SW_CRX_GPIO_CLK RCC_AHBPeriph_GPIOE
-#define CC2500_LNA_SW_CRX_PIN      GPIO_Pin_8
+#define CC2500_PA_GPIO     GPIOE
+#define CC2500_PA_GPIO_CLK RCC_AHBPeriph_GPIOE
+#define CC2500_PA_PIN      GPIO_Pin_9
 
 //LABELED GIO2
 #define CC2500_GDO2_GPIO           GPIOB
 #define CC2500_GDO2_PIN            GPIO_Pin_2
 #define CC2500_GDO2_GPIO_CLK       RCC_AHBPeriph_GPIOB
+
+
 
 
 

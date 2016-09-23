@@ -28,7 +28,7 @@ void wdt_init(void) {
         RCC_ClearFlag();
     }
 
-    // set iwdg timeout to roughly 1000ms (varies due to LSI freq dispersion)
+    // set wdg timeout to roughly 1000ms (varies due to LSI freq dispersion)
     uint32_t timeout_ms = 1000;
 
     // enable write access to IWDG_PR and IWDG_RLR registers

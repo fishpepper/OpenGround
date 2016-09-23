@@ -29,7 +29,7 @@ int main(void) {
     timeout_init();
     sound_init();
     touch_init();
-    cc2500_init();
+
     frsky_init();
 
     //screen_test();

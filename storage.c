@@ -22,7 +22,7 @@
 #include "led.h"
 #include "frsky.h"
 
-
+//http://www.st.com/content/ccc/resource/technical/document/application_note/2e/d4/65/6b/87/dd/40/25/DM00049914.pdf/files/DM00049914.pdf/jcr:content/translations/en.DM00049914.pdf
 //run time copy of persistant storage data:
 STORAGE_DESC storage;
 
@@ -58,7 +58,7 @@ void storage_read_from_flash(void){
     storage_ptr = (uint8_t*)&storage;
     len = sizeof(storage);
 
-    hal_storage_read(storage_ptr, len);
+    storage_read(storage_ptr, len);
 
 #ifdef FRSKY_USE_FIXED_ID
     //allow overrid for testing
@@ -95,6 +95,16 @@ void storage_write_to_flash(void){
     len = sizeof(storage);
 
     //execute flash write:
-    hal_storage_write(storage_ptr, len);
+    storage_write(storage_ptr, len);
 }
+
+
+void storage_write(uint8_t *buffer, uint16_t len){
+
+}
+
+void storage_read(uint8_t *storage_ptr, uint16_t len){
+
+}
+
 

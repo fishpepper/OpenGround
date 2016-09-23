@@ -34,7 +34,7 @@
 ///#include "sbus.h"
 
 //this will make binding not very reliable, use for debugging only!
-#define FRSKY_DEBUG_BIND_DATA 1
+#define FRSKY_DEBUG_BIND_DATA 0
 #define FRSKY_DEBUG_HOPTABLE 1
 
 //hop data & config
@@ -104,6 +104,8 @@ void frsky_init(void){
 
 
 void frsky_show_partinfo(void) {
+    debug("frsky: partinfo\n"); debug_flush();
+
     uint8_t partnum, version;
     //start idle
     cc2500_strobe(RFST_SIDLE);
