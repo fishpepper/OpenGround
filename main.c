@@ -18,7 +18,7 @@
 #include "wdt.h"
 
 int main(void) {
-    wdt_init();
+    //wdt_init();
     delay_init();
     led_init();
     io_init();
@@ -36,7 +36,7 @@ int main(void) {
     frsky_init();
 
     //screen_test();
-    touch_test();
+    //touch_test();
 
 
     led_on();

@@ -643,7 +643,7 @@ void frsky_calib_pll(void){
     debug("\nfrsky: calib fscal1 = ");
     for(i=0; i<FRSKY_HOPTABLE_SIZE; i++){
         debug_put_hex8(frsky_calib_fscal1_table[i]);
-        debug_putc(' ');
+        //debug_putc(' ');
         debug_flush();
     }
     debug("\nfrsky: calib fscal2 = 0x");
@@ -740,6 +740,7 @@ void frsky_main(void){
                 debug_put_uint8(percent_ok);
                 debug_putc('%');
                 debug_put_newline();
+                debug_flush();
 
                 //for testing
                 //debug_put_uint16((uint16_t)(((frsky_packet_buffer[11] & 0x0F)<<8 | frsky_packet_buffer[8])));
@@ -762,8 +763,6 @@ void frsky_main(void){
                 hopcount = 1;
                 stat_rxcount = 0;
             }
-
-            debug_flush();
 
             //led_button_r_off();
 
