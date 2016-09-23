@@ -736,7 +736,7 @@ void frsky_main(void){
             if (hopcount++ >= FRSKY_COUNT_RXSTATS){
                 uint16_t percent_ok;
                 debug(" STATS: ");
-                percent_ok = (((uint16_t)stat_rxcount) * 100) / 50;
+                percent_ok = (((uint16_t)stat_rxcount) * 100) / FRSKY_COUNT_RXSTATS;
                 debug_put_uint8(percent_ok);
                 debug_putc('%');
                 debug_put_newline();

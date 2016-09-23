@@ -36,7 +36,7 @@ int main(void) {
     frsky_init();
 
     //screen_test();
-    //touch_test();
+    touch_test();
 
 
     led_on();
