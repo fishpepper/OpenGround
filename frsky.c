@@ -170,7 +170,7 @@ void frsky_configure(void){
     cc2500_set_register(TEST2    ,0x88);
     cc2500_set_register(TEST1    ,0x31);
     cc2500_set_register(TEST0    ,0x0B);
-    //???FIFOTHR  = 0x07);
+    //cc2500_set_register(FIFOTHR  ,0x07);
     cc2500_set_register(ADDR     ,0x00);
 
     //for now just append status

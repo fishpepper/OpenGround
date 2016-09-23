@@ -8,7 +8,7 @@
 #define FRSKY_HOPTABLE_SIZE 47
 
 //#define FRSKY_COUNT_RXSTATS 100
-#define FRSKY_COUNT_RXSTATS 50
+#define FRSKY_COUNT_RXSTATS 20
 
 //
 //extern uint8_t frsky_txid[2];

@@ -54,7 +54,7 @@ static void spi_init_mode(void) {
     spi_init.SPI_CPOL      = SPI_CPOL_Low;
     spi_init.SPI_CPHA      = SPI_CPHA_1Edge;
     spi_init.SPI_NSS       = SPI_NSS_Soft;
-    spi_init.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_8; //3mhz
+    spi_init.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16; //3mhz(!)
     spi_init.SPI_FirstBit  = SPI_FirstBit_MSB;
     spi_init.SPI_CRCPolynomial = 7;
     SPI_Init(CC2500_SPI, &spi_init);
