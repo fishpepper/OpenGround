@@ -22,6 +22,7 @@
 #include "led.h"
 #include "frsky.h"
 
+#define FRSKY_USE_FIXED_ID 1
 //http://www.st.com/content/ccc/resource/technical/document/application_note/2e/d4/65/6b/87/dd/40/25/DM00049914.pdf/files/DM00049914.pdf/jcr:content/translations/en.DM00049914.pdf
 //run time copy of persistant storage data:
 STORAGE_DESC storage;

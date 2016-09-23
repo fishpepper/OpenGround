@@ -131,7 +131,7 @@
 #define CC2500_GDO2_PIN            GPIO_Pin_2
 #define CC2500_GDO2_GPIO_CLK       RCC_AHBPeriph_GPIOB
 
-
+#define DEFAULT_FSCAL_VALUE -7
 
 
 

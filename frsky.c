@@ -180,7 +180,7 @@ void frsky_configure(void){
 
 uint8_t frsky_bind_jumper_set(void){
     debug("frsky: BIND jumper set = "); debug_flush();
-    if (1) { //io_bind_request()){
+    if (0) { //io_bind_request()){
         debug("YES -> binding\n");
         return 1;
     }else{
@@ -363,6 +363,7 @@ void frsky_autotune(void){
         if (!done){
             debug_putc('-');
         }
+        debug_flush();
     }
 
     //set offset to what we found out to be the best:
@@ -387,7 +388,8 @@ void frsky_autotune(void){
     delay_ms(1);
     cc2500_strobe(RFST_SRX);
 
-    debug("frsky: autotune done. offset=");
+    debug("frsky: autotune done\n");
+    debug("frsky: offset=");
     debug_put_int8(storage.frsky_freq_offset);
     debug_put_newline();
     debug_flush();
@@ -465,6 +467,7 @@ void frsky_handle_overflows(void) {
 
 
 void frsky_fetch_txid_and_hoptable(void){
+    debug("frsky: fetching txid + hopt\n"); debug_flush();
     uint16_t hopdata_received = 0;
     uint8_t index;
     uint8_t i;
@@ -550,7 +553,7 @@ void frsky_fetch_txid_and_hoptable(void){
                     storage.frsky_txid[0] = frsky_packet_buffer[3];
                     storage.frsky_txid[1] = frsky_packet_buffer[4];
                     //debug
-                    debug("frsky: got txid 0x");
+                    debug("\nfrsky: got txid 0x");
                     debug_put_hex8(storage.frsky_txid[0]);
                     debug_put_hex8(storage.frsky_txid[1]);
                     debug_put_newline();
@@ -579,6 +582,7 @@ void frsky_fetch_txid_and_hoptable(void){
                 frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE-1] = 0x00;
             }
         }
+        debug_flush();
     }
 
 #if FRSKY_DEBUG_BIND_DATA
@@ -588,8 +592,9 @@ void frsky_fetch_txid_and_hoptable(void){
         debug_putc(' ');
         debug_flush();
     }
-    debug_putc('\n');
 #endif
+    debug_putc('\n');
+    debug_flush();
 
     //idle
     cc2500_strobe(RFST_SIDLE);
@@ -757,6 +762,8 @@ void frsky_main(void){
                 hopcount = 1;
                 stat_rxcount = 0;
             }
+
+            debug_flush();
 
             //led_button_r_off();
 

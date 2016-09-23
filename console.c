@@ -107,14 +107,13 @@ void console_render(void) {
     //update screen memory to show the current line buffer
     //we want the current line to be at the bottom, calculate first line to render:
     uint8_t line_now = console_write_y;
-    if (console_write_x == 0){
-        //no chars on next line, use previous line!
-        //line_now--;
+    if (console_buffer[line_now][0] != 0){
+        line_now++;
     }
 
     //calculate first line to print:
     uint8_t line = (line_now+1) % CONSOLE_BUFFER_SIZE_Y;
-    for(i=0; i<CONSOLE_BUFFER_SIZE_Y; i++){
+    for(i=0; i<CONSOLE_BUFFER_SIZE_Y-1; i++){
         //print current line
         console_render_str(i, color, console_buffer[line]);
         //fetch next line id

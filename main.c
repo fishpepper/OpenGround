@@ -14,8 +14,11 @@
 #include "touch.h"
 #include "cc2500.h"
 #include "frsky.h"
+#include "storage.h"
+#include "wdt.h"
 
 int main(void) {
+    wdt_init();
     delay_init();
     led_init();
     io_init();
@@ -29,7 +32,7 @@ int main(void) {
     timeout_init();
     sound_init();
     touch_init();
-
+    storage_init();
     frsky_init();
 
     //screen_test();
@@ -38,7 +41,7 @@ int main(void) {
 
     led_on();
     debug("main: starting loop\n"); debug_flush();
-
+    frsky_main();
 
     while(1){
         //adc_test();
