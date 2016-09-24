@@ -81,7 +81,7 @@ void gui_loop(void){
     uint32_t powerdown_counter = 10*(1000/delay);
 
     //this is the main GUI loop. rf stuff is done inside an ISR
-    while(1){ //powerdown_counter--){
+    while(powerdown_counter--){
         //process adc values
         adc_process();
 
