@@ -75,14 +75,31 @@ static void gui_process_touch(void){
     }
 }
 
-void gui_handle_buttons(void){
+void gui_handle_button_powerdown(void){
     if (io_powerbutton_pressed()){
         gui_shutdown_pressed++;
     }else{
         gui_shutdown_pressed = 0;
     }
+
+    //shutdown animation for leds:
+    if (gui_shutdown_pressed > GUI_SHUTDOWN_PRESS_COUNT_FROM_MS(200)){
+        //if pressed longer than 500ms, do shutdown blinking
+        if ((gui_shutdown_pressed / GUI_SHUTDOWN_PRESS_COUNT_FROM_MS(200)) & 1){
+            led_button_l_on();
+            led_button_r_off();
+        }else{
+            led_button_l_off();
+            led_button_r_on();
+        }
+    }
+
     debug_put_uint16(gui_shutdown_pressed);
     debug_put_newline();
+}
+
+void gui_handle_buttons(void){
+    gui_handle_button_powerdown();
 }
 
 void gui_loop(void){
