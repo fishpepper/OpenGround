@@ -33,19 +33,27 @@ void io_init_gpio(void) {
     GPIO_InitTypeDef gpio_init;
     GPIO_StructInit(&gpio_init);
 
-    // clock enable
+    //enable clocks
     RCC_AHBPeriphClockCmd(POWERDOWN_GPIO_CLK, ENABLE);
+    RCC_AHBPeriphClockCmd(BUTTON_POWER_BOTH_GPIO_CLK, ENABLE);
 
     //set high:
     POWERDOWN_GPIO->BSRR = (POWERDOWN_PIN);
 
-    //set pin as output
+    //set powerdown trigger pin as output
     gpio_init.GPIO_Pin   = POWERDOWN_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
     gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     GPIO_Init(POWERDOWN_GPIO, &gpio_init);
+
+    //set buttons as input:
+    gpio_init.GPIO_Pin   = BUTTON_POWER_BOTH_PIN;
+    gpio_init.GPIO_Mode  = GPIO_Mode_IN;
+    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
+    gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
+    GPIO_Init(BUTTON_POWER_BOTH_GPIO, &gpio_init);
 }
 
 
@@ -64,6 +72,10 @@ void io_test_prepare(void){
     GPIO_Init(GPIOD, &gpio_init);
     GPIO_Init(GPIOE, &gpio_init);
     GPIO_Init(GPIOF, &gpio_init);
+}
+
+uint32_t io_powerbutton_pressed(void){
+    return (GPIO_ReadInputDataBit(BUTTON_POWER_BOTH_GPIO, BUTTON_POWER_BOTH_PIN) == 0);
 }
 
 //show status of all gpios on screen

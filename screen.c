@@ -20,6 +20,7 @@ author: fishpepper <AT> gmail.com
 #include "screen.h"
 #include "font.h"
 #include "delay.h"
+#include "led.h"
 
 static uint8_t screen_buffer[SCREEN_BUFFER_SIZE];
 static const uint8_t *screen_font_ptr;
@@ -29,6 +30,7 @@ static uint8_t  screen_font_color;
 
 void screen_init(void) {
     screen_clear();
+    led_backlight_on();
 }
 
 void screen_clear(void) {
@@ -50,8 +52,8 @@ void screen_test(void) {
             screen_puts_xy(60, x+2, 1, "2 ABC");
             screen_puts_xy(90, x+3, 1, "3 ABC");
             screen_update();
-            delay_ms(500);
 
+            delay_ms(100);
         }
     }
 }

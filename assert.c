@@ -33,8 +33,11 @@ void assert_failed(uint8_t* filename, uint32_t line){
     }
 
     //infinite loop
+    led_button_r_off();
+    led_button_l_on();
     while (1){
-        led_toggle();
+        led_button_r_toggle();
+        led_button_l_toggle();
         delay_us(50*1000);
     }
 }

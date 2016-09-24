@@ -29,16 +29,19 @@ void led_init(void) {
     gpio_init.GPIO_Pin   = LED_BACKLIGHT_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
     gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
+    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     GPIO_Init(LED_BACKLIGHT_GPIO, &gpio_init);
 
-    gpio_init.GPIO_Pin   = LED_BUTTON_R_PIN | LED_BUTTON_L_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
+    gpio_init.GPIO_Pin   = LED_BUTTON_R_PIN;
     GPIO_Init(LED_BUTTON_R_GPIO, &gpio_init);
 
+
+    gpio_init.GPIO_Pin   = LED_BUTTON_L_PIN;
+    GPIO_Init(LED_BUTTON_L_GPIO, &gpio_init);
+
+    led_button_l_on();
+    led_button_r_on();
+    led_backlight_off();
 }
 

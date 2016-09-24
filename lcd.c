@@ -62,7 +62,6 @@ static void lcd_init_gpio(void) {
     //gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     //gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
 
-
     // rw
     gpio_init.GPIO_Pin   = LCD_RW_PIN;
     GPIO_Init(LCD_RW_GPIO, &gpio_init);
@@ -115,14 +114,19 @@ void lcd_powerdown(void) {
     lcd_write_command(LCD_CMD_MODE_ALLBLACK);
 
     //wait
-    delay_ms(250);
+    wdt_reset();
+    delay_ms(100);
+    wdt_reset();
+    delay_ms(100);
+    wdt_reset();
+    delay_ms(100);
 
     //power off
 }
 
 static void lcd_reset(void) {
     //wait for voltages to be stable
-    delay_us(1000*1000);
+    delay_ms(100);
 
     // trigger hw reset
     LCD_RST_LO();

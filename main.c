@@ -19,18 +19,18 @@
 #include "gui.h"
 
 int main(void) {
-    //wdt_init();
+    wdt_init();
     delay_init();
     led_init();
     io_init();
 
-    led_on();
+    timeout_init();
     lcd_init();
+
     screen_init();
     console_init();
     debug_init();
     adc_init();
-    timeout_init();
     sound_init();
     touch_init();
     storage_init();
@@ -39,9 +39,6 @@ int main(void) {
     //screen_test();
     //touch_test();
     gui_init();
-
-
-    led_on();
 
     debug("main: init done.\n"); debug_flush();
     //frsky_main();

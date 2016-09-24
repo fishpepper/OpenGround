@@ -7,6 +7,12 @@
 #define GUI_MAX_PAGE 3
 #define GUI_STATUSBAR_FONT font_tomthumb3x5
 
+
+#define GUI_LOOP_DELAY_MS 50
+#define GUI_SHUTDOWN_PRESS_S 5.0
+#define GUI_SHUTDOWN_PRESS_COUNT ((1000*GUI_SHUTDOWN_PRESS_S)/GUI_LOOP_DELAY_MS)
+
+
 void gui_init(void);
 void gui_loop(void);
 uint32_t gui_running(void);

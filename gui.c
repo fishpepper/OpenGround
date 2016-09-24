@@ -20,18 +20,21 @@
 #include "config.h"
 #include "console.h"
 #include "led.h"
+#include "io.h"
 #include "adc.h"
 #include "delay.h"
 #include "touch.h"
 #include "screen.h"
 
 
+static uint32_t gui_shutdown_pressed;
 static uint32_t gui_active = 0;
 static uint32_t gui_page;
 
 void gui_init(void){
     debug("gui: init\n"); debug_flush();
     gui_page = 1;
+    gui_shutdown_pressed = 0;
 }
 
 uint32_t gui_running(void){
@@ -72,18 +75,27 @@ static void gui_process_touch(void){
     }
 }
 
+void gui_handle_buttons(void){
+    if (io_powerbutton_pressed()){
+        gui_shutdown_pressed++;
+    }else{
+        gui_shutdown_pressed = 0;
+    }
+    debug_put_uint16(gui_shutdown_pressed);
+    debug_put_newline();
+}
+
 void gui_loop(void){
     debug("gui: entering main loop\n"); debug_flush();
     gui_active = 1;
 
-    //for now use this 60s timeout to shutdown. do proper button handling later
-    uint32_t delay = 60;
-    uint32_t powerdown_counter = 10*(1000/delay);
-
     //this is the main GUI loop. rf stuff is done inside an ISR
-    while(powerdown_counter--){
+    while(gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT){
         //process adc values
         adc_process();
+
+        //handle buttons
+        gui_handle_buttons();
 
         //handle touch gestures
         gui_process_touch();
@@ -91,11 +103,12 @@ void gui_loop(void){
         //render ui
         gui_render();
 
-        delay_ms(delay);
+        wdt_reset();
+        delay_ms(GUI_LOOP_DELAY_MS);
     }
 
-
     debug("will power down now\n"); debug_flush();
+    led_backlight_off();
     lcd_powerdown();
     io_powerdown();
 }

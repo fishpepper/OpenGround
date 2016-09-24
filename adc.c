@@ -226,6 +226,7 @@ void adc_test(void){
         led_button_r_toggle();
 
         //delay_us(10*1000);
+        wdt_reset();
         delay_ms(100);
     }
 }

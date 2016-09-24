@@ -9,4 +9,7 @@ void io_powerdown(void);
 void io_test_prepare(void);
 void io_test(void);
 
+uint32_t io_powerbutton_pressed(void);
+
+
 #endif // __IO_H__
