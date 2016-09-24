@@ -18,6 +18,7 @@
 #include "debug.h"
 #include "delay.h"
 #include "main.h"
+#include "gui.h"
 #include "console.h"
 #include <stdint.h>
 
@@ -43,7 +44,10 @@ void debug_flush(void){
     if (!debug_init_done){
         return;
     }
-    console_render();
+    if (!gui_running()){
+        //if gui is not yet active, render console now
+        console_render();
+    }
 }
 
 

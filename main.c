@@ -16,6 +16,7 @@
 #include "frsky.h"
 #include "storage.h"
 #include "wdt.h"
+#include "gui.h"
 
 int main(void) {
     //wdt_init();
@@ -36,12 +37,16 @@ int main(void) {
     frsky_init();
 
     //screen_test();
-    touch_test();
+    //touch_test();
+    gui_init();
 
 
     led_on();
-    debug("main: starting loop\n"); debug_flush();
-    frsky_main();
+
+    debug("main: init done.\n"); debug_flush();
+    //frsky_main();
+
+    gui_loop();
 
     while(1){
         //adc_test();

@@ -564,6 +564,50 @@ void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str){
 }
 
 
+void screen_put_fixed2(uint8_t x, uint8_t y, uint8_t color, uint16_t c){
+    uint8_t tmp;
+    uint8_t l=0;
+    tmp = 0;
+    screen_font_x = x;
+    screen_font_y = y;
+    screen_font_color = color;
+
+    while(c>=10000L){
+        c-=10000L;
+        tmp++;
+        l=1;
+    }
+    if (tmp != 0) screen_put_char('0' + tmp);
+
+    tmp = 0;
+    while(c>=1000L){
+        c-=1000L;
+        tmp++;
+        l=1;
+    }
+    if (l || (tmp != 0)) screen_put_char('0' + tmp);
+
+    tmp = 0;
+    while(c>=100){
+        c-=100;
+        tmp++;
+        l=1;
+    }
+    if (l || (tmp != 0)) screen_put_char('0' + tmp);
+
+    screen_put_char('.');
+
+    tmp = 0;
+    while(c>=10){
+        c-=10;
+        tmp++;
+        l=1;
+    }
+    if (l || (tmp != 0)) screen_put_char('0' + tmp);
+
+    screen_put_char('0' + (uint8_t)c);
+}
+
 void screen_set_font(const uint8_t *font) {
     screen_font_ptr = font;
 }
