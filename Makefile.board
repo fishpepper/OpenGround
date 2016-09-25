@@ -86,8 +86,11 @@ $(RESULT).elf: $(LINK_OBJS) $(STARTUP_OBJS)
 ALL_DEPS := $(patsubst %.c,%.d,$(BOARD_SRCS))
 -include $(ALL_DEPS)
 
+.hoptable.h: 
+	python ./generate_hoptable.py > .hoptable.h
+
 # compile and generate dependency info
-%.o: %.c $(HEADER_FILES)
+%.o: %.c $(HEADER_FILES) .hoptable.h
 	$(CC) -c $(CFLAGS) $< -o $@
 	$(CC) -MM -MP $(CFLAGS) $< > $@.d
 

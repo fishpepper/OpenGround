@@ -620,8 +620,10 @@ void frsky_calib_pll(void){
         ch = storage.frsky_hop_table[i];
 
         //debug info
-        debug_putc(' ');
-        debug_put_hex8(ch);
+        if (i<9){
+            debug_put_hex8(ch);
+            debug_putc(' ');
+        }
 
         //set channel number
         frsky_tune_channel(ch);
@@ -638,15 +640,14 @@ void frsky_calib_pll(void){
     //return to idle
     cc2500_strobe(RFST_SIDLE);
 
-    debug("frsky: calib fscal0 = ");
+    debug("...\nfrsky: calib fscal0 = ");
     debug_put_int8(storage.frsky_freq_offset);
-    debug("\nfrsky: calib fscal1 = ");
-    for(i=0; i<FRSKY_HOPTABLE_SIZE; i++){
+    debug("\nfrsky: calib fscal1:\n");
+    for(i=0; i<9; i++){
         debug_put_hex8(frsky_calib_fscal1_table[i]);
-        //debug_putc(' ');
-        debug_flush();
+        debug_putc(' ');
     }
-    debug("\nfrsky: calib fscal2 = 0x");
+    debug("...\nfrsky: calib fscal2 = 0x");
     debug_put_hex8(frsky_calib_fscal2);
     debug("\nfrsky: calib fscal3 = 0x");
     debug_put_hex8(frsky_calib_fscal3);

@@ -94,8 +94,8 @@ void gui_handle_button_powerdown(void){
         }
     }
 
-    debug_put_uint16(gui_shutdown_pressed);
-    debug_put_newline();
+    //debug_put_uint16(gui_shutdown_pressed);
+    //debug_put_newline();
 }
 
 void gui_handle_buttons(void){

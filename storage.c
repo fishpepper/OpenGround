@@ -21,6 +21,7 @@
 #include "delay.h"
 #include "led.h"
 #include "frsky.h"
+#include ".hoptable.h"
 
 #define FRSKY_USE_FIXED_ID 1
 //http://www.st.com/content/ccc/resource/technical/document/application_note/2e/d4/65/6b/87/dd/40/25/DM00049914.pdf/files/DM00049914.pdf/jcr:content/translations/en.DM00049914.pdf
@@ -38,20 +39,52 @@ void storage_init(void){
     //reload data from flash
     storage_read_from_flash();
 
-    debug("storage: loaded hoptable[] = ");
-    for(i=0; i<FRSKY_HOPTABLE_SIZE; i++){
-        debug_put_hex8(storage.frsky_hop_table[i]);
-        debug_putc(' ');
-        debug_flush();
+    if (storage.version != STORAGE_VERSION_ID){
+        debug("storage: corrupted! bad version\n"); debug_flush();
+        storage_load_defaults();
     }
-    debug_put_newline();
+
+    debug("storage: loaded hoptable[]:\n");
+    for(i=0; i<9; i++){
+            debug_put_hex8(storage.frsky_hop_table[i]);
+            debug_putc(' ');
+    }
+    debug("...\n");
+    debug("storage: txid 0x"); debug_put_hex16(storage.frsky_txid);
+    debug_flush();
+
 }
 
-void storage_init_memory(void){
+static void storage_load_defaults(void) {
+    uint8_t i;
+
+    debug("storage: reading defaults\n"); debug_flush();
+
+    static const uint8_t tmp[] = FRSKY_HOPTABLE;
+
+    //set valid version
+    storage.version = STORAGE_VERSION_ID;
+
+    //load values from .hoptable.h
+    storage.frsky_txid[0] = (FRSYK_TXID>>8) & 0xFF;
+    storage.frsky_txid[1] = FRSYK_TXID & 0xFF;
+
+    storage.frsky_freq_offset = FRSKY_DEFAULT_FSCAL_VALUE;
+
+    //copy hoptable
+    for(i=0; i<FRSKY_HOPTABLE_SIZE; i++){
+        storage.frsky_hop_table[i] = tmp[i];
+    }
+
+    //save changes
+    storage_write_to_flash();
+}
+
+static void storage_init_memory(void){
     //TODO
 }
 
-void storage_read_from_flash(void){
+static void storage_read_from_flash(void){
     uint8_t *storage_ptr;
     uint16_t len;
 
@@ -60,29 +93,6 @@ void storage_read_from_flash(void){
     len = sizeof(storage);
 
     storage_read(storage_ptr, len);
-
-#ifdef FRSKY_USE_FIXED_ID
-    //allow overrid for testing
-    debug("storage: using fixed id. ignoring storage content...\n");
-    {
-        uint8_t i;
-        static const uint8_t tmp[] = { 0x01, 0x42, 0x83, 0xC4, 0x1A, 0x5B, 0x9C, 0xDD, 0x33, 0x74, 0xB5, 0x0B,
-                                       0x4C, 0x8D, 0xCE, 0x24, 0x65, 0xA6, 0xE7, 0x3D, 0x7E, 0xBF, 0x15, 0x56,
-                                       0x97, 0xD8, 0x2E, 0x6F, 0xB0, 0x06, 0x47, 0x88, 0xC9, 0x1F, 0x60, 0xA1,
-                                       0xE2, 0x38, 0x79, 0xBA, 0x10, 0x51, 0x92, 0xD3, 0x29, 0x6A, 0xAB };
-
-        storage.version = 0xAB;
-        //hard coded config for debugging:
-        storage.frsky_txid[0] = 0x16;
-        storage.frsky_txid[1] = 0x68;
-        storage.frsky_freq_offset = DEFAULT_FSCAL_VALUE;
-
-        for(i=0; i<FRSKY_HOPTABLE_SIZE; i++){
-            storage.frsky_hop_table[i] = tmp[i];
-        }
-    }
-#endif
-
 }
 
 void storage_write_to_flash(void){
@@ -100,11 +110,11 @@ void storage_write_to_flash(void){
 }
 
 
-void storage_write(uint8_t *buffer, uint16_t len){
+static void storage_write(uint8_t *buffer, uint16_t len){
 
 }
 
-void storage_read(uint8_t *storage_ptr, uint16_t len){
+static void storage_read(uint8_t *storage_ptr, uint16_t len){
 
 }
 
