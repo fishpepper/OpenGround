@@ -131,9 +131,6 @@
 #define CC2500_GDO2_PIN            GPIO_Pin_2
 #define CC2500_GDO2_GPIO_CLK       RCC_AHBPeriph_GPIOB
 
-#define DEFAULT_FSCAL_VALUE -7
-
-
 #define BUTTON_POWER_BOTH_GPIO        GPIOB
 #define BUTTON_POWER_BOTH_GPIO_CLK    RCC_AHBPeriph_GPIOB
 #define BUTTON_POWER_BOTH_PIN         GPIO_Pin_14
