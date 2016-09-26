@@ -19,6 +19,7 @@
 #include "debug.h"
 #include "console.h"
 #include "led.h"
+#include "wdt.h"
 #include "delay.h"
 #include "stm32f0xx_rcc.h"
 #include "stm32f0xx_gpio.h"

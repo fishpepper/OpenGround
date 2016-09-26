@@ -1,6 +1,8 @@
 # object files
-DRIVER_SRCS   = system_stm32f0xx.c stm32f0xx_gpio.c stm32f0xx_rcc.c stm32f0xx_adc.c stm32f0xx_dma.c stm32f0xx_tim.c stm32f0xx_i2c.c stm32f0xx_exti.c stm32f0xx_syscfg.c stm32f0xx_misc.c stm32f0xx_spi.c stm32f0xx_iwdg.c
-BOARD_SRCS    = $(DRIVER_SRCS) $(GENERIC_SRCS)
+DRIVER_SRCS   = system_stm32f0xx.c stm32f0xx_gpio.c stm32f0xx_rcc.c stm32f0xx_adc.c stm32f0xx_dma.c stm32f0xx_tim.c stm32f0xx_i2c.c 
+DRIVER_SRCS  += stm32f0xx_exti.c stm32f0xx_syscfg.c stm32f0xx_misc.c stm32f0xx_spi.c stm32f0xx_iwdg.c stm32f0xx_flash.c
+EXTERNAL_SRCS = st_eeprom.c
+BOARD_SRCS    = $(DRIVER_SRCS) $(GENERIC_SRCS) $(EXTERNAL_SRCS)
 
 #crystal frequency
 CRYSTAL_FREQ = 12000000
@@ -22,6 +24,7 @@ CC=$(TOOLROOT)/arm-none-eabi-gcc
 LD=$(TOOLROOT)/arm-none-eabi-gcc
 AR=$(TOOLROOT)/arm-none-eabi-ar
 AS=$(TOOLROOT)/arm-none-eabi-as
+SIZE=$(TOOLROOT)/arm-none-eabi-size
 OBJ=$(TOOLROOT)/arm-none-eabi-objcopy
 OBJDUMP=$(TOOLROOT)/arm-none-eabi-objdump
 
@@ -35,9 +38,10 @@ PERIPH=peripheral_lib
 vpath %.c ./
 vpath %.c $(SELF_DIR)
 
-# Search path for perpheral library
+# Search path for peripheral library
 vpath %.c $(CORE)
 vpath %.c $(PERIPH)/src
+vpath %.c $(PERIPH)/eeprom_emulation/src
 vpath %.c $(DEVICE)
 vpath %.s $(DEVICE)
 
@@ -51,9 +55,9 @@ STARTUP_OBJS=$(STARTUP:%.s=%.o)
 FULLASSERT = -DUSE_FULL_ASSERT
 
 LDFLAGS+= -T$(LDSCRIPT) -mthumb -mcpu=cortex-m0
-CFLAGS+= -mcpu=cortex-m0 -mthumb 
+CFLAGS+= -mcpu=cortex-m0 -mthumb -Wl,-Map,$(RESULT).map
 CFLAGS+= -DHSE_VALUE=$(CRYSTAL_FREQ)
-CFLAGS+= -I$(DEVICE) -I$(CORE) -I$(PERIPH)/inc -I.
+CFLAGS+= -I$(DEVICE) -I$(CORE) -I$(PERIPH)/inc -I$(PERIPH)/eeprom_emulation/inc -I.
 CFLAGS+= -D$(PTYPE) -DUSE_STDPERIPH_DRIVER $(FULLASSERT) -DBUILD_TARGET=$(TARGET)
 
 OPENOCD_PIDFILE = /tmp/openocd_opensky.pid
@@ -64,7 +68,7 @@ HEADER_FILES  = $(wildcard $(SELF_DIR)/*.h)
 HEADER_FILES += $(wildcard ./*.h)
 
 # Build executable
-board: $(RESULT).elf 
+board: $(RESULT).elf size
 
 $(STARTUP_OBJS): $(STARTUP)
 	$(AS) -I $(DEVICE) -o $@ $<
@@ -97,6 +101,15 @@ ALL_DEPS := $(patsubst %.c,%.d,$(BOARD_SRCS))
 %.o: %.s
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) $< -o $@
 
+map: $(RESULT).elf
+	@$(MAP)  $(RESULT).elf
+
+size: $(RESULT).elf
+	@echo
+	@echo Memory usage:
+	@$(SIZE) $(RESULT).elf
+	@echo
+
 clean:
 	rm -f *.o *.d $(RESULT).elf $(RESULT).bin
 
@@ -105,6 +118,11 @@ debug: $(RESULT).elf
 	sleep 1
 	arm-none-eabi-gdb --eval-command="target remote localhost:3333" $(RESULT).elf
 	if [ -a $(OPENOCD_PIDFILE) ]; then kill `cat $(OPENOCD_PIDFILE)`; fi;
+
+erase : 
+	st-flash erase
+
+flasherase : erase flash
 
 flash : $(RESULT).bin
 	#if [ -a $(OPENOCD_PIDFILE) ]; then kill `cat $(OPENOCD_PIDFILE)`; fi;

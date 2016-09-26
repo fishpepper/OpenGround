@@ -11,8 +11,8 @@
 
 const uint8_t font_tomthumb3x5 [] = {
     0x00, 0x00, // fixed width font
-    0x03, //width  3px
-    0x05, //heigh 5px
+    3, //width  3px
+    5, //heigh 5px
     0x20, // first char
     0x60, // char count
 

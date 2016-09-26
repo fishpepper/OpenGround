@@ -91,3 +91,17 @@ frsky.h
 storage.c
 gui.h
 gui.c
+fonts/metric15x26.h
+fonts/metric7x12.h
+fonts/metric3x5.h
+peripheral_lib/src/stm32f0xx_flash.c
+peripheral_lib/eeprom_emulation/inc/st_eeprom.h
+peripheral_lib/eeprom_emulation/src/st_eeprom.c
+storage.h
+eeprom.c
+eeprom.h
+wdt.c
+peripheral_lib/eeprom_emulation/inc/st_eeprom.h
+peripheral_lib/eeprom_emulation/src/st_eeprom.c
+eeprom.c
+eeprom.h

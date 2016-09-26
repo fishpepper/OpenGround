@@ -215,7 +215,7 @@ void frsky_do_bind(void){
     cc2500_disable_rf_interrupt();
 
     //save to persistant storage:
-    storage_write_to_flash();
+    storage_save();
 
     //done, end up in fancy blink code
     debug("frsky: finished binding. please reset\n");

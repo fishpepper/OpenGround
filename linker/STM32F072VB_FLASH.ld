@@ -37,12 +37,21 @@ _estack = 0x20003FFF;    /* end of RAM */
 _Min_Heap_Size = 0x200;      /* required amount of heap  */
 _Min_Stack_Size = 0x400; /* required amount of stack */
 
+/* reserve two pages for eeprom emulation */
+_emulated_eeprom_page_size = 2048; /* do not change this, stm32f072 has 2k pagesize */
+_emulated_eeprom_size = 2*_emulated_eeprom_page_size;
+
+
 /* Specify the memory areas */
 MEMORY
 {
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 128K
+FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 128K-2*2048
+EMULATED_EEPROM (rwx) : ORIGIN = 0x8000000+128K-2*2048 LENGTH=2*2048
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 16K
 }
+
+/*EMULATED_EEPROM;*/
+_emulated_eeprom = 0x08011800; /*ORIGIN(EMULATED_EEPROM);*/
 
 /* Define output sections */
 SECTIONS
@@ -81,6 +90,13 @@ SECTIONS
     . = ALIGN(4);
   } >FLASH
 
+  /* memory used by the eeprom emulation, uses 2 pages a 1kB */
+  .emulated_eeprom :
+  {
+    . = ALIGN(0x400);   /* align to  page */
+    KEEP(*(.emulated_eeprom)) /* keep my variable even if not referenced */
+  } >EMULATED_EEPROM
+ 
   .ARM.extab   : { *(.ARM.extab* .gnu.linkonce.armextab.*) } >FLASH
   .ARM : {
     __exidx_start = .;

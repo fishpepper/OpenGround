@@ -14,6 +14,7 @@ void cc2500_enable_receive(void);
 void cc2500_enable_transmit(void);
 void cc2500_enter_rxmode(void);
 void cc2500_enter_txmode(void);
+void cc2500_wait_for_transmission_complete(void);
 
 #define cc2500_rx_sleep() { delay_us(1352); }
 #define cc2500_tx_sleep() { delay_us(1250); }

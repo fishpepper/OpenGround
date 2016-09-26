@@ -8,8 +8,8 @@
 
 const uint8_t font_system5x7 [] = {
     0x0, 0x0, // size of zero indicates fixed width font,
-    0x05, // width
-    0x07, // height
+    5, // width
+    7, // height
     0x20, // first char
     0x61, // char count
 

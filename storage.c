@@ -21,10 +21,9 @@
 #include "delay.h"
 #include "led.h"
 #include "frsky.h"
+#include "eeprom.h"
 #include ".hoptable.h"
 
-#define FRSKY_USE_FIXED_ID 1
-//http://www.st.com/content/ccc/resource/technical/document/application_note/2e/d4/65/6b/87/dd/40/25/DM00049914.pdf/files/DM00049914.pdf/jcr:content/translations/en.DM00049914.pdf
 //run time copy of persistant storage data:
 STORAGE_DESC storage;
 
@@ -33,14 +32,15 @@ void storage_init(void){
 
     debug("storage: init\n"); debug_flush();
 
-    //init storage
-    storage_init_memory();
-
     //reload data from flash
-    storage_read_from_flash();
+    storage_load();
 
     if (storage.version != STORAGE_VERSION_ID){
-        debug("storage: corrupted! bad version\n"); debug_flush();
+        debug("storage: corrupted! bad version\n");
+        debug("got 0x");
+        debug_put_hex8(storage.version);
+        debug_put_newline();
+        debug_flush();
         storage_load_defaults();
     }
 
@@ -49,10 +49,12 @@ void storage_init(void){
             debug_put_hex8(storage.frsky_hop_table[i]);
             debug_putc(' ');
     }
-    debug("...\n");
-    debug("storage: txid 0x"); debug_put_hex16(storage.frsky_txid);
-    debug_flush();
 
+    debug("...\n");
+    debug("storage: txid 0x");
+    debug_put_hex8(storage.frsky_txid[0]);
+    debug_put_hex8(storage.frsky_txid[1]);
+    debug_flush();
 }
 
 static void storage_load_defaults(void) {
@@ -77,36 +79,17 @@ static void storage_load_defaults(void) {
     }
 
     //save changes
-    storage_write_to_flash();
+    storage_save();
 }
 
-static void storage_init_memory(void){
-    //TODO
+
+static void storage_load(void){
+    eeprom_read_storage();
 }
 
-static void storage_read_from_flash(void){
-    uint8_t *storage_ptr;
-    uint16_t len;
-
-    debug("storage: reading\n"); debug_flush();
-    storage_ptr = (uint8_t*)&storage;
-    len = sizeof(storage);
-
-    storage_read(storage_ptr, len);
-}
-
-void storage_write_to_flash(void){
-    uint8_t *storage_ptr ;
-    uint16_t len;
-
-    debug("storage: writing\n"); debug_flush();
-    storage.version = STORAGE_VERSION_ID;
-
-    storage_ptr = (uint8_t*)&storage;
-    len = sizeof(storage);
-
-    //execute flash write:
-    storage_write(storage_ptr, len);
+void storage_save(void){
+    debug("storage: storing\n"); debug_flush();
+    eeprom_write_storage();
 }
 
 

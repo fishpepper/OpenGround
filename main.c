@@ -1,5 +1,5 @@
 #include "main.h"
-    #include "timeout.h"
+#include "timeout.h"
 #include "stm32f0xx_gpio.h"
 #include "config.h"
 #include "delay.h"
@@ -17,9 +17,10 @@
 #include "storage.h"
 #include "wdt.h"
 #include "gui.h"
+#include "eeprom.h"
 
 int main(void) {
-    wdt_init();
+//    wdt_init();
     delay_init();
     led_init();
     io_init();
@@ -33,6 +34,7 @@ int main(void) {
     adc_init();
     sound_init();
     touch_init();
+    eeprom_init();
     storage_init();
     frsky_init();
 

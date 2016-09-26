@@ -22,6 +22,7 @@
 // https://github.com/opentx/opentx/blob/dbd8abbfe8343b5d7f542304d47e232140307b95/radio/src/targets/stock/lcd_driver.cpp
 
 #include "lcd.h"
+#include "wdt.h"
 #include "delay.h"
 #include  "stm32f0xx_rcc.h"
 

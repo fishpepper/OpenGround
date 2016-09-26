@@ -21,6 +21,7 @@
 #include "console.h"
 #include "led.h"
 #include "io.h"
+#include "wdt.h"
 #include "adc.h"
 #include "delay.h"
 #include "touch.h"
@@ -50,8 +51,14 @@ void gui_render(void){
     }else{
         screen_fill(0);
         uint8_t buf[2];
-        buf[0] = '0' + gui_page;
+        buf[0] = '0' + gui_page-2;
         buf[1] = 0;
+
+        if (1){ //gui_page == 2){
+            screen_set_font(font_metric15x26);
+            uint8_t buf2[10] = "00:00";
+            screen_puts_xy(24, 1, 1, buf2);
+        }
         screen_puts_xy(64, 32, 1, buf);
         screen_update();
     }
