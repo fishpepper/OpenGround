@@ -510,7 +510,7 @@ uint8_t screen_put_char(uint8_t c){
                 }
 
                 if((pixels-p) < 8){
-                mask |= ~((1<<(pixels - p)) -1);
+                    mask |= ~((1<<(pixels - p)) -1);
                 }
 
                 if(!screen_font_color){

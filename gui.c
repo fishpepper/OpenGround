@@ -57,9 +57,10 @@ void gui_render(void){
         if (1){ //gui_page == 2){
             screen_set_font(font_metric15x26);
             uint8_t buf2[10] = "00:00";
+            buf2[1] = '0' + gui_page;
             screen_puts_xy(24, 1, 1, buf2);
         }
-        screen_puts_xy(64, 32, 1, buf);
+        //screen_puts_xy(64, 32, 1, buf);
         screen_update();
     }
 }
