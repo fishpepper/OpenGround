@@ -124,9 +124,6 @@ void lcd_powerdown(void) {
     delay_ms(100);
     wdt_reset();
     delay_ms(100);
-
-    // system is powered off now...
-    while (1) { }
 }
 
 static void lcd_reset(void) {

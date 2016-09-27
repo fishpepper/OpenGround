@@ -224,7 +224,7 @@ static uint8_t gui_adc_channel_name(uint8_t i) {
 static void gui_render_sliders(void) {
     uint32_t i;
     uint32_t y;
-    uint8_t str[2];
+    uint8_t str[5];
 
     screen_set_font(font_tomthumb3x5);
 
@@ -239,16 +239,18 @@ static void gui_render_sliders(void) {
 
         // render sliders
         uint32_t y2 = y + (font_tomthumb3x5[FONT_HEIGHT]+1)/2;
-        screen_draw_hline(12, y2 - 1, 50-1, 1);
-        screen_draw_hline(12, y2 + 1, 50-1, 1);
-        screen_draw_hline(12 + 50 + 1, y2 - 1, 50-1, 1);
-        screen_draw_hline(12 + 50 + 1, y2 + 1, 50-1, 1);
+        screen_draw_hline(8, y2 - 1, 50-1, 1);
+        screen_draw_hline(8, y2 + 1, 50-1, 1);
+        screen_draw_hline(8 + 50 + 1, y2 - 1, 50-1, 1);
+        screen_draw_hline(8 + 50 + 1, y2 + 1, 50-1, 1);
 
+        // render val as text
+        screen_put_uint14(8 + 100 + 2, y, 1, val);
 
-        // render value 0..4096 to 0...100
+        // render value as slider 0..4096 to 0...100
         val = (val * 100) / 4096;
-        screen_draw_vline(12 + val, y+1, 5, 1);
-        screen_draw_vline(12 + val + 1, y+1, 5, 1);
+        screen_draw_vline(8 + val, y+1, 5, 1);
+        screen_draw_vline(8 + val + 1, y+1, 5, 1);
     }
 }
 

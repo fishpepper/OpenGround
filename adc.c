@@ -46,6 +46,30 @@ void adc_init(void) {
 }
 
 uint16_t adc_get_channel(uint32_t id) {
+    // remap adc channels:
+    // 0 = 0 (A)
+    // 1 = 1 (E)
+    // 2 = 2 (T)
+    // 3 = 3 (R)
+    // 4 = 4 (SWA)
+    // 5 = 5 (SWB)
+    // 6 = 8 (SWC)
+    // 7 = 9 (SWD)
+    // 8 = 6 (slider left)
+    // 9 = 7 (slider right)
+    if (id < 6) {
+        // AETR map to ch0...3
+        return adc_data[id];
+    } else if (id == 6) {
+        return adc_data[8];
+    } else if (id == 7) {
+        return adc_data[9];
+    } else if (id == 8) {
+        return adc_data[6];
+    } else if (id == 9) {
+        return adc_data[7];
+    }
+
     if (id < ADC_CHANNEL_COUNT) {
         return adc_data[id];
     } else {
@@ -126,8 +150,8 @@ static void adc_init_mode(void) {
     ADC_Init(ADC1, &adc_init);
 
     // configure each channel
-    ADC_ChannelConfig(ADC1, ADC_Channel_1, ADC_SampleTime_41_5Cycles);
     ADC_ChannelConfig(ADC1, ADC_Channel_0, ADC_SampleTime_41_5Cycles);
+    ADC_ChannelConfig(ADC1, ADC_Channel_1, ADC_SampleTime_41_5Cycles);
     ADC_ChannelConfig(ADC1, ADC_Channel_2, ADC_SampleTime_41_5Cycles);
     ADC_ChannelConfig(ADC1, ADC_Channel_3, ADC_SampleTime_41_5Cycles);
     ADC_ChannelConfig(ADC1, ADC_Channel_4, ADC_SampleTime_41_5Cycles);

@@ -110,5 +110,8 @@ void io_test(void) {
 
 void io_powerdown(void) {
     POWERDOWN_GPIO->BRR = (POWERDOWN_PIN);
+
+    // system is powered off now...
+    while (1) { }
 }
 
