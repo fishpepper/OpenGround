@@ -22,6 +22,7 @@
 #include "main.h"
 #include "gui.h"
 #include "console.h"
+#include "screen.h"
 #include <stdint.h>
 
 static uint8_t debug_init_done;

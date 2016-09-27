@@ -19,6 +19,7 @@
 
 #include "adc.h"
 #include "debug.h"
+#include "screen.h"
 #include "console.h"
 #include "led.h"
 #include "wdt.h"
