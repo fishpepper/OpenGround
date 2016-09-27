@@ -23,6 +23,7 @@
 #include "console.h"
 #include "led.h"
 #include "delay.h"
+#include "screen.h"
 
 void assert_failed(uint8_t* filename, uint32_t line) {
     // report position
