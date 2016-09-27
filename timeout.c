@@ -1,5 +1,7 @@
 /*
-    This program is free software: you can redistribute it and/or modify
+    Copyright 2016 fishpepper <AT> gmail.com
+
+    This program is free software: you can redistribute it and/ or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -10,9 +12,9 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <http:// www.gnu.org/licenses/>.
 
-   author: fishpepper <AT> gmail.com
+    author: fishpepper <AT> gmail.com
 */
 
 #include "timeout.h"
@@ -29,8 +31,8 @@ volatile static __IO uint32_t timeout_100us_delay;
 void timeout_init(void) {
     debug("timeout: init\n"); debug_flush();
 
-    //configure 1ms sys tick:
-    if (SysTick_Config(SystemCoreClock / 10000)){
+    // configure 1ms sys tick:
+    if (SysTick_Config(SystemCoreClock / 10000)) {
         debug("timeout: failed to set systick timeout\n");
         debug_flush();
     }
@@ -38,7 +40,7 @@ void timeout_init(void) {
     // set prio
     NVIC_SetPriority(SysTick_IRQn, NVIC_PRIO_SYSTICK);
     NVIC_EnableIRQ(SysTick_IRQn);
-    //SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
+    // SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
 
     timeout_100us = 0;
     timeout2_100us = 0;
@@ -54,40 +56,40 @@ void timeout2_set_100us(__IO uint32_t hus) {
 }
 
 uint8_t timeout_timed_out(void) {
-    return (timeout_100us == 0);
+    return(timeout_100us == 0);
 }
 
 uint8_t timeout2_timed_out(void) {
-    return (timeout2_100us == 0);
+    return(timeout2_100us == 0);
 }
 
-void timeout2_delay_100us(uint16_t us){
+void timeout2_delay_100us(uint16_t us) {
     timeout2_set_100us(us);
-    while(!timeout2_timed_out()){}
+    while (!timeout2_timed_out()) {}
 }
 
 
 // seperate ms delay function
-void timeout_delay_ms(uint32_t timeout){
+void timeout_delay_ms(uint32_t timeout) {
     timeout_100us_delay = 10*timeout;
 
-    while(timeout_100us_delay > 0){
+    while (timeout_100us_delay > 0) {
     }
 }
 
-void SysTick_Handler(void){
-    if (timeout_100us != 0){
+void SysTick_Handler(void) {
+    if (timeout_100us != 0) {
         timeout_100us--;
     }
-    if (timeout2_100us != 0){
+    if (timeout2_100us != 0) {
         timeout2_100us--;
     }
-    if (timeout_100us_delay != 0){
+    if (timeout_100us_delay != 0) {
         timeout_100us_delay--;
     }
     sound_handle_playback();
 }
 
 uint32_t timeout_time_remaining(void) {
-    return timeout_100us/10;
+    return timeout_100us/ 10;
 }

@@ -1,5 +1,7 @@
 /*
-    This program is free software: you can redistribute it and/or modify
+    Copyright 2016 fishpepper <AT> gmail.com
+
+    This program is free software: you can redistribute it and/ or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -10,10 +12,11 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <http:// www.gnu.org/licenses/>.
 
-   author: fishpepper <AT> gmail.com
+    author: fishpepper <AT> gmail.com
 */
+
 
 #include "spi.h"
 #include "debug.h"
@@ -54,12 +57,12 @@ static void spi_init_mode(void) {
     spi_init.SPI_CPOL      = SPI_CPOL_Low;
     spi_init.SPI_CPHA      = SPI_CPHA_1Edge;
     spi_init.SPI_NSS       = SPI_NSS_Soft;
-    spi_init.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16; //3mhz(!)
+    spi_init.SPI_BaudRatePrescaler = SPI_BaudRatePrescaler_16;  // 3mHz(!)
     spi_init.SPI_FirstBit  = SPI_FirstBit_MSB;
     spi_init.SPI_CRCPolynomial = 7;
     SPI_Init(CC2500_SPI, &spi_init);
 
-    //Set fifo to quarter full (=1 byte)
+    // set fifo to quarter full(=1 byte)
     SPI_RxFIFOThresholdConfig(CC2500_SPI, SPI_RxFIFOThreshold_QF);
 }
 
@@ -68,18 +71,18 @@ static void spi_init_mode(void) {
 static void spi_init_dma(void) {
     DMA_InitTypeDef dma_init;
 
-    // Enable DMA1 Peripheral Clock
+    // enable DMA1 Peripheral Clock
     RCC_AHBPeriphClockCmd(CC2500_SPI_DMA_CLOCK, ENABLE);
 
-    // Configure SPI RX Channel
+    // configure SPI RX Channel
     dma_init.DMA_DIR                = DMA_DIR_PeripheralSRC;
     dma_init.DMA_PeripheralBaseAddr = (uint32_t)&CC2500_SPI->DR;
     dma_init.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
     dma_init.DMA_PeripheralInc      = DMA_PeripheralInc_Disable;
-    dma_init.DMA_MemoryBaseAddr     = 0; // will be set later
+    dma_init.DMA_MemoryBaseAddr     = 0;  // will be set later
     dma_init.DMA_MemoryDataSize     = DMA_MemoryDataSize_Byte;
     dma_init.DMA_MemoryInc          = DMA_MemoryInc_Enable;
-    dma_init.DMA_BufferSize         = 1; // will be set later
+    dma_init.DMA_BufferSize         = 1;  // will be set later
     dma_init.DMA_Mode               = DMA_Mode_Normal;
     dma_init.DMA_Priority           = DMA_Priority_VeryHigh;
     dma_init.DMA_M2M                = DMA_M2M_Disable;
@@ -90,10 +93,10 @@ static void spi_init_dma(void) {
     dma_init.DMA_PeripheralBaseAddr = (uint32_t)&CC2500_SPI->DR;
     dma_init.DMA_PeripheralDataSize = DMA_PeripheralDataSize_Byte;
     dma_init.DMA_PeripheralInc      = DMA_PeripheralInc_Disable;
-    dma_init.DMA_MemoryBaseAddr     = 0; // will be set later
+    dma_init.DMA_MemoryBaseAddr     = 0;  // will be set later
     dma_init.DMA_MemoryDataSize     = DMA_MemoryDataSize_Byte;
     dma_init.DMA_MemoryInc          = DMA_MemoryInc_Enable;
-    dma_init.DMA_BufferSize         = 1; // will be set later
+    dma_init.DMA_BufferSize         = 1;  // will be set later
     dma_init.DMA_Mode               = DMA_Mode_Normal;
     dma_init.DMA_Priority           = DMA_Priority_VeryHigh;
     dma_init.DMA_M2M                = DMA_M2M_Disable;
@@ -102,13 +105,12 @@ static void spi_init_dma(void) {
     // start disabled
     DMA_Cmd(CC2500_SPI_TX_DMA_CHANNEL, DISABLE);
     DMA_Cmd(CC2500_SPI_RX_DMA_CHANNEL, DISABLE);
-
 }
 
 // data in buffer will be sent and will be overwritten with
 // the data read back from the spi slave
 void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
-    //debug("xfer "); debug_put_uint8(len); debug(")\n");
+    // debug("xfer "); debug_put_uint8(len); debug(")\n");
 
     // TX: transfer buffer to slave
     CC2500_SPI_TX_DMA_CHANNEL->CMAR  = (uint32_t)buffer;
@@ -122,39 +124,39 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
     DMA_Cmd(CC2500_SPI_RX_DMA_CHANNEL, ENABLE);
     DMA_Cmd(CC2500_SPI_TX_DMA_CHANNEL, ENABLE);
 
-    //debug("DMA EN\n"); debug_flush();
+    // debug("DMA EN\n"); debug_flush();
 
     // trigger the SPI TX + RX dma
     SPI_I2S_DMACmd(CC2500_SPI, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, ENABLE);
 
-    //debug("TRIG\n"); debug_flush();
+    // debug("TRIG\n"); debug_flush();
 #if 0
     // Wait until the command is sent to the DR
-    while (!DMA_GetFlagStatus(CC2500_SPI_TX_DMA_TC_FLAG)) {};
+    while (!DMA_GetFlagStatus(CC2500_SPI_TX_DMA_TC_FLAG)) {}
 
-    //debug("ACTIVE\n"); debug_flush();
+    // debug("ACTIVE\n"); debug_flush();
 
     // wait for tx to be finished:
-    while (DMA_GetFlagStatus(CC2500_SPI_TX_DMA_TC_FLAG)) {};
-    while (DMA_GetFlagStatus(CC2500_SPI_RX_DMA_TC_FLAG)) {};
+    while (DMA_GetFlagStatus(CC2500_SPI_TX_DMA_TC_FLAG)) {}
+    while (DMA_GetFlagStatus(CC2500_SPI_RX_DMA_TC_FLAG)) {}
 
-    //wait for SPI to be no longer busy
-    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_BSY) != RESET){}
-    //debug("!BUSY\n"); debug_flush();
-#endif
+    // wait for SPI to be no longer busy
+    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_BSY) != RESET) {}
+    // debug("!BUSY\n"); debug_flush();
+#endif  // 0
 
-    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_TXE) == RESET);
-    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_BSY) != RESET){}
+    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_TXE) == RESET) {}
+    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_BSY) != RESET) {}
 
-    //while((SPI1->SR & 2) == 0);  // wait while TXE flag is 0 (TX is not empty)
-    //while((SPI1->SR & (1 << 7)) != 0);  // wait while BSY flag is 1 (SPI is busy)
+    // while ((SPI1->SR & 2) == 0);  // wait while TXE flag is 0(TX is not empty)
+    // while ((SPI1->SR & (1 << 7)) != 0);  // wait while BSY flag is 1(SPI is busy)
 
-    //disable DMA
+    // disable DMA
     DMA_Cmd(CC2500_SPI_RX_DMA_CHANNEL, DISABLE);
     DMA_Cmd(CC2500_SPI_TX_DMA_CHANNEL, DISABLE);
 
     // clear DMA flags
-    SPI_I2S_DMACmd(CC2500_SPI,SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, DISABLE);
+    SPI_I2S_DMACmd(CC2500_SPI, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, DISABLE);
 }
 
 
@@ -162,7 +164,7 @@ static void spi_init_gpio(void) {
     GPIO_InitTypeDef gpio_init;
     GPIO_StructInit(&gpio_init);
 
-    //set up alternate function
+    // set up alternate function
     GPIO_PinAFConfig(CC2500_SPI_GPIO, CC2500_SPI_SCK_PINSOURCE,  GPIO_AF_1);
     GPIO_PinAFConfig(CC2500_SPI_GPIO, CC2500_SPI_MOSI_PINSOURCE, GPIO_AF_1);
     GPIO_PinAFConfig(CC2500_SPI_GPIO, CC2500_SPI_MISO_PINSOURCE, GPIO_AF_1);
@@ -185,20 +187,19 @@ static void spi_init_gpio(void) {
     gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
     GPIO_Init(CC2500_SPI_GPIO, &gpio_init);
-
 }
 
-uint8_t spi_tx(uint8_t address){
-    //debug("spi: tx 0x"); debug_put_hex8(address); debug_put_newline(); debug_flush();
+uint8_t spi_tx(uint8_t address) {
+    // debug("spi: tx 0x"); debug_put_hex8(address); debug_put_newline(); debug_flush();
     // wait for SPI Tx buffer empty
-    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_TXE) == RESET);
+    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_TXE) == RESET) {}
     // send SPI data
     SPI_SendData8(CC2500_SPI, address);
 
     // read response
-    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_RXNE) != SET);
+    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_RXNE) != SET) {}
     uint8_t result = SPI_ReceiveData8(CC2500_SPI);
-    //debug("spi: rx 0x"); debug_put_hex8(result); debug_put_newline(); debug_flush();
+    // debug("spi: rx 0x"); debug_put_hex8(result); debug_put_newline(); debug_flush();
     return result;
 }
 

@@ -1,5 +1,7 @@
 /*
-    This program is free software: you can redistribute it and/or modify
+    Copyright 2016 fishpepper <AT> gmail.com
+
+    This program is free software: you can redistribute it and/ or modify
     it under the terms of the GNU General Public License as published by
     the Free Software Foundation, either version 3 of the License, or
     (at your option) any later version.
@@ -10,10 +12,11 @@
     GNU General Public License for more details.
 
     You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+    along with this program.  If not, see <http:// www.gnu.org/licenses/>.
 
-   author: fishpepper <AT> gmail.com
+    author: fishpepper <AT> gmail.com
 */
+
 
 #include "io.h"
 #include "debug.h"
@@ -33,14 +36,14 @@ void io_init_gpio(void) {
     GPIO_InitTypeDef gpio_init;
     GPIO_StructInit(&gpio_init);
 
-    //enable clocks
+    // enable clocks
     RCC_AHBPeriphClockCmd(POWERDOWN_GPIO_CLK, ENABLE);
     RCC_AHBPeriphClockCmd(BUTTON_POWER_BOTH_GPIO_CLK, ENABLE);
 
-    //set high:
+    // set high:
     POWERDOWN_GPIO->BSRR = (POWERDOWN_PIN);
 
-    //set powerdown trigger pin as output
+    // set powerdown trigger pin as output
     gpio_init.GPIO_Pin   = POWERDOWN_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
     gpio_init.GPIO_OType = GPIO_OType_PP;
@@ -48,7 +51,7 @@ void io_init_gpio(void) {
     gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
     GPIO_Init(POWERDOWN_GPIO, &gpio_init);
 
-    //set buttons as input:
+    // set buttons as input:
     gpio_init.GPIO_Pin   = BUTTON_POWER_BOTH_PIN;
     gpio_init.GPIO_Mode  = GPIO_Mode_IN;
     gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
@@ -57,8 +60,8 @@ void io_init_gpio(void) {
 }
 
 
-void io_test_prepare(void){
-    //sett all ios to input
+void io_test_prepare(void) {
+    // set all ios to input
     GPIO_InitTypeDef gpio_init;
     GPIO_StructInit(&gpio_init);
     gpio_init.GPIO_Pin   = 0xFFFF;
@@ -74,25 +77,27 @@ void io_test_prepare(void){
     GPIO_Init(GPIOF, &gpio_init);
 }
 
-uint32_t io_powerbutton_pressed(void){
-    return (GPIO_ReadInputDataBit(BUTTON_POWER_BOTH_GPIO, BUTTON_POWER_BOTH_PIN) == 0);
+uint32_t io_powerbutton_pressed(void) {
+    return(GPIO_ReadInputDataBit(BUTTON_POWER_BOTH_GPIO, BUTTON_POWER_BOTH_PIN) == 0);
 }
 
-//show status of all gpios on screen
-void io_test(void){
-    uint32_t i,p;
-    while(1){
+// show status of all gpios on screen
+void io_test(void) {
+    uint32_t i, p;
+
+    while (1) {
         console_clear();
         debug("GPIO TEST\n\n");
         debug("       FEDCBA9876543210\n");
-        for(p=0; p<6; p++){
+        for (p = 0; p < 6; p++) {
             debug("GPIO");
             debug_putc('A'+p);
             debug("  ");
-            for(i=0; i<16; i++){
-                if (GPIO_ReadInputDataBit(((GPIO_TypeDef *) (GPIOA_BASE + p*0x00000400)), (1<<(15-i)))){
+            for (i = 0; i < 16; i++) {
+                if (GPIO_ReadInputDataBit(((GPIO_TypeDef *) (GPIOA_BASE + p*0x00000400)), \
+                                          (1 << (15-i)))) {
                     debug_putc('1');
-                }else{
+                } else {
                     debug_putc('0');
                 }
             }
@@ -103,7 +108,7 @@ void io_test(void){
     }
 }
 
-void io_powerdown(void){
+void io_powerdown(void) {
     POWERDOWN_GPIO->BRR = (POWERDOWN_PIN);
 }
 

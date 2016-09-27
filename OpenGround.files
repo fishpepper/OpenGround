@@ -105,3 +105,4 @@ peripheral_lib/eeprom_emulation/inc/st_eeprom.h
 peripheral_lib/eeprom_emulation/src/st_eeprom.c
 eeprom.c
 eeprom.h
+wdt.h

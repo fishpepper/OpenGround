@@ -1,6 +1,27 @@
-#ifndef __TOUCH__H_
-#define __TOUCH__H_
+/*
+    Copyright 2016 fishpepper <AT> gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    author: fishpepper <AT> gmail.com
+*/
+
+#ifndef TOUCH_H_
+#define TOUCH_H_
+
 #include <stdint.h>
+
 #include "config.h"
 #include "stm32f0xx.h"
 
@@ -66,7 +87,7 @@ void EXTI4_15_IRQHandler(void);
 #define TOUCH_GESTURE_MOUSE_NONE (0x80+TOUCH_FT6236_EVENT_NO_EVENT)
 
 
-struct __attribute__ ((__packed__)) touch_ft6236_touchpoint {
+struct __attribute__((__packed__)) touch_ft6236_touchpoint {
     union {
         uint8_t xhi;
         uint8_t event;
@@ -84,12 +105,12 @@ struct __attribute__ ((__packed__)) touch_ft6236_touchpoint {
     uint8_t misc;
 };
 
-//this packet represents the register map as read from offset 0
-typedef struct __attribute__ ((__packed__)){
+// this packet represents the register map as read from offset 0
+typedef struct __attribute__((__packed__)) {
     uint8_t dev_mode;
     uint8_t gest_id;
     uint8_t touches;
     struct touch_ft6236_touchpoint points[TOUCH_FT6236_MAX_TOUCH_POINTS];
 } touch_ft6236_packet_t;
 
-#endif // __TOUCH__H_
+#endif  // TOUCH_H_

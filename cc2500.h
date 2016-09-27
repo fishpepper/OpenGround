@@ -1,9 +1,26 @@
-#ifndef __CC2500_H__
-#define __CC2500_H__
+/*
+    Copyright 2016 fishpepper <AT> gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    author: fishpepper <AT> gmail.com
+*/
+
+#ifndef CC2500_H_
+#define CC2500_H_
 
 #include <stdint.h>
-
-
 
 void cc2500_init(void);
 void cc2500_set_register(uint8_t reg, uint8_t val);
@@ -32,29 +49,29 @@ static void cc2500_init_gpio(void);
 uint32_t cc2500_set_antenna(uint8_t id);
 void cc2500_set_gdo_mode(void);
 uint8_t cc2500_get_gdo_status(void);
-void cc2500_process_packet(volatile uint8_t *packet_received, volatile uint8_t *buffer, uint8_t maxlen);
+void cc2500_process_packet(volatile uint8_t *packet_received, volatile uint8_t *buf, uint8_t max);
 void cc2500_transmit_packet(volatile uint8_t *buffer, uint8_t len);
 
 void cc2500_read_fifo(uint8_t *buf, uint8_t len);
 void cc2500_register_read_multi(uint8_t address, uint8_t *buffer, uint8_t len);
 uint8_t cc2500_transmission_completed(void);
 
-//adress checks
+// adress checks
 #define CC2500_PKTCTRL1_FLAG_ADR_CHECK_00 ((0<<1) | (0<<0))
 #define CC2500_PKTCTRL1_FLAG_ADR_CHECK_01 ((0<<1) | (1<<0))
 #define CC2500_PKTCTRL1_FLAG_ADR_CHECK_10 ((1<<1) | (0<<0))
 #define CC2500_PKTCTRL1_FLAG_ADR_CHECK_11 ((1<<1) | (1<<0))
-//append status bytes?
+// append status bytes?
 #define CC2500_PKTCTRL1_APPEND_STATUS     (1<<2)
-//crc autoflush
+// crc autoflush
 #define CC2500_PKTCTRL1_CRC_AUTOFLUSH     (1<<3)
 
-// Flags
+// flags
 #define BURST_FLAG   0b01000000
 #define WRITE_FLAG   0b00000000
 #define READ_FLAG    0b10000000
 
-//Definitions for burst/single access to registers
+// definitions for burst/single access to registers
 #define CC2500_WRITE_SINGLE     0x00
 #define CC2500_WRITE_BURST      0x40
 #define CC2500_READ_SINGLE      0x80
@@ -189,9 +206,9 @@ void cc25xx_wait_for_transmission_complete(void);
 #define cc25xx_transmit_packet(buffer, len) cc2500_transmit_packet(buffer, len)
 
 #define cc25xx_get_current_antenna() (cc25xx_current_antenna)
-#define cc25xx_partnum_valid(p, v) cc2500_partnum_valid(p,v)
+#define cc25xx_partnum_valid(p, v) cc2500_partnum_valid(p, v)
 #define CC25XX_MODE_RX 0
 #define CC25XX_MODE_TX 1
 
-#endif // __CC25XX_H__
+#endif  // CC2500_H_
 

@@ -1,8 +1,32 @@
-#ifndef __LCD__H_
-#define __LCD__H_
+/*
+    Copyright 2016 fishpepper <AT> gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    author: fishpepper <AT> gmail.com
+*/
+
+#ifndef LCD_H_
+#define LCD_H_
+
 #include <stdint.h>
 #include "stm32f0xx_gpio.h"
 #include "config.h"
+
+// the screen itself is 128 x 64
+#define LCD_WIDTH   128
+#define LCD_HEIGHT   64
 
 void lcd_init(void);
 static void lcd_init_gpio(void);
@@ -32,8 +56,8 @@ void lcd_powerdown(void);
 
 
 #define LCD_CMD_RESET            0xE2
-#define LCD_CMD_BIAS_1_9         0xA2 // 1/9 bias
-#define LCD_CMD_BIAS_1_7         0xA3 // 1/7 bias
+#define LCD_CMD_BIAS_1_9         0xA2  // 1/9 bias
+#define LCD_CMD_BIAS_1_7         0xA3  // 1/7 bias
 
 #define LCD_CMD_SEG_NORMAL       0xA0
 #define LCD_CMD_SEG_INVERSE      0xA1
@@ -66,12 +90,5 @@ void lcd_powerdown(void);
 #define LCD_CMD_MODE_ALLBLACK    0xA5
 
 
-// the screen itself is 128 x 64, however the display ram of the controler
-// has 132x64 entries. therefore we define the framebuffer to have the same size
-// in order to be able to push this to the display without any calculations
-#define LCD_WIDTH   128
-#define LCD_HEIGHT   64
-
-
-#endif //__LCD__H_
+#endif  // LCD_H_
 
