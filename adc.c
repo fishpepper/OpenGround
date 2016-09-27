@@ -221,6 +221,7 @@ void adc_test(void) {
             }
         }
         console_render();
+        screen_update();
         led_button_r_toggle();
 
         // delay_us(10*1000);

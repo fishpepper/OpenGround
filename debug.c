@@ -49,6 +49,7 @@ void debug_flush(void) {
     if (!gui_running()) {
         // if gui is not yet active, render console now
         console_render();
+        screen_update();
     }
 }
 

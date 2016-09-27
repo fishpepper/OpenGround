@@ -46,11 +46,16 @@ uint32_t gui_running(void) {
 }
 
 void gui_render(void) {
+    screen_fill(0);
+
     if (gui_page == 0) {
         // render debug console
         console_render();
     } else if (gui_page == 1) {
         gui_render_statusbar();
+    } else if (gui_page == 2) {
+        gui_render_statusbar();
+        gui_render_sliders();
     } else {
         screen_fill(0);
         uint8_t buf[2];
@@ -64,8 +69,8 @@ void gui_render(void) {
             screen_puts_xy(24, 1, 1, buf2);
         }
         // screen_puts_xy(64, 32, 1, buf);
-        screen_update();
     }
+    screen_update();
 }
 
 static void gui_process_touch(void) {
@@ -188,7 +193,6 @@ static void gui_render_rssi(uint8_t rssi_rx, uint8_t rssi_tx) {
 
 static void gui_render_statusbar(void) {
     // render rx/tx rssi and battery status:
-    screen_fill(0);
     // draw divider
     screen_draw_line(0, 7, LCD_WIDTH, 7, 1);
     // draw battery voltage
@@ -196,9 +200,55 @@ static void gui_render_statusbar(void) {
 
     gui_render_rssi(111, 120);
 
-    uint8_t buf[2];
+    /*uint8_t buf[2];
     buf[0] = '0' + gui_page;
     buf[1] = 0;
-    screen_puts_xy(64, 32, 1, buf);
-    screen_update();
+    screen_puts_xy(64, 32, 1, buf);*/
 }
+
+static uint8_t gui_adc_channel_name(uint8_t i) {
+    switch (i) {
+        default: break;
+        case(0): return 'A';
+        case(1): return 'E';
+        case(2): return 'T';
+        case(3): return 'R';
+        case(4):
+        case(5):
+        case(6):
+        case(7): return '0'+(i-4);
+    }
+    return '?';
+}
+
+static void gui_render_sliders(void) {
+    uint32_t i;
+    uint32_t y;
+    uint8_t str[2];
+
+    screen_set_font(font_tomthumb3x5);
+
+    for (i = 0; i < 8; i++) {
+        uint32_t val = adc_get_channel(i);
+
+        // render channel names
+        str[0] = gui_adc_channel_name(i);
+        str[1] = 0;
+        y = 10 + i*(font_tomthumb3x5[FONT_HEIGHT]+1);
+        screen_puts_xy(1, y, 1, str);
+
+        // render sliders
+        uint32_t y2 = y + (font_tomthumb3x5[FONT_HEIGHT]+1)/2;
+        screen_draw_hline(12, y2 - 1, 50-1, 1);
+        screen_draw_hline(12, y2 + 1, 50-1, 1);
+        screen_draw_hline(12 + 50 + 1, y2 - 1, 50-1, 1);
+        screen_draw_hline(12 + 50 + 1, y2 + 1, 50-1, 1);
+
+
+        // render value 0..4096 to 0...100
+        val = (val * 100) / 4096;
+        screen_draw_vline(12 + val, y+1, 5, 1);
+        screen_draw_vline(12 + val + 1, y+1, 5, 1);
+    }
+}
+

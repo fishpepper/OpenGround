@@ -508,7 +508,6 @@ uint8_t screen_put_char(uint8_t c) {
             // extra pixel on right for spacing on all fonts but NoPadFixed fonts
             if ((dy & 7) || (pixels - p < 8)) {
                 uint8_t mask = 0;
-                //screen_dpos = ((dy & ~7)/ 8)*128 + screen_font_x;
                 dbyte =  screen_buffer_read(screen_dpos);
 
                 if (dy & 7) {

@@ -122,8 +122,6 @@ void console_render(void) {
         // fetch next line id
         line = (line + 1) % CONSOLE_BUFFER_SIZE_Y;
     }
-
-    screen_update();
 }
 
 

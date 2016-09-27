@@ -34,6 +34,7 @@ void assert_failed(uint8_t* filename, uint32_t line) {
         debug_put_newline();
         debug_flush();
         console_render();
+        screen_update();
     }
 
     // infinite loop
