@@ -570,6 +570,25 @@ void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str) {
     }
 }
 
+uint32_t screen_strlen(uint8_t *str) {
+    uint32_t len = 0;
+    while (*str++) {
+        len++;
+        if (len > 50) {
+            // just in case... we do not handle longer strings
+            break;
+        }
+    }
+    return len;
+}
+
+void screen_puts_centered(uint8_t y, uint8_t color, uint8_t *str) {
+    uint32_t font_width = screen_font_ptr[FONT_FIXED_WIDTH];
+    uint32_t char_count = screen_strlen(str);
+    uint32_t x = LCD_WIDTH/2 - font_width/2 - (char_count*(font_width+1))/2;
+    screen_puts_xy(x, y, color, str);
+}
+
 
 // output an unsigned 14-bit number
 void screen_put_uint14(uint8_t x, uint8_t y, uint8_t color, uint16_t c) {
@@ -593,7 +612,11 @@ void screen_put_uint14(uint8_t x, uint8_t y, uint8_t color, uint16_t c) {
         tmp++;
         l = 1;
     }
-    if (l || (tmp != 0)) screen_put_char('0' + tmp);
+    if (l || (tmp != 0)) {
+        screen_put_char('0' + tmp);
+    } else {
+        screen_put_char(' ');
+    }
 
     tmp = 0;
     while (c >= 100) {
@@ -601,7 +624,11 @@ void screen_put_uint14(uint8_t x, uint8_t y, uint8_t color, uint16_t c) {
         tmp++;
         l = 1;
     }
-    if (l || (tmp != 0)) screen_put_char('0' + tmp);
+    if (l || (tmp != 0)) {
+        screen_put_char('0' + tmp);
+    } else {
+        screen_put_char(' ');
+    }
 
     tmp = 0;
     while (c >= 10) {
@@ -609,7 +636,11 @@ void screen_put_uint14(uint8_t x, uint8_t y, uint8_t color, uint16_t c) {
         tmp++;
         l = 1;
     }
-    if (l || (tmp != 0)) screen_put_char('0' + tmp);
+    if (l || (tmp != 0)) {
+        screen_put_char('0' + tmp);
+    } else {
+        screen_put_char(' ');
+    }
 
     screen_put_char('0' + (uint8_t)c);
 }

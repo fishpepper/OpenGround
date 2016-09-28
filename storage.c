@@ -44,7 +44,12 @@ void storage_init(void) {
         debug_put_newline();
         debug_flush();
         storage_load_defaults();
+        storage_save();
     }
+
+    // for debugging
+    storage_load_defaults();
+
 
     debug("storage: loaded hoptable[]:\n");
     for (i = 0; i < 9; i++) {
@@ -80,8 +85,11 @@ static void storage_load_defaults(void) {
         storage.frsky_hop_table[i] = tmp[i];
     }
 
-    // save changes
-    storage_save();
+    // stick calib
+    for (i = 0; i < 4; i++) {
+        storage.stick_calibration[i][0] = 100;
+        storage.stick_calibration[i][1] = 4096 - 100;
+    }
 }
 
 

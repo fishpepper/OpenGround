@@ -49,8 +49,11 @@ void screen_set_pixels(uint8_t x, uint8_t y, uint8_t x2, uint8_t y2, uint8_t col
 void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
 
 
+uint32_t screen_strlen(uint8_t *str);
+
 void screen_set_font(const uint8_t *font);
 void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str);
+void screen_puts_centered(uint8_t y, uint8_t color, uint8_t *str);
 void screen_put_uint14(uint8_t x, uint8_t y, uint8_t color, uint16_t c);
 void screen_put_fixed2(uint8_t x, uint8_t y, uint8_t color, uint16_t c);
 void screen_fill(uint8_t color);

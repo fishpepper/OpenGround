@@ -38,9 +38,11 @@ void gui_init(void);
 void gui_loop(void);
 uint32_t gui_running(void);
 
+static void gui_process_touch(void);
+
 static void gui_render_sliders(void);
 static void gui_render_battery(void);
 static void gui_render_statusbar(void);
-static void gui_process_touch(void);
+static void gui_config_render_stick_calibration(void);
 
 #endif  // GUI_H_
