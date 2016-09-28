@@ -155,9 +155,6 @@ void gui_loop(void) {
         if (gui_page < 5) {
             // render normal ui
             gui_render();
-
-            wdt_reset();
-            delay_ms(GUI_LOOP_DELAY_MS);
         } else {
             // do config menu
             screen_fill(0);
@@ -175,8 +172,9 @@ void gui_loop(void) {
                 gui_page = 1;
             }
             screen_update();
-            wdt_reset();
         }
+        wdt_reset();
+        delay_ms(GUI_LOOP_DELAY_MS);
     }
 
     debug("will power down now\n"); debug_flush();
