@@ -161,7 +161,7 @@ static void lcd_reset(void) {
 
     // set EV(contrast?), this is  2byte command
     lcd_write_command(LCD_CMD_EV);
-    lcd_write_command(35);  // dynamic contrast 0...63
+    lcd_write_command(40);  // dynamic contrast 0...63
 
     // set startline to 0
     lcd_write_command(LCD_CMD_SET_STARTLINE + 0);
