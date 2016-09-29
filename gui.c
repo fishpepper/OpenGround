@@ -542,7 +542,6 @@ static void gui_config_clonetx_render(void) {
 
         case (2) :
             // do autotune loop until done
-            screen_update();
             while (!frsky_autotune_do()) {
                 /*screen_fill(0);
                 console_render();
@@ -550,6 +549,7 @@ static void gui_config_clonetx_render(void) {
                 if (io_powerbutton_pressed()){
                     // abort!
                     gui_page = GUI_PAGE_SETTING_FLAG | 0;
+                    return;
                 }
             }
             gui_config_counter++;
@@ -566,7 +566,6 @@ static void gui_config_clonetx_render(void) {
             break;
 
         case (5) :
-            screen_update();
             while (!frsky_fetch_txid_and_hoptable_do()) {
                 /*screen_fill(0);
                 console_render();
@@ -574,6 +573,7 @@ static void gui_config_clonetx_render(void) {
                 if (io_powerbutton_pressed()){
                     // abort!
                     gui_page = GUI_PAGE_SETTING_FLAG | 0;
+                    return;
                 }
             }
             gui_config_counter++;
