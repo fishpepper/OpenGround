@@ -384,7 +384,7 @@ static void gui_config_stick_calibration_store_adc_values(void) {
         storage.stick_calibration[i][1] = adc_get_channel(i);
         // max
         storage.stick_calibration[i][2] =
-                max(adc_get_channel(i), storage.stick_calibration[i][1]);
+                max(adc_get_channel(i), storage.stick_calibration[i][2]);
     }
 }
 
@@ -630,11 +630,11 @@ static void gui_config_stick_calibration_render(void) {
     screen_puts_xy(x+3*4*w+2*2*w+w, y, 1, "max");
     y += h;
     for (idx = 0; idx < 4; idx++) {
-        screen_puts_xy(x, y, 1,                gui_get_channel_name(idx, GUI_CHANNEL_DESCR_LONG));
+        screen_puts_xy(x, y, 1, gui_get_channel_name(idx, GUI_CHANNEL_DESCR_LONG));
         for (a = 0; a < 3; a++) {
-            screen_put_uint14(x+(a+1)*4*w+a*2*w, y, 1,       storage.stick_calibration[idx][0]);
-            y += h;
+            screen_put_uint14(x+(a+1)*4*w+a*2*w, y, 1,       storage.stick_calibration[idx][a]);
         }
+        y += h;
     }
 
     // render buttons and set callback
