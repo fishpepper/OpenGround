@@ -415,6 +415,7 @@ void gui_render(void) {
         case(2) :
             // slider screen
             gui_render_sliders();
+            break;
 
         default :
             screen_fill(0);
