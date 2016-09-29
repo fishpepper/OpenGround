@@ -34,10 +34,12 @@
 #define TOUCH_I2C_TIMEOUT      20
 #define TOUCH_I2C_FLAG_TIMEOUT 10
 
-static touch_event_t touch_event;
+static volatile touch_event_t touch_event;
 
 void touch_init(void) {
     debug("touch: init\n"); debug_flush();
+
+    touch_event.event_id = 0;
 
     touch_deinit_i2c();
     touch_init_i2c_rcc();
@@ -130,7 +132,7 @@ static void touch_init_isr(void) {
 
     // enable and set EXTI* Interrupt
     nvic_init.NVIC_IRQChannel = TOUCH_INT_EXTI_IRQN;
-    nvic_init.NVIC_IRQChannelPriority = 0x00;
+    nvic_init.NVIC_IRQChannelPriority = 3;  // lowest prio
     nvic_init.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvic_init);
 }
@@ -139,8 +141,10 @@ void EXTI4_15_IRQHandler(void) {
     if (EXTI_GetITStatus(TOUCH_INT_EXTI_SOURCE_LINE) != RESET) {
         // interrupt(falling edge) on Touch INT line, event detected!
         if (touch_event.event_id == 0) {
-            // last event was picked up, store new one
+            // last event has been processed
             touch_ft6236_packet_t buf;
+
+            // fetch data:
             uint32_t res = touch_i2c_read(0x00, (uint8_t *)&buf, sizeof(buf));
 
             if (!res) {
@@ -174,6 +178,13 @@ void EXTI4_15_IRQHandler(void) {
         // clear the EXTI line pending bit
         EXTI_ClearITPendingBit(TOUCH_INT_EXTI_SOURCE_LINE);
     }
+}
+
+
+touch_event_t touch_get_last_event(void) {
+    touch_event_t tmp = touch_event;
+    touch_event.event_id = 0;
+    return tmp;
 }
 
 static void touch_init_i2c_free_bus(void) {
@@ -405,11 +416,6 @@ static uint32_t touch_i2c_read(uint8_t address, uint8_t *data, uint8_t len) {
 }
 
 
-touch_event_t touch_get_and_clear_last_event(void) {
-    touch_event_t tmp = touch_event;
-    touch_event.event_id = 0;
-    return tmp;
-}
 
 void touch_test(void) {
     debug("TOUCH TEST\n");
@@ -418,7 +424,7 @@ void touch_test(void) {
     uint32_t delay = 20;
     uint32_t powerdown_counter = 10*(1000/ delay);
     while (powerdown_counter--) {
-        touch_event_t t = touch_get_and_clear_last_event();
+        touch_event_t t = touch_get_last_event();
         if (t.event_id) {
             // detected touch event!
             uint32_t ev_valid = 1;

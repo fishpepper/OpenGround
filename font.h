@@ -37,5 +37,6 @@
 extern const uint8_t font_system5x7[];
 extern const uint8_t font_tomthumb3x5[];
 extern const uint8_t font_metric15x26[];
+extern const uint8_t font_metric7x12[];
 
 #endif  // FONT_H_

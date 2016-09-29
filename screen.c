@@ -645,6 +645,35 @@ void screen_put_uint14(uint8_t x, uint8_t y, uint8_t color, uint16_t c) {
     screen_put_char('0' + (uint8_t)c);
 }
 
+// put hexadecimal number to debug out.
+void screen_put_hex8(uint8_t x, uint8_t y, uint8_t color, uint8_t val) {
+    screen_font_x = x;
+    screen_font_y = y;
+    screen_font_color = color;
+
+    uint8_t lo = val&0x0F;
+    uint8_t hi = val>>4;
+    if (hi < 0x0A) {
+        hi = '0' + hi;
+    } else {
+        hi = 'A' - 0x0A + hi;
+    }
+
+    if (lo < 0x0A) {
+        lo = '0' + lo;
+    } else {
+        lo = 'A' - 0x0A + lo;
+    }
+    screen_put_char(hi);
+    screen_put_char(lo);
+}
+
+// put 16bit hexadecimal number to debug out
+void screen_put_hex16(uint8_t x, uint8_t y, uint8_t color, uint16_t val) {
+    screen_put_hex8(x, y, color, val>>8);
+    screen_put_hex8(x, y, color, val & 0xFF);
+}
+
 void screen_put_fixed2(uint8_t x, uint8_t y, uint8_t color, uint16_t c) {
     uint8_t tmp;
     uint8_t l = 0;

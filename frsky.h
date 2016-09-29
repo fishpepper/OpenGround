@@ -30,6 +30,16 @@
 #define FRSKY_PACKET_BUFFER_SIZE (FRSKY_PACKET_LENGTH+3)
 #define FRSKY_COUNT_RXSTATS 20
 
+void frsky_do_bind_prepare(void);
+void frsky_do_bind_finish(void);
+void frsky_autotune_prepare(void);
+uint32_t frsky_autotune_do(void);
+void frsky_autotune_finish(void);
+void frsky_fetch_txid_and_hoptable_prepare(void);
+uint32_t frsky_fetch_txid_and_hoptable_do(void);
+void frsky_fetch_txid_and_hoptable_finish(void);
+
+
 extern uint8_t frsky_current_ch_idx;
 extern uint8_t frsky_diversity_count;
 // rssi

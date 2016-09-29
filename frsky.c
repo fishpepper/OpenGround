@@ -56,6 +56,7 @@ uint8_t frsky_diversity_count;
 uint8_t frsky_rssi;
 uint8_t frsky_link_quality;
 
+
 // pll calibration
 uint8_t frsky_calib_fscal1_table[FRSKY_HOPTABLE_SIZE];
 uint8_t frsky_calib_fscal2;
@@ -63,6 +64,8 @@ uint8_t frsky_calib_fscal3;
 // int16_t storage.frsky_freq_offset_acc;
 
 // rf rxtx buffer
+static uint8_t frsky_bind_packet_received;
+static uint16_t frsky_bind_packet_hoptable_flags;
 volatile uint8_t frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE];
 volatile uint8_t frsky_packet_received;
 volatile uint8_t frsky_packet_sent;
@@ -78,6 +81,7 @@ void frsky_init(void) {
     frsky_diversity_count = 0;
     frsky_packet_received = 0;
     frsky_packet_sent = 0;
+    frsky_bind_packet_received = 0;
 
     frsky_rssi = 100;
 
@@ -87,11 +91,11 @@ void frsky_init(void) {
     // init frsky registersttings for cc2500
     frsky_configure();
 
-    if (frsky_bind_jumper_set()) {
+    /*if (frsky_bind_jumper_set()) {
         // do binding
         frsky_do_bind();
         // binding will never return/ continue
-    }
+    }*/
 
     // show info:
     debug("frsky: using txid 0x"); debug_flush();
@@ -195,7 +199,7 @@ uint8_t frsky_bind_jumper_set(void) {
     }
 }
 
-void frsky_do_bind(void) {
+void frsky_do_bind_prepare(void) {
     debug("frsky: do bind\n"); debug_flush();
 
     // set txid to bind channel
@@ -210,13 +214,9 @@ void frsky_do_bind(void) {
     // set up leds:frsky_txid
     led_button_r_off();
     led_button_l_on();
+}
 
-    // start autotune:
-    frsky_autotune();
-
-    // now run the actual binding:
-    frsky_fetch_txid_and_hoptable();
-
+void frsky_do_bind_finish(void) {
     // important: stop RF interrupts:
     cc2500_disable_rf_interrupt();
 
@@ -226,27 +226,13 @@ void frsky_do_bind(void) {
     // done, end up in fancy blink code
     debug("frsky: finished binding. please reset\n");
     led_button_l_on();
-
-    while (1) {
-        led_button_r_on();
-        delay_ms(500);
-        wdt_reset();
-
-        led_button_r_off();
-        delay_ms(500);
-        wdt_reset();
-    }
 }
 
+static uint8_t frsky_state;
+static int8_t frsky_fscal0_min;
+static int8_t frsky_fscal0_max;
 
-void frsky_autotune(void) {
-    uint8_t done = 0;
-    uint8_t received_packet = 0;
-    uint8_t state = 0;
-    int8_t fscal0_min = 127;
-    int8_t fscal0_max = -127;
-    int16_t fscal0_calc;
-
+void frsky_autotune_prepare(void) {
     debug("frsky: autotune\n"); debug_flush();
 
     // enter RX mode
@@ -259,21 +245,27 @@ void frsky_autotune(void) {
 
     led_button_r_off();
 
+    frsky_state = 0;
+    frsky_fscal0_min = 127;
+    frsky_fscal0_max = -127;
+    frsky_bind_packet_received = 0;
+}
+
+uint32_t frsky_autotune_do(void) {
     // search for best fscal 0 match
-    while (state != 5) {
-        // reset wdt
-        wdt_reset();
+    // reset wdt
+    wdt_reset();
 
-        // handle any ovf conditions
-        frsky_handle_overflows();
+    // handle any ovf conditions
+    frsky_handle_overflows();
 
-        // search full range quickly using binary search
-        switch (state) {
+    // search full range quickly using binary search
+    switch (frsky_state) {
         default:
         case (0):
             // init left search:
             storage.frsky_freq_offset = -127;
-            state = 1;
+            frsky_state = 1;
             break;
 
         case (1):
@@ -282,105 +274,110 @@ void frsky_autotune(void) {
                 storage.frsky_freq_offset += 9;
             } else {
                 // done one search, did we receive anything?
-                if (received_packet) {
+                if (frsky_bind_packet_received) {
                     // finished, go to slow search
-                    storage.frsky_freq_offset = fscal0_min - 9;
-                    state = 2;
+                    storage.frsky_freq_offset = frsky_fscal0_min - 9;
+                    frsky_state = 2;
                 } else {
                     // no success, lets try again
-                    state = 0;
+                    frsky_state = 0;
                 }
             }
             break;
 
         case (2):
-            if (storage.frsky_freq_offset < fscal0_max+9) {
+            if (storage.frsky_freq_offset < frsky_fscal0_max+9) {
                 storage.frsky_freq_offset++;
             } else {
                 // done!
-                state = 5;
+                frsky_state = 5;
             }
             break;
-        }
-
-        // go to idle
-        cc2500_strobe(RFST_SIDLE);
-
-        // set freq offset
-        cc2500_set_register(FSCTRL0, storage.frsky_freq_offset);
-
-        led_button_r_off();
-
-        // go back to RX:
-        delay_ms(1);
-        cc2500_strobe(RFST_SRX);
-
-        // set timeout
-        timeout_set(50);
-        done = 0;
-
-        led_button_l_on();
-        led_button_r_off();
-
-        // debug("tune "); debug_put_int8(storage.frsky_freq_offset);
-        // debug_put_newline(); debug_flush();
-
-        while ((!timeout_timed_out()) && (!done)) {
-            // handle any ovf conditions
-            frsky_handle_overflows();
-
-            cc2500_process_packet(&frsky_packet_received, \
-                                  (volatile uint8_t *)&frsky_packet_buffer, \
-                                  FRSKY_PACKET_BUFFER_SIZE);
-
-            if (frsky_packet_received) {
-                // prepare for next packet:
-                frsky_packet_received = 0;
-                cc2500_enable_receive();
-                cc2500_strobe(RFST_SRX);
-
-                // valid packet?
-                if (FRSKY_VALID_PACKET_BIND(frsky_packet_buffer)) {
-                    // bind packet!
-                    debug_putc('B');
-
-                    // packet received
-                    received_packet = 1;
-
-                    // this fscal value is done
-                    done = 1;
-
-                    // update min/ max
-                    fscal0_min = min(fscal0_min, storage.frsky_freq_offset);
-                    fscal0_max = max(fscal0_max, storage.frsky_freq_offset);
-
-                    // make sure we never read the same packet twice by invalidating packet
-                    frsky_packet_buffer[0] = 0x00;
-                }
-
-                /*debug("[");debug_flush();
-        uint8_t cnt;
-                for (cnt = 0; cnt < FRSKY_PACKET_BUFFER_SIZE; cnt++) {
-                    debug_put_hex8(frsky_packet_buffer[cnt]);
-                    debug_putc(' ');
-                    debug_flush();
-                }
-                debug("]\n"); debug_flush();*/
-            }
-        }
-        if (!done) {
-            debug_putc('-');
-        }
-        debug_flush();
     }
 
+    // go to idle
+    cc2500_strobe(RFST_SIDLE);
+
+    // set freq offset
+    cc2500_set_register(FSCTRL0, storage.frsky_freq_offset);
+
+    led_button_r_off();
+
+    // go back to RX:
+    delay_ms(1);
+    cc2500_strobe(RFST_SRX);
+
+    // set timeout
+    timeout_set(50);
+
+    led_button_l_on();
+    led_button_r_off();
+
+    // debug("tune "); debug_put_int8(storage.frsky_freq_offset);
+    // debug_put_newline(); debug_flush();
+    uint32_t done = 0;
+    while ((!timeout_timed_out()) && (!done)) {
+        frsky_packet_received = 0;
+
+        // handle any ovf conditions
+        frsky_handle_overflows();
+
+        cc2500_process_packet(&frsky_packet_received, \
+                              (volatile uint8_t *)&frsky_packet_buffer, \
+                              FRSKY_PACKET_BUFFER_SIZE);
+
+        if (frsky_packet_received) {
+            // prepare for next packet:
+            frsky_packet_received = 0;
+            cc2500_enable_receive();
+            cc2500_strobe(RFST_SRX);
+
+            // valid packet?
+            if (FRSKY_VALID_PACKET_BIND(frsky_packet_buffer)) {
+                // bind packet!
+                debug_putc('B');
+
+                // packet received
+                frsky_bind_packet_received = 1;
+
+                // this fscal value is done
+                done = 1;
+
+                // update min/ max
+                frsky_fscal0_min = min(frsky_fscal0_min, storage.frsky_freq_offset);
+                frsky_fscal0_max = max(frsky_fscal0_max, storage.frsky_freq_offset);
+
+                // make sure we never read the same packet twice by invalidating packet
+                frsky_packet_buffer[0] = 0x00;
+            }
+
+            /*debug("[");debug_flush();
+    uint8_t cnt;
+            for (cnt = 0; cnt < FRSKY_PACKET_BUFFER_SIZE; cnt++) {
+                debug_put_hex8(frsky_packet_buffer[cnt]);
+                debug_putc(' ');
+                debug_flush();
+            }
+            debug("]\n"); debug_flush();*/
+        }
+    }
+    if (!done) {
+        debug_putc('-');
+    }
+    debug_flush();
+
+    return (frsky_state == 5);
+}
+
+
+void frsky_autotune_finish(void) {
     // set offset to what we found out to be the best:
-    fscal0_calc = (fscal0_max + fscal0_min)/ 2;
+    int16_t fscal0_calc = (frsky_fscal0_max + frsky_fscal0_min)/ 2;
 
     debug("\nfrsky: fscal0 ");
-    debug_put_int8(fscal0_min);
+    debug_put_int8(frsky_fscal0_min);
     debug(" - ");
-    debug_put_int8(fscal0_max);
+    debug_put_int8(frsky_fscal0_max);
     debug_put_newline();
     debug_flush();
 
@@ -475,11 +472,8 @@ void frsky_handle_overflows(void) {
 }
 
 
-void frsky_fetch_txid_and_hoptable(void) {
+void frsky_fetch_txid_and_hoptable_prepare(void) {
     debug("frsky: fetching txid + hopt\n"); debug_flush();
-    uint16_t hopdata_received = 0;
-    uint8_t index;
-    uint8_t i;
 
     // enter RX mode
     frsky_enter_rxmode(0);
@@ -490,107 +484,118 @@ void frsky_fetch_txid_and_hoptable(void) {
 
     // timeout to wait for packets
     timeout_set(9*3+1);
+    frsky_bind_packet_received = 0;
+    frsky_bind_packet_hoptable_flags = 0;
+}
+
+uint32_t frsky_fetch_txid_and_hoptable_do(void) {
+    uint8_t i;
 
     // fetch hopdata array
-    while (hopdata_received != HOPDATA_RECEIVE_DONE) {
-        // reset wdt
-        wdt_reset();
+    // reset wdt
+    wdt_reset();
 
-        // handle any ovf conditions
-        frsky_handle_overflows();
+    // handle any ovf conditions
+    frsky_handle_overflows();
 
-        // FIXME: this should be handled in a cleaner way.
-        // as this is just for binding, stay with this fix for now...
-        if (timeout_timed_out()) {
-            // do diversity
-            // cc2500_switch_antenna();
+    // FIXME: this should be handled in a cleaner way.
+    // as this is just for binding, stay with this fix for now...
+    if (timeout_timed_out()) {
+        // do diversity
+        // cc2500_switch_antenna();
 
-            debug_putc('m');
+        debug_putc('m');
 
-            // next packet should be there ein 9ms
-            // if no packet for 3*9ms -> reset rx chain:
-            timeout_set(3*9+1);
+        // next packet should be there ein 9ms
+        // if no packet for 3*9ms -> reset rx chain:
+        timeout_set(3*9+1);
 
-            // re-prepare for next packet:
-            cc2500_strobe(RFST_SIDLE);
-            // TESTME: moved to rx_sleep....
-            // delay_ms(1);
-            frsky_packet_received = 0;
-            cc2500_rx_sleep();
-            cc2500_enable_receive();
-            cc2500_strobe(RFST_SRX);
-        }
+        // re-prepare for next packet:
+        cc2500_strobe(RFST_SIDLE);
+        // TESTME: moved to rx_sleep....
+        // delay_ms(1);
+        frsky_packet_received = 0;
+        cc2500_rx_sleep();
+        cc2500_enable_receive();
+        cc2500_strobe(RFST_SRX);
+    }
 
-        // process incoming data
-        cc2500_process_packet(&frsky_packet_received, (volatile uint8_t *)&frsky_packet_buffer, \
-                              FRSKY_PACKET_BUFFER_SIZE);
+    // process incoming data
+    cc2500_process_packet(&frsky_packet_received, (volatile uint8_t *)&frsky_packet_buffer, \
+                          FRSKY_PACKET_BUFFER_SIZE);
 
-        if (frsky_packet_received) {
-            debug_putc('p');
+    if (frsky_packet_received) {
+        debug_putc('p');
 
-            // prepare for next packet:
-            frsky_packet_received = 0;
-            cc2500_enable_receive();
-            cc2500_strobe(RFST_SRX);
+        // prepare for next packet:
+        frsky_packet_received = 0;
+        cc2500_enable_receive();
+        cc2500_strobe(RFST_SRX);
 
 
 #if FRSKY_DEBUG_BIND_DATA
-            if (FRSKY_VALID_FRAMELENGTH(frsky_packet_buffer)) {
-                debug("frsky: RX ");
-                debug_flush();
-                for (i = 0; i < FRSKY_PACKET_BUFFER_SIZE; i++) {
-                    debug_put_hex8(frsky_packet_buffer[i]);
-                    debug_putc(' ');
-                }
-                debug_put_newline();
+        if (FRSKY_VALID_FRAMELENGTH(frsky_packet_buffer)) {
+            debug("frsky: RX ");
+            debug_flush();
+            for (i = 0; i < FRSKY_PACKET_BUFFER_SIZE; i++) {
+                debug_put_hex8(frsky_packet_buffer[i]);
+                debug_putc(' ');
             }
+            debug_put_newline();
+        }
 #endif  // FRSKY_DEBUG_BIND_DATA
 
 
-            // do we know our txid yet?
-            if (FRSKY_VALID_PACKET_BIND(frsky_packet_buffer)) {
-                // next packet should be ther ein 9ms
-                // if no packet for 3*9ms -> reset rx chain:
-                timeout_set(3*9+1);
+        // do we know our txid yet?
+        if (FRSKY_VALID_PACKET_BIND(frsky_packet_buffer)) {
+            // next packet should be ther ein 9ms
+            // if no packet for 3*9ms -> reset rx chain:
+            timeout_set(3*9+1);
 
-                debug_putc('B');
-                if ((storage.frsky_txid[0] == 0) && (storage.frsky_txid[1] == 0)) {
-                    // no! extract this
-                    storage.frsky_txid[0] = frsky_packet_buffer[3];
-                    storage.frsky_txid[1] = frsky_packet_buffer[4];
-                    // debug
-                    debug("\nfrsky: got txid 0x");
-                    debug_put_hex8(storage.frsky_txid[0]);
-                    debug_put_hex8(storage.frsky_txid[1]);
-                    debug_put_newline();
-                }
-
-                // this is actually for us
-                index = frsky_packet_buffer[5];
-
-                // valid bind index?
-                if (index/ 5 < MAX_BIND_PACKET_COUNT) {
-                    // copy data to our hop list:
-                    for (i = 0; i < 5; i++) {
-                        if ((index+i) < FRSKY_HOPTABLE_SIZE) {
-                            storage.frsky_hop_table[index+i] = frsky_packet_buffer[6+i];
-                        }
-                    }
-                    // mark as done: set bit flag for index
-                    hopdata_received |= (1 << (index/ 5));
-                } else {
-                    debug("frsky: invalid bind idx");
-                    debug_put_uint8(index / 5);
-                    debug_put_newline();
-                }
-
-                // make sure we never read the same packet twice by crc flag
-                frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE-1] = 0x00;
+            debug_putc('B');
+            if ((storage.frsky_txid[0] == 0) && (storage.frsky_txid[1] == 0)) {
+                // no! extract this
+                storage.frsky_txid[0] = frsky_packet_buffer[3];
+                storage.frsky_txid[1] = frsky_packet_buffer[4];
+                // debug
+                debug("\nfrsky: got txid 0x");
+                debug_put_hex8(storage.frsky_txid[0]);
+                debug_put_hex8(storage.frsky_txid[1]);
+                debug_put_newline();
             }
-        }
-        debug_flush();
-    }
 
+            // this is actually for us
+            uint8_t index = frsky_packet_buffer[5];
+
+            // valid bind index?
+            if (index/ 5 < MAX_BIND_PACKET_COUNT) {
+                // copy data to our hop list:
+                for (i = 0; i < 5; i++) {
+                    if ((index+i) < FRSKY_HOPTABLE_SIZE) {
+                        storage.frsky_hop_table[index+i] = frsky_packet_buffer[6+i];
+                    }
+                }
+                // mark as done: set bit flag for index
+                frsky_bind_packet_hoptable_flags |= (1 << (index/ 5));
+            } else {
+                debug("frsky: invalid bind idx");
+                debug_put_uint8(index / 5);
+                debug_put_newline();
+            }
+
+            // make sure we never read the same packet twice by crc flag
+            frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE-1] = 0x00;
+        }
+    }
+    debug_put_uint8(frsky_bind_packet_hoptable_flags);
+    debug_put_newline();
+
+    debug_flush();
+
+    return (frsky_bind_packet_hoptable_flags == HOPDATA_RECEIVE_DONE);
+}
+
+void frsky_fetch_txid_and_hoptable_finish(void) {
 #if FRSKY_DEBUG_BIND_DATA
     debug("frsky: hop[] = ");
     for (i = 0; i < FRSKY_HOPTABLE_SIZE; i++) {

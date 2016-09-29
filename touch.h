@@ -113,4 +113,6 @@ typedef struct __attribute__((__packed__)) {
     struct touch_ft6236_touchpoint points[TOUCH_FT6236_MAX_TOUCH_POINTS];
 } touch_ft6236_packet_t;
 
+touch_event_t touch_get_last_event(void);
+
 #endif  // TOUCH_H_

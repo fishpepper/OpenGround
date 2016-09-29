@@ -48,7 +48,7 @@ void storage_init(void) {
     }
 
     // for debugging
-    storage_load_defaults();
+    // storage_load_defaults();
 
 
     debug("storage: loaded hoptable[]:\n");
@@ -61,6 +61,16 @@ void storage_init(void) {
     debug("storage: txid 0x");
     debug_put_hex8(storage.frsky_txid[0]);
     debug_put_hex8(storage.frsky_txid[1]);
+    debug_flush();
+
+    debug("\nstorage: stick calib:\n");
+    for (i = 0; i < 4; i++) {
+        debug("CH "); debug_put_uint8(i); debug_putc(' ');
+        debug_put_uint16(storage.stick_calibration[i][0]); debug_putc('-');
+        debug_put_uint16(storage.stick_calibration[i][1]); debug_putc('-');
+        debug_put_uint16(storage.stick_calibration[i][2]);
+        debug_put_newline();
+    }
     debug_flush();
 }
 
@@ -88,10 +98,51 @@ static void storage_load_defaults(void) {
     // stick calib
     for (i = 0; i < 4; i++) {
         storage.stick_calibration[i][0] = 100;
-        storage.stick_calibration[i][1] = 4096 - 100;
+        storage.stick_calibration[i][1] = 2048;
+        storage.stick_calibration[i][2] = 4096 - 100;
     }
+
+    // initialise empty models
+    for (i = 0; i < STORAGE_MODEL_MAX_COUNT; i++) {
+        storage.model[i].name[0] = 0;
+        storage.model[i].name[STORAGE_MODEL_NAME_LEN-1] = 0;
+        storage.model[i].timer = 5*60;
+    }
+
+    // add example model
+    storage_mode_set_name(0, "TinyWhoop");
+    storage.model[0].timer = 3*60;
+    storage.current_model = 0;
 }
 
+void storage_mode_set_name(uint8_t index, uint8_t *str) {
+    debug("storage: set modelname ");
+    debug_put_uint8(index);
+    debug("\n         ");
+    debug(str);
+    debug_put_newline();
+    debug_flush();
+
+    // valid index?
+    if (index >= STORAGE_MODEL_MAX_COUNT) {
+        // invalid index!
+        debug("storage: ERROR invalid index\n");
+        debug_flush();
+        return;
+    }
+
+    // make sure not to exceed the maximum number of chars in name
+    uint32_t i;
+    for (i = 0; i < STORAGE_MODEL_NAME_LEN; i++) {
+        storage.model[index].name[i] = str[i];
+        if (str[i] == 0) {
+            break;
+        }
+    }
+
+    // make sure we have a valid zero terminated string in any case
+    storage.model[index].name[STORAGE_MODEL_NAME_LEN-1] = 0;
+}
 
 static void storage_load(void) {
     eeprom_read_storage();
