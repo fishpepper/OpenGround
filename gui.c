@@ -547,6 +547,10 @@ static void gui_config_clonetx_render(void) {
                 /*screen_fill(0);
                 console_render();
                 screen_update();*/
+                if (io_powerbutton_pressed()){
+                    // abort!
+                    gui_page = GUI_PAGE_SETTING_FLAG | 0;
+                }
             }
             gui_config_counter++;
             break;
@@ -567,6 +571,10 @@ static void gui_config_clonetx_render(void) {
                 /*screen_fill(0);
                 console_render();
                 screen_update();*/
+                if (io_powerbutton_pressed()){
+                    // abort!
+                    gui_page = GUI_PAGE_SETTING_FLAG | 0;
+                }
             }
             gui_config_counter++;
             break;
