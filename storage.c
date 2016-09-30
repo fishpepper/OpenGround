@@ -77,7 +77,6 @@ void storage_init(void) {
         debug_put_newline();
     }
     debug_flush();
-    delay_ms(10000);
 }
 
 static void storage_load_defaults(void) {

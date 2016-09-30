@@ -136,7 +136,7 @@ void frsky_init_timer(void) {
     // compute prescaler value
     // we want one ISR every 9ms
     // setting TIM_Period to 9000 will reuqire
-    // a prescaler so that one timer tick es 1us
+    // a prescaler so that one timer tick is 1us (1MHz)
     uint16_t prescaler = (uint16_t) (SystemCoreClock  / 1000000) - 1;
 
     // time base configuration as calculated above
@@ -147,7 +147,7 @@ void frsky_init_timer(void) {
     timebase_init.TIM_CounterMode   = TIM_CounterMode_Up;
     TIM_TimeBaseInit(TIM3, &timebase_init);
 
-    // should be done by timebasinit...
+    // should be done by timebaseinit...
     // TIM_PrescalerConfig(TIM3, prescaler, TIM_PSCReloadMode_Immediate);
 
     // TIM Interrupts enable
@@ -161,8 +161,11 @@ void TIM3_IRQHandler(void) {
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
+        CC2500_SPI_GPIO->BSRR = (CC2500_SPI_GPIO->ODR ^ CC2500_SPI_CSN_PIN) | (CC2500_SPI_CSN_PIN << 16);
+
         // do frsky stuff now
         led_button_r_toggle();
+        led_button_l_on();
     }
 }
 
