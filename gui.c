@@ -418,7 +418,6 @@ void gui_render(void) {
             break;
 
         default :
-            screen_fill(0);
             uint8_t buf[2];
             buf[0] = '0' + gui_page-2;
             buf[1] = 0;
