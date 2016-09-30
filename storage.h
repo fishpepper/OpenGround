@@ -33,7 +33,7 @@ void storage_init(void);
 // void storage_write_to_flash(void);
 // static void storage_read_from_flash(void);
 void storage_save(void);
-static void storage_load(void);
+void storage_load(void);
 void storage_mode_set_name(uint8_t index, uint8_t *str);
 static void storage_load_defaults(void);
 /*static void storage_write(uint8_t *buffer, uint16_t len);

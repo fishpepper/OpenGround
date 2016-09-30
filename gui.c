@@ -25,6 +25,7 @@
 #include "storage.h"
 #include "led.h"
 #include "io.h"
+#include "storage.h"
 #include "wdt.h"
 #include "adc.h"
 #include "sound.h"
@@ -168,6 +169,14 @@ static void gui_cb_config_save(void) {
 }
 
 static void gui_cb_config_stick_cal(void) {
+    uint32_t i, j;
+    // re init min/center/max to cur value
+    for (i = 0; i < 4; i++) {
+        for (j = 0; j < 3; j++) {
+            storage.stick_calibration[i][j] = adc_get_channel(i);
+        }
+    }
+
     gui_page = GUI_PAGE_SETTING_FLAG | 1;
 }
 
@@ -181,6 +190,10 @@ static void gui_cb_config_model(void) {
 }
 
 static void gui_cb_config_exit(void) {
+    // restore old settings
+    storage_load();
+
+    // back to config main menu
     gui_page = 1;
 }
 
@@ -633,7 +646,7 @@ static void gui_config_stick_calibration_render(void) {
     }
 
     // render buttons and set callback
-    gui_add_button(89, 34 + 0*15, 35, 13, "SAVE", &gui_cb_config_exit);
+    gui_add_button(89, 34 + 0*15, 35, 13, "SAVE", &gui_cb_config_save);
     gui_add_button(89, 34 + 1*15, 35, 13, "BACK", &gui_cb_config_exit);
 
     // gui_add_button(94, 34 + 0*18, font, " SAVE ", &gui_cb_config_save);

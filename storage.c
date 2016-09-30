@@ -34,6 +34,7 @@ void storage_init(void) {
 
     debug("storage: init\n"); debug_flush();
 
+
     // reload data from flash
     storage_load();
 
@@ -42,13 +43,17 @@ void storage_init(void) {
         debug("got 0x");
         debug_put_hex8(storage.version);
         debug_put_newline();
+        delay_ms(1000);
         debug_flush();
         storage_load_defaults();
         storage_save();
+        // reload to make sure write was ok
+        storage_load();
     }
 
     // for debugging
     // storage_load_defaults();
+    // storage_save();
 
 
     debug("storage: loaded hoptable[]:\n");
@@ -145,12 +150,13 @@ void storage_mode_set_name(uint8_t index, uint8_t *str) {
     storage.model[index].name[STORAGE_MODEL_NAME_LEN-1] = 0;
 }
 
-static void storage_load(void) {
+void storage_load(void) {
+    debug("storage: load\n"); debug_flush();
     eeprom_read_storage();
 }
 
 void storage_save(void) {
-    debug("storage: storing\n"); debug_flush();
+    debug("storage: save\n"); debug_flush();
     eeprom_write_storage();
 }
 

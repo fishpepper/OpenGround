@@ -137,8 +137,10 @@ void eeprom_read_storage(void) {
             debug_put_newline();
             debug_flush();*/
         } else {
-            // read back into storage:
             // debug("eeprom: read 0x"); debug_put_hex16(value); debug_put_newline(); debug_flush();
+            // delay_ms(100);
+
+            // read back into storage:
             if (p < sizeof (storage)) storage_ptr[p++] = (value>>8) & 0xFF;
             if (p < sizeof (storage)) storage_ptr[p++] = value & 0xFF;
 

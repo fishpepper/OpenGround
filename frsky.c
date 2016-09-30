@@ -137,7 +137,7 @@ void frsky_init_timer(void) {
     // we want one ISR every 9ms
     // setting TIM_Period to 9000 will reuqire
     // a prescaler so that one timer tick es 1us
-    uint16_t prescaler = (uint16_t) (SystemCoreClock  / 1000*1000) - 1;
+    uint16_t prescaler = (uint16_t) (SystemCoreClock  / 1000000) - 1;
 
     // time base configuration as calculated above
     // timer counts with 1MHz thus 9000 ticks = 9ms
