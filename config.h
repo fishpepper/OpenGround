@@ -75,7 +75,10 @@
 #define SPEAKER_PIN          GPIO_Pin_8
 #define SPEAKER_PIN_SOURCE   8
 
-#define NVIC_PRIO_SYSTICK    0
+// irq priorities
+#define NVIC_PRIO_FRSKY      0
+#define NVIC_PRIO_SYSTICK    1
+#define NVIC_PRIO_TOUCH      3
 
 // touch
 #define TOUCH_FT6236_I2C_ADDRESS      0x70

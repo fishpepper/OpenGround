@@ -57,6 +57,13 @@ void sound_init(void) {
     sound_tone_duration = 0;
 }
 
+void sound_play_click(void) {
+    sound_queue[0].frequency   = 20000;
+    sound_queue[0].duration_ms = 80;
+    sound_queue[1].duration_ms = 0;
+    sound_queue_state = 1;
+}
+
 static void sound_init_rcc(void) {
     // enable all peripheral clocks:
     RCC_AHBPeriphClockCmd(SPEAKER_GPIO_CLK, ENABLE);

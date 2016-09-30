@@ -74,7 +74,7 @@ static void gui_render_bottombar(void);
 static void gui_render_settings(void);
 
 static void gui_touch_callback_execute(uint8_t i);
-static void gui_add_button(uint8_t x, uint8_t y, const uint8_t *font, uint8_t *Str, f_ptr_t cb);
+static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *str, f_ptr_t cb);
 
 static void gui_cb_previous_page(void);
 static void gui_cb_next_page(void);

@@ -582,13 +582,56 @@ uint32_t screen_strlen(uint8_t *str) {
     return len;
 }
 
-void screen_puts_centered(uint8_t y, uint8_t color, uint8_t *str) {
-    uint32_t font_width = screen_font_ptr[FONT_FIXED_WIDTH];
+void screen_puts_xy_centered(uint8_t x, uint8_t y, uint8_t color, uint8_t *str) {
+    uint32_t font_w = screen_font_ptr[FONT_FIXED_WIDTH];
+    uint32_t font_h = screen_font_ptr[FONT_HEIGHT];
+
     uint32_t char_count = screen_strlen(str);
-    uint32_t x = LCD_WIDTH/2 - font_width/2 - (char_count*(font_width+1))/2;
-    screen_puts_xy(x, y, color, str);
+    uint32_t sx = x - font_w/2 - (char_count*(font_w+1))/2;
+    uint32_t sy = y - font_h/2;
+    screen_puts_xy(sx, sy, color, str);
 }
 
+void screen_puts_centered(uint8_t y, uint8_t color, uint8_t *str) {
+    screen_puts_xy_centered(LCD_WIDTH/2, y, color, str);
+}
+
+
+
+// output a signed 8-bit number to uart
+void screen_put_int8(uint8_t x, uint8_t y, uint8_t color, int8_t c) {
+    screen_font_x = x;
+    screen_font_y = y;
+    screen_font_color = color;
+
+    uint8_t tmp;
+    uint8_t mul;
+    uint8_t l;
+    uint8_t uint_s;
+
+    if (c < 0) {
+        screen_put_char('-');
+        uint_s = -c;
+    } else {
+        screen_put_char(' ');
+        uint_s = c;
+    }
+
+    l = 0;
+    for (mul = 100; mul > 0; mul = mul/ 10) {
+        tmp = '0';
+        while (uint_s >= mul) {
+            uint_s -= mul;
+            tmp++;
+            l = 1;
+        }
+        if ((l == 0) && (tmp == '0') && (mul != 1)) {
+            screen_put_char(' ');
+        } else {
+            screen_put_char(tmp);
+        }
+    }
+}
 
 // output an unsigned 14-bit number
 void screen_put_uint14(uint8_t x, uint8_t y, uint8_t color, uint16_t c) {

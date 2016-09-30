@@ -30,8 +30,11 @@ static void adc_init_gpio(void);
 static void adc_init_mode(void);
 static void adc_init_dma(void);
 static void adc_dma_arm(void);
+
 void adc_process(void);
+
 uint16_t adc_get_channel(uint32_t id);
+int32_t adc_get_channel_rescaled(uint8_t idx);
 uint32_t adc_get_battery_voltage(void);
 
 #define ADC_DMA_CHANNEL           DMA1_Channel1

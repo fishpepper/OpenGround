@@ -27,6 +27,7 @@
 #include "io.h"
 #include "wdt.h"
 #include "adc.h"
+#include "sound.h"
 #include "delay.h"
 #include "touch.h"
 #include "screen.h"
@@ -108,23 +109,15 @@ static void gui_touch_callback_execute(uint8_t i) {
     }
 }
 
-static void gui_add_button(uint8_t x, uint8_t y, const uint8_t *font, uint8_t *str, f_ptr_t cb) {
-    uint32_t h = font[FONT_HEIGHT] + 1;
-    uint32_t w = font[FONT_FIXED_WIDTH] + 1;
-
-    // length of string
-    uint8_t len = screen_strlen(str);
-
+static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *str, f_ptr_t cb) {
     // render a rounded rect
-    uint32_t rect_w = len*w + 2*3;
-    uint32_t rect_h = h + 2*2;
-    screen_draw_round_rect(x, y, rect_w, rect_h, 3, 1);
+    screen_draw_round_rect(x, y, w, h, 3, 1);
 
-    // add string
-    screen_puts_xy(x + 3, y + 2, 1, str);
+    // render string
+    screen_puts_xy_centered(x + w/2, y + h/2, 1, str);
 
     // register the callback
-    gui_touch_callback_register(x, x + rect_w, y, y + rect_h, cb);
+    gui_touch_callback_register(x, x + w, y, y + h, cb);
 }
 
 static void gui_process_touch(void) {
@@ -143,6 +136,8 @@ static void gui_process_touch(void) {
                 // check if click was inside this region
                 if ((t.x >= gui_touch_callback[i].xs) && (t.x <= gui_touch_callback[i].xe) &&
                     (t.y >= gui_touch_callback[i].ys) && (t.y <= gui_touch_callback[i].ye) ) {
+                        // play sound
+                        sound_play_click();
                         // execute callback!
                         gui_touch_callback_execute(i);
                 }
@@ -219,13 +214,6 @@ void gui_loop(void) {
     debug("gui: entering main loop\n"); debug_flush();
     gui_active = 1;
     gui_page = GUI_PAGE_SETTING_FLAG | 0;
-
-    // fixme: move this to a function
-    uint32_t i;
-    for (i = 0; i < 4; i++) {
-        storage.stick_calibration[i][0] = adc_get_channel(i);
-        storage.stick_calibration[i][1] = adc_get_channel(i)+1;
-    }
 
     // this is the main GUI loop. rf stuff is done inside an ISR
     while (gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT) {
@@ -322,7 +310,8 @@ static void gui_render_bottombar(void) {
     screen_fill_rect(0, LCD_HEIGHT - 7, LCD_WIDTH, 7, 1);
 
     screen_set_font(font_tomthumb3x5);
-    screen_puts_centered(LCD_HEIGHT - 6, 0, storage.model[storage.current_model].name);
+    screen_puts_centered(LCD_HEIGHT - 6 + font_tomthumb3x5[FONT_HEIGHT]/2, 0,
+                         storage.model[storage.current_model].name);
 }
 
 
@@ -350,8 +339,6 @@ static void gui_render_sliders(void) {
     screen_set_font(font_tomthumb3x5);
 
     for (i = 0; i < 8; i++) {
-        uint32_t val = adc_get_channel(i);
-
         // render channel names
         y = 10 + i*(font_tomthumb3x5[FONT_HEIGHT]+1);
         screen_puts_xy(1, y, 1, gui_get_channel_name(i, GUI_CHANNEL_DESCR_SHORT));
@@ -363,13 +350,17 @@ static void gui_render_sliders(void) {
         screen_draw_hline(8 + 50 + 1, y2 - 1, 50-1, 1);
         screen_draw_hline(8 + 50 + 1, y2 + 1, 50-1, 1);
 
-        // render val as text
-        screen_put_uint14(8 + 100 + 2, y, 1, val);
+        int32_t val = adc_get_channel_rescaled(i);
+        // rescale  adc value from +/- 3200 to +/-100
+        val = val / 32;
 
-        // render value as slider 0..4096 to 0...100
-        val = (val * 100) / 4096;
-        screen_draw_vline(8 + val, y+1, 5, 1);
-        screen_draw_vline(8 + val + 1, y+1, 5, 1);
+        // render val as text
+        screen_put_int8(8 + 100 + 2, y, 1, val);
+
+        // rescale from +/-100 to 0..100
+        val = 50 + val/2;
+        screen_draw_vline(8 + val - 1, y+1, 5, 1);
+        screen_draw_vline(8 + val    , y+1, 5, 1);
     }
 }
 
@@ -418,6 +409,7 @@ void gui_render(void) {
             break;
 
         default :
+            screen_fill(0);
             uint8_t buf[2];
             buf[0] = '0' + gui_page-2;
             buf[1] = 0;
@@ -482,7 +474,7 @@ static void gui_config_header_render(uint8_t *str) {
     screen_draw_round_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, 3, 1);
 
     screen_set_font(font_tomthumb3x5);
-    screen_puts_centered(1, 0, str);
+    screen_puts_centered(1 + font_tomthumb3x5[FONT_HEIGHT]/2, 0, str);
 }
 
 static void gui_config_main_render(void) {
@@ -496,12 +488,12 @@ static void gui_config_main_render(void) {
     gui_config_header_render("MAIN CONFIGURATION");
 
     // render buttons and set callback
-    gui_add_button(3, 12 + 0*18, font, "STICK CAL", &gui_cb_config_stick_cal);
-    gui_add_button(3, 12 + 1*18, font, "CLONE  TX", &gui_cb_config_clonetx);
-    gui_add_button(3, 12 + 2*18, font, "MODEL CFG", &gui_cb_config_model);
+    gui_add_button(3, 10 + 0*17, 50, 15, "STICK CAL", &gui_cb_config_stick_cal);
+    gui_add_button(3, 10 + 1*17, 50, 15, "CLONE  TX", &gui_cb_config_clonetx);
+    gui_add_button(3, 10 + 2*17, 50, 15, "MODEL CFG", &gui_cb_config_model);
 
     // exit button
-    gui_add_button(94, 34 + 1*18, font, " EXIT ", &gui_cb_config_exit);
+    gui_add_button(74, 10 + 2*17, 50, 15, "EXIT", &gui_cb_config_exit);
 }
 
 static void gui_config_clonetx_render(void) {
@@ -516,7 +508,7 @@ static void gui_config_clonetx_render(void) {
     if (gui_config_counter >= 0) screen_puts_xy(3, 9 + 1*h, 1, "preparing bind...");
     if (gui_config_counter >= 1) screen_puts_xy(3, 9 + 2*h, 1, "preparing autotune");
     if (gui_config_counter >= 2) screen_puts_xy(3, 9 + 3*h, 1, "autotune running (takes long)");
-    if (gui_config_counter >= 3){
+    if (gui_config_counter >= 3) {
         screen_puts_xy(3, 9 + 4*h, 1, "autotune done. freq offset 0x");
         screen_put_hex16(3+w*29, 9 + 4*h, 1, storage.frsky_freq_offset);
     }
@@ -543,10 +535,8 @@ static void gui_config_clonetx_render(void) {
         case (2) :
             // do autotune loop until done
             while (!frsky_autotune_do()) {
-                /*screen_fill(0);
-                console_render();
-                screen_update();*/
-                if (io_powerbutton_pressed()){
+                // screen_fill(0); console_render(); screen_update();
+                if (io_powerbutton_pressed()) {
                     // abort!
                     gui_page = GUI_PAGE_SETTING_FLAG | 0;
                     return;
@@ -567,10 +557,8 @@ static void gui_config_clonetx_render(void) {
 
         case (5) :
             while (!frsky_fetch_txid_and_hoptable_do()) {
-                /*screen_fill(0);
-                console_render();
-                screen_update();*/
-                if (io_powerbutton_pressed()){
+                // screen_fill(0); console_render(); screen_update();
+                if (io_powerbutton_pressed()) {
                     // abort!
                     gui_page = GUI_PAGE_SETTING_FLAG | 0;
                     return;
@@ -602,7 +590,8 @@ static void gui_config_clonetx_render(void) {
 static void gui_config_model_render(void) {
     // header
     gui_config_header_render("MODEL SETTINGS");
-    gui_add_button(94, 34 + 1*18, font_tomthumb3x5, " BACK ", &gui_cb_config_back);
+    // gui_add_button(94, 34 + 1*18, font_tomthumb3x5, " BACK ", &gui_cb_config_back);
+    gui_add_button(74, 12 + 2*17, 50, 15, "BACK", &gui_cb_config_exit);
 }
 
 
@@ -618,14 +607,10 @@ static void gui_config_stick_calibration_render(void) {
     gui_config_stick_calibration_store_adc_values();
 
     // draw ui
-    screen_fill_rect(0, 0, LCD_WIDTH, 7, 1);
-    screen_draw_round_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, 3, 1);
-
-    screen_set_font(font);
-    screen_puts_centered(1, 0, "STICK CALIBRATION");
+    gui_config_header_render("STICK CALIBRATION");
 
     uint32_t y = 8;
-    //                          |                          |
+    //                       |                             |
     screen_puts_xy(3, y, 1, "Please move all sticks to the"); y += h;
     screen_puts_xy(3, y, 1, "extreme positions."); y += h;
     screen_puts_xy(3, y, 1, "When done, move all sticks to"); y += h;
@@ -633,19 +618,24 @@ static void gui_config_stick_calibration_render(void) {
 
     uint32_t x = 3;
     y = 33;
-    screen_puts_xy(x+1*4*w+w, y, 1, "min");
+
+    screen_puts_xy(x+1*4*w+w, y, 1,       "min");
     screen_puts_xy(x+2*4*w+1*2*w+w, y, 1, "now");
     screen_puts_xy(x+3*4*w+2*2*w+w, y, 1, "max");
     y += h;
+
     for (idx = 0; idx < 4; idx++) {
         screen_puts_xy(x, y, 1, gui_get_channel_name(idx, GUI_CHANNEL_DESCR_LONG));
         for (a = 0; a < 3; a++) {
-            screen_put_uint14(x+(a+1)*4*w+a*2*w, y, 1,       storage.stick_calibration[idx][a]);
+            screen_put_uint14(x+(a+1)*4*w+a*2*w, y, 1, storage.stick_calibration[idx][a]);
         }
         y += h;
     }
 
     // render buttons and set callback
-    gui_add_button(94, 34 + 0*18, font, " SAVE ", &gui_cb_config_save);
-    gui_add_button(94, 34 + 1*18, font, " BACK ", &gui_cb_config_back);
+    gui_add_button(89, 34 + 0*15, 35, 13, "SAVE", &gui_cb_config_exit);
+    gui_add_button(89, 34 + 1*15, 35, 13, "BACK", &gui_cb_config_exit);
+
+    // gui_add_button(94, 34 + 0*18, font, " SAVE ", &gui_cb_config_save);
+    // gui_add_button(94, 34 + 1*18, font, " BACK ", &gui_cb_config_back);
 }

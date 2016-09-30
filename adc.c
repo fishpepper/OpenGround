@@ -24,6 +24,7 @@
 #include "led.h"
 #include "wdt.h"
 #include "delay.h"
+#include "storage.h"
 #include "stm32f0xx_rcc.h"
 #include "stm32f0xx_gpio.h"
 #include "stm32f0xx_adc.h"
@@ -76,6 +77,44 @@ uint16_t adc_get_channel(uint32_t id) {
     } else {
         return 0;
     }
+}
+
+
+#define ADC_RESCALE_TARGET_RANGE 3200
+// return the adc channel rescaled from 0...4095 to -TARGET_RANGE...+TARGET_RANGE
+// switches are scaled manually, sticks use calibration data
+int32_t adc_get_channel_rescaled(uint8_t idx) {
+    int32_t divider;
+
+    // fetch raw stick value (0..4095)
+    int32_t value = adc_get_channel(idx);
+
+    // sticks are ch0..3 and use calibration coefficents:
+    if (idx < 4) {
+        // apply center calibration value:
+        value = value - (int16_t)storage.stick_calibration[idx][1];
+
+        // now rescale this to +/- TARGET_RANGE
+        // fetch divider
+        if (value < 0) {
+            divider = storage.stick_calibration[idx][1] - storage.stick_calibration[idx][0];
+        } else {
+            divider = storage.stick_calibration[idx][2] - storage.stick_calibration[idx][1];
+        }
+        // apply the scale
+        value = (value * ADC_RESCALE_TARGET_RANGE) / divider;
+    } else {
+        // for sticks we do not care about scaling/calibration (for now)
+        // min is 0, max from adc is 4095 -> rescale this to +/- 3200
+        // rescale to 0...6400
+        value = (ADC_RESCALE_TARGET_RANGE * 2 * value) / 4096;
+        value = value - ADC_RESCALE_TARGET_RANGE;
+    }
+
+    // limit value to -3200 ... 3200
+    value = max(-ADC_RESCALE_TARGET_RANGE, min(ADC_RESCALE_TARGET_RANGE, value));
+
+    return value;
 }
 
 
@@ -225,8 +264,6 @@ void adc_process(void) {
         // cancel and re arm dma ???
     }
 }
-
-
 
 void adc_test(void) {
     while (1) {

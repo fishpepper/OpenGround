@@ -31,6 +31,9 @@
 #include "storage.h"
 #include "adc.h"
 
+#include "stm32f0xx_tim.h"
+#include "stm32f0xx_misc.h"
+
 // this will make binding not very reliable, use for debugging only!
 #define FRSKY_DEBUG_BIND_DATA 0
 #define FRSKY_DEBUG_HOPTABLE 1
@@ -47,28 +50,29 @@
 // 0x3D, 0x7E, 0xBF, 0x15, 0x56, 0x97, 0xD8, 0x2E, 0x6F, 0xB0, 0x06, 0x47, 0x88, 0xC9,
 // 0x1F, 0x60, 0xA1, 0xE2, 0x38, 0x79, 0xBA, 0x10, 0x51, 0x92, 0xD3, 0x29, 0x6A, 0xAB};
 // int8_t storage.frsky_freq_offset;
-uint8_t frsky_current_ch_idx;
+static uint8_t frsky_current_ch_idx;
 
 // iversity counter
-uint8_t frsky_diversity_count;
+static uint8_t frsky_diversity_count;
 
 // rssi
-uint8_t frsky_rssi;
-uint8_t frsky_link_quality;
-
+static uint8_t frsky_rssi;
+static uint8_t frsky_link_quality;
 
 // pll calibration
-uint8_t frsky_calib_fscal1_table[FRSKY_HOPTABLE_SIZE];
-uint8_t frsky_calib_fscal2;
-uint8_t frsky_calib_fscal3;
+static uint8_t frsky_calib_fscal1_table[FRSKY_HOPTABLE_SIZE];
+static uint8_t frsky_calib_fscal2;
+static uint8_t frsky_calib_fscal3;
 // int16_t storage.frsky_freq_offset_acc;
+
+static uint8_t frsky_tx_enabled;
 
 // rf rxtx buffer
 static uint8_t frsky_bind_packet_received;
 static uint16_t frsky_bind_packet_hoptable_flags;
-volatile uint8_t frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE];
-volatile uint8_t frsky_packet_received;
-volatile uint8_t frsky_packet_sent;
+static volatile uint8_t frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE];
+static volatile uint8_t frsky_packet_received;
+static volatile uint8_t frsky_packet_sent;
 
 
 void frsky_init(void) {
@@ -91,12 +95,6 @@ void frsky_init(void) {
     // init frsky registersttings for cc2500
     frsky_configure();
 
-    /*if (frsky_bind_jumper_set()) {
-        // do binding
-        frsky_do_bind();
-        // binding will never return/ continue
-    }*/
-
     // show info:
     debug("frsky: using txid 0x"); debug_flush();
     debug_put_hex8(storage.frsky_txid[0]);
@@ -109,7 +107,63 @@ void frsky_init(void) {
     // tune cc2500 pll and save the values to ram
     frsky_calib_pll();
 
+    // initialise 9ms timer isr
+    frsky_tx_enabled = 0;
+    frsky_init_timer();
+
     debug("frsky: init done\n"); debug_flush();
+}
+
+void frsky_init_timer(void) {
+    // init timer3 for 9ms
+    TIM_TimeBaseInitTypeDef timebase_init;
+    TIM_OCInitTypeDef oc_init;
+    NVIC_InitTypeDef nvic_init;
+
+    // pre-initialise structs
+    TIM_TimeBaseStructInit(&timebase_init);
+    TIM_OCStructInit(&oc_init);
+
+    // TIM3 clock enable
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+
+    // Enable the TIM3 gloabal Interrupt
+    nvic_init.NVIC_IRQChannel         = TIM3_IRQn;
+    nvic_init.NVIC_IRQChannelPriority = NVIC_PRIO_FRSKY;
+    nvic_init.NVIC_IRQChannelCmd      = ENABLE;
+    NVIC_Init(&nvic_init);
+
+    // compute prescaler value
+    // we want one ISR every 9ms
+    // setting TIM_Period to 9000 will reuqire
+    // a prescaler so that one timer tick es 1us
+    uint16_t prescaler = (uint16_t) (SystemCoreClock  / 1000*1000) - 1;
+
+    // time base configuration as calculated above
+    // timer counts with 1MHz thus 9000 ticks = 9ms
+    timebase_init.TIM_Period        = 9000-1;
+    timebase_init.TIM_Prescaler     = prescaler;
+    timebase_init.TIM_ClockDivision = 0;
+    timebase_init.TIM_CounterMode   = TIM_CounterMode_Up;
+    TIM_TimeBaseInit(TIM3, &timebase_init);
+
+    // should be done by timebasinit...
+    // TIM_PrescalerConfig(TIM3, prescaler, TIM_PSCReloadMode_Immediate);
+
+    // TIM Interrupts enable
+    TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+
+    // TIM3 enable counter
+    TIM_Cmd(TIM3, ENABLE);
+}
+
+void TIM3_IRQHandler(void) {
+    if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
+        TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+
+        // do frsky stuff now
+        led_button_r_toggle();
+    }
 }
 
 

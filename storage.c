@@ -72,6 +72,7 @@ void storage_init(void) {
         debug_put_newline();
     }
     debug_flush();
+    delay_ms(10000);
 }
 
 static void storage_load_defaults(void) {
@@ -95,11 +96,11 @@ static void storage_load_defaults(void) {
         storage.frsky_hop_table[i] = tmp[i];
     }
 
-    // stick calib
+    // stick calib, just dummy values
     for (i = 0; i < 4; i++) {
-        storage.stick_calibration[i][0] = 100;
-        storage.stick_calibration[i][1] = 2048;
-        storage.stick_calibration[i][2] = 4096 - 100;
+        storage.stick_calibration[i][0] = 300;
+        storage.stick_calibration[i][1] = 2000;
+        storage.stick_calibration[i][2] = 4096-300;
     }
 
     // initialise empty models

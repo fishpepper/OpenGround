@@ -132,7 +132,7 @@ static void touch_init_isr(void) {
 
     // enable and set EXTI* Interrupt
     nvic_init.NVIC_IRQChannel = TOUCH_INT_EXTI_IRQN;
-    nvic_init.NVIC_IRQChannelPriority = 3;  // lowest prio
+    nvic_init.NVIC_IRQChannelPriority = NVIC_PRIO_TOUCH;
     nvic_init.NVIC_IRQChannelCmd = ENABLE;
     NVIC_Init(&nvic_init);
 }

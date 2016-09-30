@@ -31,7 +31,7 @@ volatile static __IO uint32_t timeout_100us_delay;
 void timeout_init(void) {
     debug("timeout: init\n"); debug_flush();
 
-    // configure 1ms sys tick:
+    // configure 0.1ms sys tick:
     if (SysTick_Config(SystemCoreClock / 10000)) {
         debug("timeout: failed to set systick timeout\n");
         debug_flush();

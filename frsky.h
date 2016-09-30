@@ -30,31 +30,6 @@
 #define FRSKY_PACKET_BUFFER_SIZE (FRSKY_PACKET_LENGTH+3)
 #define FRSKY_COUNT_RXSTATS 20
 
-void frsky_do_bind_prepare(void);
-void frsky_do_bind_finish(void);
-void frsky_autotune_prepare(void);
-uint32_t frsky_autotune_do(void);
-void frsky_autotune_finish(void);
-void frsky_fetch_txid_and_hoptable_prepare(void);
-uint32_t frsky_fetch_txid_and_hoptable_do(void);
-void frsky_fetch_txid_and_hoptable_finish(void);
-
-
-extern uint8_t frsky_current_ch_idx;
-extern uint8_t frsky_diversity_count;
-// rssi
-extern uint8_t frsky_rssi;
-extern uint8_t frsky_link_quality;
-// pll calibration
-extern uint8_t frsky_calib_fscal1_table[FRSKY_HOPTABLE_SIZE];
-extern uint8_t frsky_calib_fscal2;
-extern uint8_t frsky_calib_fscal3;
-
-extern volatile uint8_t frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE];
-extern volatile uint8_t frsky_packet_received;
-extern volatile uint8_t frsky_packet_sent;
-
-
 void frsky_init(void);
 void frsky_show_partinfo(void);
 void frsky_configure(void);
@@ -73,6 +48,35 @@ void frsky_increment_channel(int8_t cnt);
 void frsky_set_channel(uint8_t hop_index);
 void frsky_send_telemetry(uint8_t telemetry_id);
 void frsky_update_ppm(void);
+
+void frsky_do_bind_prepare(void);
+void frsky_do_bind_finish(void);
+void frsky_autotune_prepare(void);
+uint32_t frsky_autotune_do(void);
+void frsky_autotune_finish(void);
+void frsky_fetch_txid_and_hoptable_prepare(void);
+uint32_t frsky_fetch_txid_and_hoptable_do(void);
+void frsky_fetch_txid_and_hoptable_finish(void);
+
+void frsky_init_timer(void);
+void TIM3_IRQHandler(void);
+
+
+// extern uint8_t frsky_current_ch_idx;
+// extern uint8_t frsky_diversity_count;
+// rssi
+// extern uint8_t frsky_rssi;
+// extern uint8_t frsky_link_quality;
+// pll calibration
+// extern uint8_t frsky_calib_fscal1_table[FRSKY_HOPTABLE_SIZE];
+// extern uint8_t frsky_calib_fscal2;
+// extern uint8_t frsky_calib_fscal3;
+//
+// extern volatile uint8_t frsky_packet_buffer[FRSKY_PACKET_BUFFER_SIZE];
+// extern volatile uint8_t frsky_packet_received;
+// extern volatile uint8_t frsky_packet_sent;
+
+
 
 /*
 void frsky_fetch_txid_and_hoptable(void);
