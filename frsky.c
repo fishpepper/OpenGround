@@ -161,11 +161,7 @@ void TIM3_IRQHandler(void) {
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
-        CC2500_SPI_GPIO->BSRR = (CC2500_SPI_GPIO->ODR ^ CC2500_SPI_CSN_PIN) | (CC2500_SPI_CSN_PIN << 16);
 
-        // do frsky stuff now
-        led_button_r_toggle();
-        led_button_l_on();
     }
 }
 
