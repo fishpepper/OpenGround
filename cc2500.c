@@ -99,7 +99,7 @@ inline uint32_t cc2500_set_antenna(uint8_t id) {
 inline void cc2500_set_gdo_mode(void) {
     // set to RX FIFO signal
     cc2500_set_register(IOCFG0, 0x01);
-    // cc2500_set_register(IOCFG1, 0x01); //
+    //cc2500_set_register(IOCFG1, 0x01); //
     cc2500_set_register(IOCFG2, 0x01);
 }
 

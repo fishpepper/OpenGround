@@ -45,6 +45,7 @@ void frsky_calib_pll(void);
 void frsky_main(void);
 uint8_t frsky_extract_rssi(uint8_t rssi_raw);
 void frsky_increment_channel(int8_t cnt);
+void frsky_tx_set_enabled(uint32_t enabled);
 void frsky_set_channel(uint8_t hop_index);
 void frsky_send_telemetry(uint8_t telemetry_id);
 void frsky_update_ppm(void);

@@ -630,7 +630,7 @@ static void gui_config_stick_calibration_render(void) {
     screen_puts_xy(3, y, 1, "Please move all sticks to the"); y += h;
     screen_puts_xy(3, y, 1, "extreme positions."); y += h;
     screen_puts_xy(3, y, 1, "When done, move all sticks to"); y += h;
-    screen_puts_xy(3, y, 1, "the center and tap the screen."); y += h;
+    screen_puts_xy(3, y, 1, "the center and press save."); y += h;
 
     uint32_t x = 3;
     y = 33;

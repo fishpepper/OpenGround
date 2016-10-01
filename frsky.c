@@ -111,6 +111,8 @@ void frsky_init(void) {
     frsky_tx_enabled = 0;
     frsky_init_timer();
 
+    frsky_tx_set_enabled(1);
+
     debug("frsky: init done\n"); debug_flush();
 }
 
@@ -151,17 +153,131 @@ void frsky_init_timer(void) {
     // TIM_PrescalerConfig(TIM3, prescaler, TIM_PSCReloadMode_Immediate);
 
     // TIM Interrupts enable
-    TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+    // DO NOT ENABLE IT YET
+    // TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
 
     // TIM3 enable counter
     TIM_Cmd(TIM3, ENABLE);
+}
+
+void frsky_tx_set_enabled(uint32_t enabled) {
+    // TIM Interrupts enable? -> tx active
+    if (enabled) {
+        TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+    } else {
+        TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
+    }
+}
+
+static volatile uint8_t frsky_frame_counter;
+static uint8_t frsky_last_received_telemetry_id;
+
+static void frsky_send_packet(void) {
+    // Stop RX DMA
+    cc2500_strobe(RFST_SFRX);
+
+    // enable tx
+    cc2500_enter_txmode();
+
+    // fetch adc channel data
+    uint16_t adc_data[8];
+    uint32_t i;
+    for (i = 0; i < 8; i++) {
+        adc_data[i] = adc_get_channel_packetdata(i);
+    }
+
+    // build frsky packet
+    // packet length
+    frsky_packet_buffer[0] = 0x11;
+    // txid
+    frsky_packet_buffer[1] = storage.frsky_txid[0];
+    frsky_packet_buffer[2] = storage.frsky_txid[1];
+    // frame counter
+    frsky_packet_buffer[3] = frsky_frame_counter;
+    // last received telemtry frame
+    frsky_packet_buffer[4] = frsky_last_received_telemetry_id;
+    // ?
+    frsky_packet_buffer[5] = 0x01;
+    // 6 .. 9 is LO(channel data 0..3)
+    frsky_packet_buffer[6] = adc_data[0] & 0xFF;
+    frsky_packet_buffer[7] = adc_data[1] & 0xFF;
+    frsky_packet_buffer[8] = adc_data[2] & 0xFF;
+    frsky_packet_buffer[9] = adc_data[3] & 0xFF;
+    // 10 .. 11 is HI(channel data 0..3)
+    frsky_packet_buffer[10] = ((adc_data[0]>>8) & 0x0F) | ((adc_data[1]>>4) & 0xF0);
+    frsky_packet_buffer[11] = ((adc_data[2]>>8) & 0x0F) | ((adc_data[3]>>4) & 0xF0);
+    // 12 .. 15 is LO(channel data 4..7)
+    frsky_packet_buffer[12] = adc_data[4] & 0xFF;
+    frsky_packet_buffer[13] = adc_data[5] & 0xFF;
+    frsky_packet_buffer[14] = adc_data[6] & 0xFF;
+    frsky_packet_buffer[15] = adc_data[7] & 0xFF;
+    // 16 .. 17 is HI(channel data 4..7)
+    frsky_packet_buffer[16] = ((adc_data[4]>>8) & 0x0F) | ((adc_data[5]>>4) & 0xF0);
+    frsky_packet_buffer[17] = ((adc_data[6]>>8) & 0x0F) | ((adc_data[7]>>4) & 0xF0);
+    // RSSI TODO!
+    frsky_packet_buffer[18] = 0x40;
+
+    // send packet
+    cc2500_transmit_packet(frsky_packet_buffer, frsky_packet_buffer[0] + 1);
 }
 
 void TIM3_IRQHandler(void) {
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
+        // hop to next channel
+        //if ((frsky_frame_counter % 4) != 3) frsky_increment_channel(1);
+        frsky_frame_counter++;
 
+        /*if ((frsky_frame_counter % 4) == 2) {
+            // we should have received an telemetry frame by now!
+            // handle any ovf conditions
+            frsky_handle_overflows();
+
+            // fetch incoming packet
+            cc2500_process_packet(&frsky_packet_received, \
+                                  (volatile uint8_t *)&frsky_packet_buffer, \
+                                  FRSKY_PACKET_BUFFER_SIZE);
+
+            if (frsky_packet_received) {
+                // show data
+                debug("frsky: RX ");
+                debug_flush();
+                uint32_t i;
+                for (i = 0; i < FRSKY_PACKET_BUFFER_SIZE; i++) {
+                    debug_put_hex8(frsky_packet_buffer[i]);
+                    debug_putc(' ');
+                }
+                debug_put_newline();
+
+            }
+        } else {
+            // time to transmit!
+        }*/
+
+        if ((frsky_frame_counter % 4) != 3){
+            frsky_increment_channel(1);
+            frsky_send_packet();
+        }else{
+            // ch was already incremented...
+            // rx is on its way
+        }
+
+        if ((frsky_frame_counter % 4) == 2) {
+            // the next packet will be an incoming telemetry packet!
+            // thus switch to RX mode!
+            cc2500_wait_for_transmission_complete();
+            frsky_increment_channel(1);
+            cc2500_enter_rxmode();
+            //cc2500_strobe(RFST_SRX);
+        }
+
+        // wait for transmission complete:
+        /*
+
+        // prepare for rx:
+        cc2500_setup_rf_dma(cc2500_MODE_RX);
+        cc2500_enable_receive();*/
     }
 }
 

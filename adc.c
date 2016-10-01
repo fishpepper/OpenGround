@@ -117,6 +117,18 @@ int32_t adc_get_channel_rescaled(uint8_t idx) {
     return value;
 }
 
+uint16_t adc_get_channel_packetdata(uint8_t idx) {
+    // frsky packets send us * 1.5
+    // where 1000 us =   0%
+    //       2000 us = 100%
+    // -> remap +/-3200 to 1500..3000
+    // 6400 => 1500 <=> 64 = 15
+    int32_t val = adc_get_channel_rescaled(idx);
+    val = (15 * val) / 64;
+    val = val + 2250;
+    return (uint16_t) val;
+}
+
 
 static void adc_init_rcc(void) {
     debug("adc: init rcc\n"); debug_flush();
