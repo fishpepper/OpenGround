@@ -349,6 +349,7 @@ static void gui_render_rssi(uint8_t rssi_rx, uint8_t rssi_tx) {
     // fill bargraphs
     // rssi can be 0..100 (?)
     uint8_t bar_w = min(rssi_telemetry, 100)/4;
+    bar_w = 0;
     if (bar_w > 1) bar_w--;
     screen_fill_round_rect(2, 2, bar_w, 3, 2, 1);
     bar_w = min(rssi, 100)/4;
