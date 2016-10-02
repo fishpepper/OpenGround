@@ -303,9 +303,28 @@ static void gui_render_rssi(uint8_t rssi_rx, uint8_t rssi_tx) {
     x+=GUI_RSSI_BAR_W+2;
     // show values
     screen_puts_xy(x, 1, 0, "120|105");
-    x += (GUI_STATUSBAR_FONT[FONT_FIXED_WIDTH]+1)*7;
+
+    // show RSSI
+    uint8_t rssi, rssi_telemetry;
+    frsky_get_rssi(&rssi, &rssi_telemetry);
+
+    screen_put_uint8(x, 1, 0, rssi_telemetry);
+    x += (GUI_STATUSBAR_FONT[FONT_FIXED_WIDTH]+1) * 3;
+    screen_puts_xy(x, 1, 0, "|");
+    x += (GUI_STATUSBAR_FONT[FONT_FIXED_WIDTH]+1) * 1;
+    screen_put_uint8(x, 1, 0, rssi);
+    x += (GUI_STATUSBAR_FONT[FONT_FIXED_WIDTH]+1) * 3;
+
     // render tx rssi bargraph at a given position
     screen_fill_round_rect(x, 1, GUI_RSSI_BAR_W+1, 5, 2, 0);
+
+    // fill bargraphs
+    // rssi can be 0..100 (?)
+    uint8_t bar_w = min(rssi_telemetry, 100)/4 - 1;
+    screen_fill_round_rect(2, 2, bar_w, 3, 2, 1);
+    bar_w = min(rssi, 100)/4 - 1;
+    screen_fill_round_rect(x+1, 2, bar_w, 3, 2, 1);
+
 }
 
 static void gui_render_statusbar(void) {

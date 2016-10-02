@@ -62,6 +62,7 @@ void frsky_fetch_txid_and_hoptable_finish(void);
 void frsky_init_timer(void);
 void TIM3_IRQHandler(void);
 
+void frsky_get_rssi(uint8_t *rssi, uint8_t *rssi_telemetry);
 
 // extern uint8_t frsky_current_ch_idx;
 // extern uint8_t frsky_diversity_count;

@@ -260,7 +260,7 @@ inline void cc2500_process_packet(volatile uint8_t *packet_received, volatile ui
             uint8_t tmp_buffer[len];
             cc2500_read_fifo(tmp_buffer, len);
 
-            // only accept valid packet lenbghts:
+            // only accept valid packet lengths:
             if (len == maxlen) {
                 uint8_t i;
                 for (i = 0; i < maxlen; i++) {

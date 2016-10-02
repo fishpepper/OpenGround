@@ -598,7 +598,7 @@ void screen_puts_centered(uint8_t y, uint8_t color, uint8_t *str) {
 
 
 
-// output a signed 8-bit number to uart
+// output a signed 8-bit number
 void screen_put_int8(uint8_t x, uint8_t y, uint8_t color, int8_t c) {
     screen_font_x = x;
     screen_font_y = y;
@@ -622,6 +622,33 @@ void screen_put_int8(uint8_t x, uint8_t y, uint8_t color, int8_t c) {
         tmp = '0';
         while (uint_s >= mul) {
             uint_s -= mul;
+            tmp++;
+            l = 1;
+        }
+        if ((l == 0) && (tmp == '0') && (mul != 1)) {
+            screen_put_char(' ');
+        } else {
+            screen_put_char(tmp);
+        }
+    }
+}
+
+
+// output a unsigned 8-bit
+void screen_put_uint8(uint8_t x, uint8_t y, uint8_t color, uint8_t c) {
+    screen_font_x = x;
+    screen_font_y = y;
+    screen_font_color = color;
+
+    uint8_t tmp;
+    uint8_t mul;
+    uint8_t l;
+
+    l = 0;
+    for (mul = 100; mul > 0; mul = mul/ 10) {
+        tmp = '0';
+        while (c >= mul) {
+            c -= mul;
             tmp++;
             l = 1;
         }
