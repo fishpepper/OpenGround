@@ -31,9 +31,12 @@
 #include "stm32f0xx_dma.h"
 
 static uint16_t adc_data[ADC_CHANNEL_COUNT];
+static uint16_t adc_battery_voltage_raw_filtered;
 
 void adc_init(void) {
     debug("adc: init\n"); debug_flush();
+
+    adc_battery_voltage_raw_filtered = 0;
 
     adc_init_rcc();
     adc_init_gpio();
@@ -174,7 +177,7 @@ uint32_t adc_get_battery_voltage(void) {
     // 123 = 12.3 V
     // raw data is 0 .. 4095 ~ 0 .. 3300mV
     // Vadc = raw * 3300 / 4095
-    uint32_t raw = adc_data[10];
+    uint32_t raw = adc_battery_voltage_raw_filtered;
     // the voltage divider is 5.1k / 10k
     // Vadc = Vbat * R2 / (R1+R2) = Vbat * 51/ 151
     // -> Vbat = Vadc * (R1-R2) / R2
@@ -268,6 +271,10 @@ static void adc_dma_arm(void) {
 void adc_process(void) {
     // adc dma finished?
     if (DMA_GetITStatus(ADC_DMA_TC_FLAG)) {
+        // filter battery voltage
+        adc_battery_voltage_raw_filtered = adc_battery_voltage_raw_filtered +
+                10 * (adc_data[10] - adc_battery_voltage_raw_filtered) / 100;
+
         // fine, arm DMA again:
         adc_dma_arm();
     } else {
