@@ -310,6 +310,8 @@ static void gui_render_battery(void) {
     x += 2;
     // draw border
     screen_draw_round_rect(x, 1, 21, 5, 2, 0);
+    screen_draw_vline(x+20, 1, 5, 0);
+
     // show fillgrade
     // assume nimh batteries with 1.2V > 90% / 1.0V = 5%
     //                         = 4.8V       / 4.0V
@@ -327,7 +329,7 @@ static void gui_render_rssi(uint8_t rssi_rx, uint8_t rssi_tx) {
     #define GUI_RSSI_BAR_W 25
     uint16_t x = 1;
     // render rx rssi bargraph at a given position
-    screen_fill_round_rect(x, 1, GUI_RSSI_BAR_W+1, 5, 2, 0);
+    screen_fill_rect(x, 1, GUI_RSSI_BAR_W+1, 5, 0);
     x+=GUI_RSSI_BAR_W+2;
     // show values
     screen_puts_xy(x, 1, 0, "120|105");
@@ -344,17 +346,16 @@ static void gui_render_rssi(uint8_t rssi_rx, uint8_t rssi_tx) {
     x += (GUI_STATUSBAR_FONT[FONT_FIXED_WIDTH]+1) * 3;
 
     // render tx rssi bargraph at a given position
-    screen_fill_round_rect(x, 1, GUI_RSSI_BAR_W+1, 5, 2, 0);
+    screen_fill_rect(x, 1, GUI_RSSI_BAR_W+1, 5, 0);
 
     // fill bargraphs
     // rssi can be 0..100 (?)
     uint8_t bar_w = min(rssi_telemetry, 100)/4;
-    bar_w = 0;
     if (bar_w > 1) bar_w--;
-    screen_fill_round_rect(2, 2, bar_w, 3, 2, 1);
+    if (bar_w > 0) screen_fill_rect(1+bar_w, 2, 25-bar_w, 3, 1);
     bar_w = min(rssi, 100)/4;
     if (bar_w > 1) bar_w--;
-    screen_fill_round_rect(x+1, 2, bar_w, 3, 2, 1);
+    if (bar_w > 0) screen_fill_rect(x+bar_w, 2, 25-bar_w, 3, 1);
 }
 
 static void gui_render_statusbar(void) {
