@@ -271,9 +271,14 @@ static void adc_dma_arm(void) {
 void adc_process(void) {
     // adc dma finished?
     if (DMA_GetITStatus(ADC_DMA_TC_FLAG)) {
-        // filter battery voltage
-        adc_battery_voltage_raw_filtered = adc_battery_voltage_raw_filtered +
-                10 * (adc_data[10] - adc_battery_voltage_raw_filtered) / 100;
+        if (adc_battery_voltage_raw_filtered == 0) {
+            // initialise with current value
+            adc_battery_voltage_raw_filtered = adc_data[10];
+        } else {
+            // low pass filter battery voltage
+            adc_battery_voltage_raw_filtered = adc_battery_voltage_raw_filtered +
+                                     (4 * (adc_data[10] - adc_battery_voltage_raw_filtered)) / 128;
+        }
 
         // fine, arm DMA again:
         adc_dma_arm();

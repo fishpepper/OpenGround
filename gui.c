@@ -181,6 +181,10 @@ static void gui_cb_config_stick_cal(void) {
 }
 
 static void gui_cb_config_clonetx(void) {
+
+    //disable tx code
+    frsky_tx_set_enabled(0);
+
     gui_config_counter = 0;
     gui_page = GUI_PAGE_SETTING_FLAG | 2;
 }
@@ -192,6 +196,9 @@ static void gui_cb_config_model(void) {
 static void gui_cb_config_exit(void) {
     // restore old settings
     storage_load();
+
+    // restart tx code
+    frsky_tx_set_enabled(1);
 
     // back to config main menu
     gui_page = 1;
@@ -289,6 +296,8 @@ static void gui_render_battery(void) {
     //                         = 4.8V       / 4.0V
     // i know this is not 100% correct, better calc is tbd ;)
     int32_t fill_percent = ((17 * v_bat)/ 16) - 420;
+    fill_percent = max(min(fill_percent, 100), 5);
+
     // 0% = 0px, 100% = 20px
     int32_t fill_px = max(0, min(20, fill_percent / 5));
     // draw fill grade
@@ -320,11 +329,12 @@ static void gui_render_rssi(uint8_t rssi_rx, uint8_t rssi_tx) {
 
     // fill bargraphs
     // rssi can be 0..100 (?)
-    uint8_t bar_w = min(rssi_telemetry, 100)/4 - 1;
+    uint8_t bar_w = min(rssi_telemetry, 100)/4;
+    if (bar_w > 1) bar_w--;
     screen_fill_round_rect(2, 2, bar_w, 3, 2, 1);
-    bar_w = min(rssi, 100)/4 - 1;
+    bar_w = min(rssi, 100)/4;
+    if (bar_w > 1) bar_w--;
     screen_fill_round_rect(x+1, 2, bar_w, 3, 2, 1);
-
 }
 
 static void gui_render_statusbar(void) {

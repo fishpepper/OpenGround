@@ -172,7 +172,10 @@ void frsky_tx_set_enabled(uint32_t enabled) {
         frsky_state = 0;
         TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
     } else {
+        // stop ISR
         TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
+        // make sure last packet was sent
+        delay_ms(20);
     }
 }
 
@@ -224,6 +227,8 @@ static void frsky_send_packet(void) {
     cc2500_transmit_packet(frsky_packet_buffer, frsky_packet_buffer[0] + 1);
 }
 
+static uint8_t frsky_packet_lost_counter;
+
 static void frsky_receive_packet(void) {
     // fetch incoming packet
     cc2500_process_packet(&frsky_packet_received, (volatile uint8_t *)&frsky_packet_buffer, \
@@ -233,21 +238,28 @@ static void frsky_receive_packet(void) {
     if (frsky_packet_received) {
         // decrypt data
         if (FRSKY_VALID_PACKET(frsky_packet_buffer)) {
-            frsky_rssi           = frsky_packet_buffer[5];
-            // frsky_rssi           = (((uint32_t)frsky_packet_buffer[5])*10 - 310)*12987/10000;
-            frsky_rssi_telemetry = frsky_extract_rssi(frsky_packet_buffer[18]); // c2500_get_register_burst(RSSI);
+            // reset lost packet counter
+            frsky_packet_lost_counter = 0;
 
-            debug_flush();
+            // extract RSSI
+            frsky_rssi = frsky_rssi + (8 * ((uint32_t)frsky_packet_buffer[5] -
+                                       (uint32_t)frsky_rssi)) / 128;
+            // frsky_rssi           = (((uint32_t)frsky_packet_buffer[5])*10 - 310)*12987/10000;
+            frsky_rssi_telemetry = frsky_rssi_telemetry + (8 * (
+                                        (uint32_t)frsky_extract_rssi(frsky_packet_buffer[18]) -
+                                        (uint32_t)frsky_rssi_telemetry)) / 128;
+
+
+            /*debug_flush();
             uint32_t i;
             for (i = 0; i < FRSKY_PACKET_BUFFER_SIZE; i++) {
                 debug_put_hex8(frsky_packet_buffer[i]);
                 debug_putc(' ');
             }
-            debug_put_newline();
+            debug_put_newline();*/
         }
     } else {
-        frsky_rssi           = 0;
-        frsky_rssi_telemetry = 0;
+        frsky_packet_lost_counter++;
     }
 
 
@@ -257,8 +269,13 @@ static void frsky_receive_packet(void) {
 }
 
 void frsky_get_rssi(uint8_t *rssi, uint8_t *rssi_telemetry) {
-    *rssi           = frsky_rssi;
-    *rssi_telemetry = frsky_rssi_telemetry;
+    if (frsky_packet_lost_counter > 20) {
+        *rssi           = 0;
+        *rssi_telemetry = 0;
+    } else {
+        *rssi           = frsky_rssi;
+        *rssi_telemetry = frsky_rssi_telemetry;
+    }
 }
 
 void TIM3_IRQHandler(void) {
