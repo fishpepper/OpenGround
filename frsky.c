@@ -43,6 +43,10 @@
 #define HOPDATA_RECEIVE_DONE ((1  <<  (MAX_BIND_PACKET_COUNT))-1)
 
 
+static volatile uint8_t frsky_frame_counter;
+static uint8_t frsky_last_received_telemetry_id;
+static volatile uint32_t frsky_state;
+
 // hop data & config
 // uint8_t storage.frsky_txid[2] = {0x16, 0x68};
 // uint8_t storage.frsky_hop_table[FRSKY_HOPTABLE_SIZE] = {0x01, 0x42, 0x83, 0xC4, 0x1A,
@@ -163,14 +167,14 @@ void frsky_init_timer(void) {
 void frsky_tx_set_enabled(uint32_t enabled) {
     // TIM Interrupts enable? -> tx active
     if (enabled) {
+        frsky_frame_counter = 0;
+        frsky_state = 0;
         TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
     } else {
         TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
     }
 }
 
-static volatile uint8_t frsky_frame_counter;
-static uint8_t frsky_last_received_telemetry_id;
 
 static void frsky_send_packet(void) {
     // Stop RX DMA
@@ -213,21 +217,100 @@ static void frsky_send_packet(void) {
     frsky_packet_buffer[15] = adc_data[7] & 0xFF;
     // 16 .. 17 is HI(channel data 4..7)
     frsky_packet_buffer[16] = ((adc_data[4]>>8) & 0x0F) | ((adc_data[5]>>4) & 0xF0);
-    frsky_packet_buffer[17] = ((adc_data[6]>>8) & 0x0F) | ((adc_data[7]>>4) & 0xF0);
-    // RSSI TODO!
-    frsky_packet_buffer[18] = 0x40;
+    frsky_packet_buffer[17] = 0xAA; //((adc_data[6]>>8) & 0x0F) | ((adc_data[7]>>4) & 0xF0);
 
     // send packet
     cc2500_transmit_packet(frsky_packet_buffer, frsky_packet_buffer[0] + 1);
+}
+
+static void frsky_receive_packet(void) {
+    // fetch incoming packet
+    cc2500_process_packet(&frsky_packet_received, (volatile uint8_t *)&frsky_packet_buffer, \
+                      FRSKY_PACKET_BUFFER_SIZE);
+
+    // packet received?
+    if (frsky_packet_received) {
+        // show data
+        debug("frsky: RX ");
+        debug_flush();
+        uint32_t i;
+        for (i = 0; i < FRSKY_PACKET_BUFFER_SIZE; i++) {
+            debug_put_hex8(frsky_packet_buffer[i]);
+            debug_putc(' ');
+        }
+        debug_put_newline();
+    }
+
+    // handle any ovf conditions
+    frsky_handle_overflows();
+
 }
 
 void TIM3_IRQHandler(void) {
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
-        // hop to next channel
-        //if ((frsky_frame_counter % 4) != 3) frsky_increment_channel(1);
-        frsky_frame_counter++;
+        // when will there be the next isr?
+        switch (frsky_state) {
+            default:
+            case (0) :
+                // process any incoming telemetry data
+                frsky_receive_packet();
+                // hop to next channel
+                frsky_increment_channel(1);
+                // send data
+                frsky_send_packet();
+                frsky_frame_counter++;
+                // next hop in 9ms
+                TIM_SetAutoreload(TIM3, 9000-1);
+                frsky_state = 1;
+                break;
+
+            case (1) :
+                // hop to next channel
+                frsky_increment_channel(1);
+                // send data
+                frsky_send_packet();
+                frsky_frame_counter++;
+                // next hop in 9ms
+                TIM_SetAutoreload(TIM3, 9000-1);
+                frsky_state = 2;
+                break;
+
+            case (2) :
+                // hop to next channel
+                frsky_increment_channel(1);
+                // send data
+                frsky_send_packet();
+                frsky_frame_counter++;
+                // after this tx we expect rx data,
+                // TX is finished after ~7.2ms -> next isr in 7.5ms
+                TIM_SetAutoreload(TIM3, 7500-1);
+                frsky_state = 3;
+                break;
+
+            case (3) :
+                // prepare for data receiption, hop to next channel
+                frsky_increment_channel(1);
+                // enable LNA
+                cc2500_enter_rxmode();
+                // the next hop will now in 1.3ms (after freq stabilised)
+                TIM_SetAutoreload(TIM3, 1300-1);
+                frsky_state = 4;
+                break;
+
+            case (4) :
+                // now go to RX mode
+                // go to idle
+                cc2500_strobe(RFST_SRX);
+                // increment framecounter
+                frsky_frame_counter++;
+                // the next hop will now in 9.2ms
+                // 2*9 = 18 = 7.5 + 1.3 + 9.2
+                TIM_SetAutoreload(TIM3, 9200-1);
+                frsky_state = 0;
+                break;
+        }
 
         /*if ((frsky_frame_counter % 4) == 2) {
             // we should have received an telemetry frame by now!
@@ -254,7 +337,7 @@ void TIM3_IRQHandler(void) {
         } else {
             // time to transmit!
         }*/
-
+#if 0
         if ((frsky_frame_counter % 4) != 3){
             frsky_increment_channel(1);
             frsky_send_packet();
@@ -262,15 +345,25 @@ void TIM3_IRQHandler(void) {
             // ch was already incremented...
             // rx is on its way
         }
-
+*/
         if ((frsky_frame_counter % 4) == 2) {
             // the next packet will be an incoming telemetry packet!
             // thus switch to RX mode!
+/*
+            use gdo2 to detect tx finished
+                    see http://www.ti.com/lit/ds/symlink/cc2500.pdf p53
+                set gdo2 to ISR on tx complete
+*/
             cc2500_wait_for_transmission_complete();
             frsky_increment_channel(1);
             cc2500_enter_rxmode();
+            // TIM_SetAutoreload(TIM3, 7500-1); CONTINUUE
             //cc2500_strobe(RFST_SRX);
+        }else{
+            TIM_SetAutoreload(TIM3,9000-1);
         }
+
+
 
         // wait for transmission complete:
         /*
@@ -278,6 +371,7 @@ void TIM3_IRQHandler(void) {
         // prepare for rx:
         cc2500_setup_rf_dma(cc2500_MODE_RX);
         cc2500_enable_receive();*/
+#endif
     }
 }
 
@@ -349,7 +443,7 @@ void frsky_configure(void) {
     cc2500_set_register(TEST2    , 0x88);
     cc2500_set_register(TEST1    , 0x31);
     cc2500_set_register(TEST0    , 0x0B);
-    // cc2500_set_register(FIFOTHR  , 0x07);
+    cc2500_set_register(FIFOTHR  , 0x0F);  // fifo threshold -> tx gdo goes high if 1 byte left
     cc2500_set_register(ADDR     , 0x00);
 
     // for now just append status
@@ -397,7 +491,6 @@ void frsky_do_bind_finish(void) {
     led_button_l_on();
 }
 
-static uint8_t frsky_state;
 static int8_t frsky_fscal0_min;
 static int8_t frsky_fscal0_max;
 

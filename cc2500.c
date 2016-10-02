@@ -99,13 +99,14 @@ inline uint32_t cc2500_set_antenna(uint8_t id) {
 inline void cc2500_set_gdo_mode(void) {
     // set to RX FIFO signal
     cc2500_set_register(IOCFG0, 0x01);
-    //cc2500_set_register(IOCFG1, 0x01); //
-    cc2500_set_register(IOCFG2, 0x01);
+    // cc2500_set_register(IOCFG1, 0x02); //
+    cc2500_set_register(IOCFG2, 0x02);
 }
 
 inline void cc2500_set_register(uint8_t address, uint8_t data) {
     // select device
     cc2500_csn_lo();
+
 
     // wait for ready signal
     while (GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
@@ -177,7 +178,7 @@ inline void cc2500_enable_receive(void) {
 
 
 inline uint8_t cc2500_get_gdo_status(void) {
-    if (GPIO_ReadInputDataBit(CC2500_GDO2_GPIO, CC2500_GDO2_PIN)) {
+    if (GPIO_ReadInputDataBit(CC2500_GDO1_GPIO, CC2500_GDO1_PIN)) {
         return 1;
     } else {
         return 0;
