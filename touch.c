@@ -166,7 +166,7 @@ void EXTI4_15_IRQHandler(void) {
                         uint8_t ev = buf.points[0].event >> 6;
                         touch_event.event_id = TOUCH_GESTURE_MOUSE_DOWN + ev;
                         // swap x&y and calculate lcd pixel coords
-                        touch_event.y = (buf.points[0].xhi & 0x0F) <<8  | (buf.points[0].xlo);
+                        touch_event.y = (buf.points[0].xhi & 0x0F) << 8  | (buf.points[0].xlo);
                         touch_event.y = (touch_event.y >> 1);
                         touch_event.x = (buf.points[0].yhi & 0x0F) << 8 | (buf.points[0].ylo);
                         touch_event.x = 128 - (touch_event.x >> 1);

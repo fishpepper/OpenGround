@@ -75,18 +75,24 @@ static void gui_touch_callback_register(uint8_t xs, uint8_t xe, uint8_t ys, uint
         return;
     }
 
-    /* debug("     ");
+    if ((xs != 0) && (xs != 118)) {
+        debug("     ");
     debug_put_uint8(xs); debug_putc('-'); debug_put_uint8(xe);
     debug_putc(' ');
     debug_put_uint8(ys); debug_putc('-'); debug_put_uint8(ye);
     debug_put_newline();
-    debug_flush(); */
+    debug_flush();
+    }
+
+    // make sure to have valid ranges by ignoring bad ranges
+    if (xs > xe) { xs = xe; }
+    if (ys > ye) { ys = ye; }
 
     // fine, configure this slot:
-    gui_touch_callback[gui_touch_callback_index].xs       = xs;
-    gui_touch_callback[gui_touch_callback_index].xe       = xe;
-    gui_touch_callback[gui_touch_callback_index].ys       = ys;
-    gui_touch_callback[gui_touch_callback_index].ye       = ye;
+    gui_touch_callback[gui_touch_callback_index].xs       = min(xs, LCD_WIDTH);
+    gui_touch_callback[gui_touch_callback_index].xe       = min(xe, LCD_WIDTH);
+    gui_touch_callback[gui_touch_callback_index].ys       = min(ys, LCD_HEIGHT);
+    gui_touch_callback[gui_touch_callback_index].ye       = min(ye, LCD_HEIGHT);
     gui_touch_callback[gui_touch_callback_index].callback = cb;
     gui_touch_callback_index++;
 }
@@ -111,6 +117,9 @@ static void gui_touch_callback_execute(uint8_t i) {
 }
 
 static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *str, f_ptr_t cb) {
+    // set font
+    screen_set_font(font_tomthumb3x5);
+
     // render a rounded rect
     screen_draw_round_rect(x, y, w, h, 3, 1);
 
@@ -129,6 +138,11 @@ static void gui_process_touch(void) {
 
     if (t.event_id == TOUCH_GESTURE_MOUSE_DOWN) {
         // there was a mouse click!
+
+        debug("CLICK: ");
+        debug_put_uint8(t.x); debug("-");
+        debug_put_uint8(t.y); debug_put_newline(); debug_flush();
+
         // check if we will have to execute a callback
         for (i = 0; i < gui_touch_callback_index; i++) {
             // the first one matching will be triggered first.
@@ -170,7 +184,7 @@ static void gui_cb_config_save(void) {
 
 static void gui_cb_config_stick_cal(void) {
     uint32_t i, j;
-    // re init min/center/max to cur value
+    // reinit min/center/max to current value
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 3; j++) {
             storage.stick_calibration[i][j] = adc_get_channel(i);
@@ -181,8 +195,7 @@ static void gui_cb_config_stick_cal(void) {
 }
 
 static void gui_cb_config_clonetx(void) {
-
-    //disable tx code
+    // disable tx code
     frsky_tx_set_enabled(0);
 
     gui_config_counter = 0;
@@ -191,6 +204,10 @@ static void gui_cb_config_clonetx(void) {
 
 static void gui_cb_config_model(void) {
     gui_page = GUI_PAGE_SETTING_FLAG | 3;
+}
+
+static void gui_cb_config_enter(void) {
+    gui_page = GUI_PAGE_SETTING_FLAG | 0;
 }
 
 static void gui_cb_config_exit(void) {
@@ -236,7 +253,9 @@ void gui_handle_buttons(void) {
 void gui_loop(void) {
     debug("gui: entering main loop\n"); debug_flush();
     gui_active = 1;
-    gui_page = GUI_PAGE_SETTING_FLAG | 0;
+
+    // start with main page
+    gui_page = 1;
 
     // this is the main GUI loop. rf stuff is done inside an ISR
     while (gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT) {
@@ -476,6 +495,9 @@ void gui_render(void) {
                 else
                     screen_puts_xy(start, 40, 1, "=");*/
             }
+
+            gui_add_button(64-50/2, 40, 50, 15, "SETUP", &gui_cb_config_enter);
+
             break;
     }
     screen_update();
