@@ -174,7 +174,7 @@ static void adc_init_gpio(void) {
 
 uint32_t adc_get_battery_voltage(void) {
     // return a fixed point number of the battery voltage
-    // 123 = 12.3 V
+    // 1230 = 12.3 V
     // raw data is 0 .. 4095 ~ 0 .. 3300mV
     // Vadc = raw * 3300 / 4095
     uint32_t raw = adc_battery_voltage_raw_filtered;

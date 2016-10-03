@@ -583,10 +583,28 @@ static void gui_config_header_render(uint8_t *str) {
 }
 
 static void gui_render_main_screen(void) {
+    uint32_t x;
+    uint32_t y;
+
+    // do statusbars
     gui_render_statusbar();
     gui_render_bottombar();
 
-    // draw countdown
+    // render voltage
+    screen_set_font(font_metric7x12);
+    x = 1;
+    y = 10;
+    screen_put_fixed2_1digit(x, y, 1, 1640);
+    x += (font_metric7x12[FONT_FIXED_WIDTH]+1)*3 + 3;
+    screen_puts_xy(x, y, 1, "V");
+
+    x = 1;
+    y += font_metric7x12[FONT_HEIGHT]+1;
+    screen_put_fixed2_1digit(x, y, 1, 3010);
+    x += (font_metric7x12[FONT_FIXED_WIDTH]+1)*3 + 3;
+    screen_puts_xy(x, y, 1, "A");
+
+
     // screen_set_font(font_metric7x12);
     screen_set_font(font_metric15x26);
 
@@ -605,8 +623,8 @@ static void gui_render_main_screen(void) {
     }
 
     // render background
-    uint32_t x = 51;
-    uint32_t y = 10;
+    x = 51;
+    y = 10;
     uint32_t w = (font_metric15x26[FONT_FIXED_WIDTH]/2 + 2) +
                  (font_metric15x26[FONT_FIXED_WIDTH] + 1) * 4 + 3;
     uint32_t h = font_metric15x26[FONT_HEIGHT] + 2;

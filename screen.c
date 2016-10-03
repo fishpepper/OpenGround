@@ -663,6 +663,23 @@ void screen_put_time(uint8_t x, uint8_t y, uint8_t c, int16_t time) {
 }
 
 
+void screen_put_fixed2_1digit(uint8_t x, uint8_t y, uint8_t color, uint32_t v) {
+    int16_t full = v / 100;
+    int16_t frac = (v % 100)/10;  // keep only one digit
+
+    // put v
+    screen_put_uint8_2dec(x, y, color, full);
+    x = x + (screen_font_ptr[FONT_FIXED_WIDTH] + 1) * 2;
+
+    // render point
+    screen_fill_rect(x, y + screen_font_ptr[FONT_HEIGHT]*7/8, 2, 2, color);
+
+    // put frac
+    x = x + 3;
+    screen_put_uint8_1dec(x, y, color, frac);
+}
+
+
 // output a unsigned 8-bit, only two decimals
 void screen_put_uint8_2dec(uint8_t x, uint8_t y, uint8_t color, uint8_t c) {
     screen_font_x = x;
@@ -673,8 +690,9 @@ void screen_put_uint8_2dec(uint8_t x, uint8_t y, uint8_t color, uint8_t c) {
     uint8_t mul;
     uint8_t l;
 
-    while (c >= 100) {
-        c-= 100;
+    // this should not happen
+    if (c >= 100) {
+        return;
     }
 
     l = 0;
@@ -687,6 +705,19 @@ void screen_put_uint8_2dec(uint8_t x, uint8_t y, uint8_t color, uint8_t c) {
         }
         screen_put_char(tmp);
     }
+}
+
+void screen_put_uint8_1dec(uint8_t x, uint8_t y, uint8_t color, uint8_t c) {
+    screen_font_x = x;
+    screen_font_y = y;
+    screen_font_color = color;
+
+    // this should not happen
+    if (c >= 10) {
+        return;
+    }
+
+    screen_put_char('0' + c);
 }
 
 // output a unsigned 8-bit
