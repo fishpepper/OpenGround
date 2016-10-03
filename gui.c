@@ -41,6 +41,8 @@ static uint32_t gui_page;
 static uint32_t gui_config_tap_detected;
 static uint8_t gui_touch_callback_index;
 static touch_callback_entry_t gui_touch_callback[GUI_TOUCH_CALLBACK_COUNT];
+static int16_t gui_model_timer;
+static uint8_t gui_loop_counter;
 
 void gui_init(void) {
     debug("gui: init\n"); debug_flush();
@@ -161,6 +163,10 @@ static void gui_process_touch(void) {
     }
 }
 
+static void gui_cb_model_timer_reload(void) {
+    gui_model_timer = (int16_t) storage.model[storage.current_model].timer;
+}
+
 static void gui_cb_previous_page(void) {
     if (gui_page > 0) {
         gui_page--;
@@ -250,12 +256,38 @@ void gui_handle_buttons(void) {
     gui_handle_button_powerdown();
 }
 
+static void gui_process_logic(void) {
+    uint32_t second_elapsed = 0;
+
+    if (timeout2_timed_out()) {
+        // one second has passed
+        second_elapsed = 1;
+        // next timeout in 1s
+        timeout2_set_100us(10000);
+    }
+
+    // count down when
+    if (adc_get_channel_rescaled(ADC_CHANNEL_THROTTLE) >= ADC_RESCALED_ZERO_THRESHOLD) {
+        // do timer logic, handle countdown
+        if (second_elapsed) {
+            gui_model_timer--;
+        }
+    }
+}
+
+
+
 void gui_loop(void) {
     debug("gui: entering main loop\n"); debug_flush();
     gui_active = 1;
 
     // start with main page
     gui_page = 1;
+    gui_loop_counter = 0;
+
+    // re init model timer
+    gui_cb_model_timer_reload();
+    gui_model_timer = 10;
 
     // this is the main GUI loop. rf stuff is done inside an ISR
     while (gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT) {
@@ -272,6 +304,10 @@ void gui_loop(void) {
         // will (re-)register callbacks
         gui_touch_callback_clear();
 
+        // do some ui logic, like counting down timers,
+        // doing warning beeps etc
+        gui_process_logic();
+
         // render ui
         if (gui_page & GUI_PAGE_SETTING_FLAG) {
             // render settings ui
@@ -281,6 +317,7 @@ void gui_loop(void) {
             gui_render();
         }
 
+        gui_loop_counter++;
         wdt_reset();
         delay_ms(GUI_LOOP_DELAY_MS);
     }
@@ -464,9 +501,8 @@ void gui_render(void) {
             break;
 
         case(1) :
-            // status screen
-            gui_render_statusbar();
-            gui_render_bottombar();
+            // main status screen
+            gui_render_main_screen();
             break;
 
         case(2) :
@@ -545,6 +581,45 @@ static void gui_config_header_render(uint8_t *str) {
     screen_set_font(font_tomthumb3x5);
     screen_puts_centered(1 + font_tomthumb3x5[FONT_HEIGHT]/2, 0, str);
 }
+
+static void gui_render_main_screen(void) {
+    gui_render_statusbar();
+    gui_render_bottombar();
+
+    // draw countdown
+    // screen_set_font(font_metric7x12);
+    screen_set_font(font_metric15x26);
+
+    // render time
+    uint32_t color = 1;
+    if (gui_model_timer < 0) {
+        if ((gui_loop_counter % 4) == 0) {
+            color = 1 - color;
+        }
+    }
+    if ((gui_model_timer > 0) && (gui_model_timer < 15)) {
+        if ((gui_loop_counter % 10) == 0) {
+            // beep!
+            sound_play_low_time();
+        }
+    }
+
+    // render background
+    uint32_t x = 51;
+    uint32_t y = 10;
+    uint32_t w = (font_metric15x26[FONT_FIXED_WIDTH]/2 + 2) +
+                 (font_metric15x26[FONT_FIXED_WIDTH] + 1) * 4 + 3;
+    uint32_t h = font_metric15x26[FONT_HEIGHT] + 2;
+    screen_fill_round_rect(x, y, w, h, 2, 1 - color);
+    x++;
+    y++;
+
+    // render time
+    screen_put_time(x, y, color, gui_model_timer);
+    // register the reset callback
+    gui_touch_callback_register(x, x + w, y, y + h, &gui_cb_model_timer_reload);
+}
+
 
 static void gui_config_main_render(void) {
     uint32_t idx;

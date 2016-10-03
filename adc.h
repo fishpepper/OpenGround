@@ -42,4 +42,21 @@ uint32_t adc_get_battery_voltage(void);
 #define ADC_DMA_TC_FLAG           DMA1_FLAG_TC1
 #define ADC_CHANNEL_COUNT 11
 
+#define ADC_CHANNEL_AILERON   0
+#define ADC_CHANNEL_ELEVATION 1
+#define ADC_CHANNEL_THROTTLE  2
+#define ADC_CHANNEL_RUDDER    3
+#define ADC_CHANNEL_CH0       4
+#define ADC_CHANNEL_CH1       5
+#define ADC_CHANNEL_CH2       6
+#define ADC_CHANNEL_CH3       7
+
+// rescaled data goes from -3200 to 3200
+// set zero threshold to 10% movement from absolute zero
+#define ADC_RESCALED_ABSOLUTE_MIN        -3200
+#define ADC_RESCALED_ABSOLUTE_MAX         3200
+#define ADC_RESCALED_ZERO_THRESHOLD      (ADC_RESCALED_ABSOLUTE_MIN + 0.1 * \
+                                         (ADC_RESCALED_ABSOLUTE_MAX - ADC_RESCALED_ABSOLUTE_MIN))
+
+
 #endif  // ADC_H_

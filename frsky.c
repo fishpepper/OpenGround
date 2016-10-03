@@ -234,6 +234,9 @@ static void frsky_receive_packet(void) {
     cc2500_process_packet(&frsky_packet_received, (volatile uint8_t *)&frsky_packet_buffer, \
                       FRSKY_PACKET_BUFFER_SIZE);
 
+    // increment counter, will be cleared on valid packet rx
+    frsky_packet_lost_counter++;
+
     // packet received?
     if (frsky_packet_received) {
         // decrypt data
@@ -258,8 +261,6 @@ static void frsky_receive_packet(void) {
             }
             debug_put_newline();*/
         }
-    } else {
-        frsky_packet_lost_counter++;
     }
 
 
@@ -927,6 +928,8 @@ void frsky_calib_pll(void) {
     debug("frsky: calib pll done\n");
 }
 
+/*
+
 void frsky_main(void) {
     uint8_t send_telemetry = 0;
     uint8_t requested_telemetry_id = 0;
@@ -1128,7 +1131,7 @@ void frsky_main(void) {
     }
 }
 
-
+*/
 
 void frsky_set_channel(uint8_t hop_index) {
     uint8_t ch = storage.frsky_hop_table[hop_index];
@@ -1210,7 +1213,7 @@ void frsky_update_ppm(void) {
     // and to ppm
     /// ppm_update(channel_data);
 }
-
+/*
 void frsky_send_telemetry(uint8_t telemetry_id) {
     static uint8_t test = 0;
 
@@ -1256,6 +1259,7 @@ void frsky_send_telemetry(uint8_t telemetry_id) {
     cc2500_enable_receive();
     // SHOULD NOT BE NECESSARY, DEFAULT IS BACK TO RX// cc2500_strobe(RFST_SRX);
 }
+*/
 
 
 // useful for debugging/ sniffing packets from anothe tx or rx

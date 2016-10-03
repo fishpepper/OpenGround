@@ -61,6 +61,9 @@ void gui_loop(void);
 uint32_t gui_running(void);
 
 static void gui_process_touch(void);
+static void gui_render_main_screen(void);
+static void gui_process_logic(void);
+
 
 static void gui_config_render(void);
 static void gui_config_stick_calibration_store_adc_values(void);
@@ -76,6 +79,7 @@ static void gui_render_settings(void);
 static void gui_touch_callback_execute(uint8_t i);
 static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *str, f_ptr_t cb);
 
+static void gui_cb_model_timer_reload(void);
 static void gui_cb_previous_page(void);
 static void gui_cb_next_page(void);
 static void gui_cb_config_back(void);

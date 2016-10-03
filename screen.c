@@ -633,6 +633,61 @@ void screen_put_int8(uint8_t x, uint8_t y, uint8_t color, int8_t c) {
     }
 }
 
+void screen_put_time(uint8_t x, uint8_t y, uint8_t c, int16_t time) {
+    // print time -00:00 on screen
+    uint32_t color = c;
+    uint32_t negative = 0;
+
+    if (time < 0) {
+        time = -time;
+        // render '-' char
+        screen_fill_rect(x, y + screen_font_ptr[FONT_HEIGHT]/2 - 1,
+                         screen_font_ptr[FONT_FIXED_WIDTH]/2, 3, color);
+    }
+
+    int16_t minutes = time / 60;
+    int16_t seconds = time % 60;
+
+    // put minutes
+    x = x + (screen_font_ptr[FONT_FIXED_WIDTH]/2 + 2);
+    screen_put_uint8_2dec(x, y, color, minutes);
+    x = x + (screen_font_ptr[FONT_FIXED_WIDTH] + 1) * 2;
+
+    // render colon
+    screen_fill_rect(x, y + screen_font_ptr[FONT_HEIGHT]*3/8, 2, 2, color);
+    screen_fill_rect(x, y + screen_font_ptr[FONT_HEIGHT]*5/8, 2, 2, color);
+
+    // put seconds
+    x = x + 3;
+    screen_put_uint8_2dec(x, y, color, seconds);
+}
+
+
+// output a unsigned 8-bit, only two decimals
+void screen_put_uint8_2dec(uint8_t x, uint8_t y, uint8_t color, uint8_t c) {
+    screen_font_x = x;
+    screen_font_y = y;
+    screen_font_color = color;
+
+    uint8_t tmp;
+    uint8_t mul;
+    uint8_t l;
+
+    while (c >= 100) {
+        c-= 100;
+    }
+
+    l = 0;
+    for (mul = 10; mul > 0; mul = mul/ 10) {
+        tmp = '0';
+        while (c >= mul) {
+            c -= mul;
+            tmp++;
+            l = 1;
+        }
+        screen_put_char(tmp);
+    }
+}
 
 // output a unsigned 8-bit
 void screen_put_uint8(uint8_t x, uint8_t y, uint8_t color, uint8_t c) {

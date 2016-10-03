@@ -284,6 +284,7 @@ void cc2500_transmit_packet(volatile uint8_t *buffer, uint8_t len) {
     cc2500_strobe(RFST_STX);
 }
 
+/*
 void cc2500_wait_for_transmission_complete(void) {
     // after STX we go back to RX state(see MCSM1 register)
     // so wait a maximum of 9ms for completion
@@ -299,4 +300,4 @@ void cc2500_wait_for_transmission_complete(void) {
 
     // if we reach this point, tx timed out:
     debug("!TX");
-}
+}*/
