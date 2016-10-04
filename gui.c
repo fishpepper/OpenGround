@@ -77,15 +77,6 @@ static void gui_touch_callback_register(uint8_t xs, uint8_t xe, uint8_t ys, uint
         return;
     }
 
-    if ((xs != 0) && (xs != 118)) {
-        debug("     ");
-    debug_put_uint8(xs); debug_putc('-'); debug_put_uint8(xe);
-    debug_putc(' ');
-    debug_put_uint8(ys); debug_putc('-'); debug_put_uint8(ye);
-    debug_put_newline();
-    debug_flush();
-    }
-
     // make sure to have valid ranges by ignoring bad ranges
     if (xs > xe) { xs = xe; }
     if (ys > ye) { ys = ye; }
@@ -113,7 +104,7 @@ static void gui_touch_callback_execute(uint8_t i) {
     debug_flush();*/
 
     if (gui_touch_callback[i].callback != 0) {
-        // now execute this cabblack
+        // execute this callback if valid
         gui_touch_callback[i].callback();
     }
 }
@@ -511,29 +502,6 @@ void gui_render(void) {
             break;
 
         default :
-            screen_fill(0);
-            uint8_t buf[2];
-            buf[0] = '0' + gui_page-2;
-            buf[1] = 0;
-
-            if (1) {  // gui_page == 2){
-                screen_set_font(font_metric15x26);
-                    uint8_t buf2[10] = "00:00";
-                buf2[1] = '0' + gui_page;
-                screen_puts_xy(24, 1, 1, buf2);
-
-                /*screen_set_font(font_metric7x12);
-                static uint8_t start = 0;
-                start++;
-                if (start>100) start = 0;
-                if ((start/2) % 3 == 0)
-                    screen_puts_xy(start, 40, 1, "[");
-                else if ((start/2) % 3 == 1)
-                    screen_puts_xy(start, 40, 1, "<");
-                else
-                    screen_puts_xy(start, 40, 1, "=");*/
-            }
-
             gui_add_button(64-50/2, 40, 50, 15, "SETUP", &gui_cb_config_enter);
 
             break;
