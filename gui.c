@@ -46,7 +46,7 @@ static uint8_t gui_loop_counter;
 
 void gui_init(void) {
     debug("gui: init\n"); debug_flush();
-    gui_page = 1;
+    gui_page = 0;
     gui_shutdown_pressed = 0;
     gui_config_tap_detected = 0;
     gui_touch_callback_index = 0;
@@ -234,7 +234,7 @@ static void gui_cb_config_exit(void) {
     frsky_tx_set_enabled(1);
 
     // back to config main menu
-    gui_page = 1;
+    gui_page = 0;
 }
 
 void gui_handle_button_powerdown(void) {
@@ -292,13 +292,13 @@ void gui_loop(void) {
     gui_active = 1;
 
     // start with main page
-    gui_page = 1;
+    gui_page = 0;
     gui_loop_counter = 0;
 
     // re init model timer
     gui_cb_model_timer_reload();
 
-    gui_page = 3 | GUI_PAGE_SETTING_FLAG;
+    gui_page = 0;
 
     // this is the main GUI loop. rf stuff is done inside an ISR
     while (gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT) {
@@ -320,7 +320,11 @@ void gui_loop(void) {
         gui_process_logic();
 
         // render ui
-        if (gui_page & GUI_PAGE_SETTING_FLAG) {
+        if (adc_get_channel_rescaled(ADC_CHANNEL_CH3) < 0){
+            // show console on switch down
+            console_render();
+            screen_update();
+        } else if (gui_page & GUI_PAGE_SETTING_FLAG) {
             // render settings ui
             gui_config_render();
         } else {
@@ -506,17 +510,12 @@ void gui_render(void) {
                                 &gui_cb_next_page);
 
     switch (gui_page) {
-        case(0) :
-            // debug console
-            console_render();
-            break;
-
-        case(1) :
+        case (0) :
             // main status screen
             gui_render_main_screen();
             break;
 
-        case(2) :
+        case (1) :
             // slider screen
             gui_render_sliders();
             break;

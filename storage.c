@@ -109,8 +109,13 @@ static void storage_load_defaults(void) {
 
     // initialise empty models
     for (i = 0; i < STORAGE_MODEL_MAX_COUNT; i++) {
-        storage.model[i].name = "- EMPTY X -";
-        storage.model[i].name[8] = '0' + i;
+        storage.model[i].name[0] = 'E';
+        storage.model[i].name[1] = 'M';
+        storage.model[i].name[2] = 'P';
+        storage.model[i].name[3] = 'T';
+        storage.model[i].name[4] = 'Y';
+        storage.model[i].name[6] = '0' + i;
+        storage.model[i].name[6] = 0;
         storage.model[i].timer = 3*60;
         storage.model[i].stick_scale = 100;
     }
@@ -118,6 +123,7 @@ static void storage_load_defaults(void) {
     // add example model
     storage_mode_set_name(0, "TinyWhoop");
     storage.model[0].timer = 3*60;
+    storage.model[i].stick_scale = 50;
     storage.current_model = 0;
 }
 
