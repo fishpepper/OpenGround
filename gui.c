@@ -113,11 +113,11 @@ static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *
     // set font
     screen_set_font(font_tomthumb3x5);
 
-    // render a rounded rect
-    screen_draw_round_rect(x, y, w, h, 3, 1);
-
     // render string
     screen_puts_xy_centered(x + w/2, y + h/2, 1, str);
+
+    // render a rounded rect
+    screen_draw_round_rect(x, y, w, h, 3, 1);
 
     // register the callback
     gui_touch_callback_register(x, x + w, y, y + h, cb);
@@ -131,11 +131,6 @@ static void gui_process_touch(void) {
 
     if (t.event_id == TOUCH_GESTURE_MOUSE_DOWN) {
         // there was a mouse click!
-
-        debug("CLICK: ");
-        debug_put_uint8(t.x); debug("-");
-        debug_put_uint8(t.y); debug_put_newline(); debug_flush();
-
         // check if we will have to execute a callback
         for (i = 0; i < gui_touch_callback_index; i++) {
             // the first one matching will be triggered first.
@@ -156,6 +151,30 @@ static void gui_process_touch(void) {
 
 static void gui_cb_model_timer_reload(void) {
     gui_model_timer = (int16_t) storage.model[storage.current_model].timer;
+}
+
+static void gui_cb_model_prev(void) {
+    if (storage.current_model > 0) {
+        storage.current_model--;
+    }
+}
+
+static void gui_cb_model_next(void) {
+    if (storage.current_model < (STORAGE_MODEL_MAX_COUNT-1)) {
+        storage.current_model++;
+    }
+}
+
+static void gui_cb_model_stickscale_dec(void) {
+    if (storage.model[storage.current_model].stick_scale > 2) {
+        storage.model[storage.current_model].stick_scale--;
+    }
+}
+
+static void gui_cb_model_stickscale_inc(void) {
+    if (storage.model[storage.current_model].stick_scale < 100) {
+        storage.model[storage.current_model].stick_scale++;
+    }
 }
 
 static void gui_cb_previous_page(void) {
@@ -278,7 +297,8 @@ void gui_loop(void) {
 
     // re init model timer
     gui_cb_model_timer_reload();
-    gui_model_timer = 10;
+
+    gui_page = 3 | GUI_PAGE_SETTING_FLAG;
 
     // this is the main GUI loop. rf stuff is done inside an ISR
     while (gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT) {
@@ -515,7 +535,6 @@ static void gui_config_render(void) {
 
     // register callbacks
     // none for now...
-
     switch (gui_page) {
         case (0 | GUI_PAGE_SETTING_FLAG) :
             // main settings menu
@@ -720,8 +739,39 @@ static void gui_config_clonetx_render(void) {
 static void gui_config_model_render(void) {
     // header
     gui_config_header_render("MODEL SETTINGS");
-    // gui_add_button(94, 34 + 1*18, font_tomthumb3x5, " BACK ", &gui_cb_config_back);
-    gui_add_button(74, 12 + 2*17, 50, 15, "BACK", &gui_cb_config_exit);
+
+    const uint8_t *font = font_system5x7;
+
+    screen_set_font(font);
+
+    uint32_t y = 12;
+
+    // add model name
+    screen_puts_centered(y, 1, storage.model[storage.current_model].name);
+
+    // add < ... > buttons
+    gui_add_button(3, y - 3, 15, 10, "<", &gui_cb_model_prev);
+    gui_add_button(LCD_WIDTH - 3 - 15, y - 3, 15, 10, ">", &gui_cb_model_next);
+    y += 1 + font[FONT_HEIGHT];
+
+    // add line
+    // screen_draw_hline(0, y, LCD_WIDTH, 1);
+    y += 2;
+
+    // now use smaller font
+    font = font_tomthumb3x5;
+    screen_set_font(font);
+
+    // add stick scaling
+    screen_puts_xy(3, y, 1, "SCALE");
+    uint32_t x = 45;
+    screen_put_uint8(x, y, 1, storage.model[storage.current_model].stick_scale);
+    gui_add_button(x - 15, y - 1, 15, 9, "-", &gui_cb_model_stickscale_dec);
+    gui_add_button(x + 15, y - 1, 15, 9, "+", &gui_cb_model_stickscale_inc);
+
+    // render buttons and set callback
+    gui_add_button(89, 34 + 0*15, 35, 13, "SAVE", &gui_cb_config_save);
+    gui_add_button(89, 34 + 1*15, 35, 13, "BACK", &gui_cb_config_exit);
 }
 
 

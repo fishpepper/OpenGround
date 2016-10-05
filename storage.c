@@ -109,9 +109,10 @@ static void storage_load_defaults(void) {
 
     // initialise empty models
     for (i = 0; i < STORAGE_MODEL_MAX_COUNT; i++) {
-        storage.model[i].name[0] = 0;
-        storage.model[i].name[STORAGE_MODEL_NAME_LEN-1] = 0;
-        storage.model[i].timer = 5*60;
+        storage.model[i].name = "- EMPTY X -";
+        storage.model[i].name[8] = '0' + i;
+        storage.model[i].timer = 3*60;
+        storage.model[i].stick_scale = 100;
     }
 
     // add example model

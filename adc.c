@@ -114,6 +114,17 @@ int32_t adc_get_channel_rescaled(uint8_t idx) {
         value = value - ADC_RESCALE_TARGET_RANGE;
     }
 
+    // apply the scale factor:
+    switch (idx) {
+        default:
+            // do not apply scale
+            break;
+        case (ADC_CHANNEL_AILERON):
+        case (ADC_CHANNEL_ELEVATION):
+            value = (value * storage.model[storage.current_model].stick_scale) / 100;
+            break;
+    }
+
     // limit value to -3200 ... 3200
     value = max(-ADC_RESCALE_TARGET_RANGE, min(ADC_RESCALE_TARGET_RANGE, value));
 

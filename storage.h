@@ -45,6 +45,8 @@ typedef struct {
     uint8_t name[STORAGE_MODEL_NAME_LEN];
     // timer
     uint16_t timer;
+    // scale
+    uint8_t stick_scale;
     // add further data here...
 } MODEL_DESC;
 
