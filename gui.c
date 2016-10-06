@@ -36,9 +36,10 @@
 
 static uint32_t gui_config_counter;
 static uint32_t gui_shutdown_pressed;
-static uint32_t gui_active = 0;
-static uint32_t gui_page;
-static uint32_t gui_config_tap_detected;
+static uint8_t gui_active = 0;
+static uint8_t gui_page;
+static uint8_t gui_sub_page;
+static uint8_t gui_config_tap_detected;
 static uint8_t gui_touch_callback_index;
 static touch_callback_entry_t gui_touch_callback[GUI_TOUCH_CALLBACK_COUNT];
 static int16_t gui_model_timer;
@@ -109,10 +110,13 @@ static void gui_touch_callback_execute(uint8_t i) {
     }
 }
 
-static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *str, f_ptr_t cb) {
-    // set font
+static void gui_add_button_smallfont(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                                     uint8_t *str, f_ptr_t cb) {
     screen_set_font(font_tomthumb3x5);
+    gui_add_button(x, y, w, h, str, cb);
+}
 
+static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *str, f_ptr_t cb) {
     // render string
     screen_puts_xy_centered(x + w/2, y + h/2, 1, str);
 
@@ -165,6 +169,25 @@ static void gui_cb_model_next(void) {
     }
 }
 
+static void gui_cb_setting_model_stickscale(void) {
+    gui_page    |= GUI_PAGE_SETTING_OPTION_FLAG;
+    gui_sub_page = GUI_SUBPAGE_SETTING_MODEL_SCALE;
+}
+
+static void gui_cb_setting_model_name(void) {
+    gui_page    |= GUI_PAGE_SETTING_OPTION_FLAG;
+    gui_sub_page = GUI_SUBPAGE_SETTING_MODEL_NAME;
+}
+
+static void gui_cb_setting_model_timer(void) {
+    gui_page    |= GUI_PAGE_SETTING_OPTION_FLAG;
+    gui_sub_page = GUI_SUBPAGE_SETTING_MODEL_TIMER;
+}
+
+static void gui_cb_setting_option_leave(void) {
+    gui_page &= ~GUI_PAGE_SETTING_OPTION_FLAG;
+}
+
 static void gui_cb_model_stickscale_dec(void) {
     if (storage.model[storage.current_model].stick_scale > 2) {
         storage.model[storage.current_model].stick_scale--;
@@ -174,6 +197,18 @@ static void gui_cb_model_stickscale_dec(void) {
 static void gui_cb_model_stickscale_inc(void) {
     if (storage.model[storage.current_model].stick_scale < 100) {
         storage.model[storage.current_model].stick_scale++;
+    }
+}
+
+static void gui_cb_model_timer_dec(void) {
+    if (storage.model[storage.current_model].timer > 2) {
+        storage.model[storage.current_model].timer--;
+    }
+}
+
+static void gui_cb_model_timer_inc(void) {
+    if (storage.model[storage.current_model].timer < 99*60) {
+        storage.model[storage.current_model].timer++;
     }
 }
 
@@ -220,6 +255,7 @@ static void gui_cb_config_clonetx(void) {
 
 static void gui_cb_config_model(void) {
     gui_page = GUI_PAGE_SETTING_FLAG | 3;
+    gui_sub_page = 0;
 }
 
 static void gui_cb_config_enter(void) {
@@ -298,7 +334,7 @@ void gui_loop(void) {
     // re init model timer
     gui_cb_model_timer_reload();
 
-    gui_page = 0;
+    gui_page = 0;  // GUI_PAGE_SETTING_FLAG | 3;
 
     // this is the main GUI loop. rf stuff is done inside an ISR
     while (gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT) {
@@ -320,7 +356,7 @@ void gui_loop(void) {
         gui_process_logic();
 
         // render ui
-        if (adc_get_channel_rescaled(ADC_CHANNEL_CH3) < 0){
+        if (adc_get_channel_rescaled(ADC_CHANNEL_CH3) < 0) {
             // show console on switch down
             console_render();
             screen_update();
@@ -521,7 +557,7 @@ void gui_render(void) {
             break;
 
         default :
-            gui_add_button(64-50/2, 40, 50, 15, "SETUP", &gui_cb_config_enter);
+            gui_add_button_smallfont(64-50/2, 40, 50, 15, "SETUP", &gui_cb_config_enter);
 
             break;
     }
@@ -534,23 +570,23 @@ static void gui_config_render(void) {
 
     // register callbacks
     // none for now...
-    switch (gui_page) {
-        case (0 | GUI_PAGE_SETTING_FLAG) :
+    switch (gui_page & GUI_PAGE_NOFLAGS) {
+        case (0) :
             // main settings menu
             gui_config_main_render();
             break;
 
-        case (1 | GUI_PAGE_SETTING_FLAG) :
+        case (1) :
             // stick calibration
             gui_config_stick_calibration_render();
             break;
 
-        case (2 | GUI_PAGE_SETTING_FLAG) :
+        case (2) :
             // clone tx
             gui_config_clonetx_render();
             break;
 
-        case (3 | GUI_PAGE_SETTING_FLAG) :
+        case (3) :
             // model config
             gui_config_model_render();
             break;
@@ -636,12 +672,12 @@ static void gui_config_main_render(void) {
     gui_config_header_render("MAIN CONFIGURATION");
 
     // render buttons and set callback
-    gui_add_button(3, 10 + 0*17, 50, 15, "STICK CAL", &gui_cb_config_stick_cal);
-    gui_add_button(3, 10 + 1*17, 50, 15, "CLONE  TX", &gui_cb_config_clonetx);
-    gui_add_button(3, 10 + 2*17, 50, 15, "MODEL CFG", &gui_cb_config_model);
+    gui_add_button_smallfont(3, 10 + 0*17, 50, 15, "STICK CAL", &gui_cb_config_stick_cal);
+    gui_add_button_smallfont(3, 10 + 1*17, 50, 15, "CLONE  TX", &gui_cb_config_clonetx);
+    gui_add_button_smallfont(3, 10 + 2*17, 50, 15, "MODEL CFG", &gui_cb_config_model);
 
     // exit button
-    gui_add_button(74, 10 + 2*17, 50, 15, "EXIT", &gui_cb_config_exit);
+    gui_add_button_smallfont(74, 10 + 2*17, 50, 15, "EXIT", &gui_cb_config_exit);
 }
 
 static void gui_config_clonetx_render(void) {
@@ -732,25 +768,24 @@ static void gui_config_clonetx_render(void) {
     }
 
 
-    // gui_add_button(94, 34 + 1*18, font_tomthumb3x5, " BACK ", &gui_cb_config_back);
+    // gui_add_button_smallfont(94, 34 + 1*18, font_tomthumb3x5, " BACK ", &gui_cb_config_back);
 }
 
-static void gui_config_model_render(void) {
-    // header
-    gui_config_header_render("MODEL SETTINGS");
-
+static void gui_config_model_render_main(void) {
     const uint8_t *font = font_system5x7;
-
     screen_set_font(font);
 
     uint32_t y = 12;
 
     // add model name
     screen_puts_centered(y, 1, storage.model[storage.current_model].name);
+    // register the callback
+    gui_touch_callback_register(20, LCD_WIDTH - 20, y, y + font[FONT_HEIGHT] + 1,
+                                &gui_cb_setting_model_name);
 
     // add < ... > buttons
-    gui_add_button(3, y - 3, 15, 10, "<", &gui_cb_model_prev);
-    gui_add_button(LCD_WIDTH - 3 - 15, y - 3, 15, 10, ">", &gui_cb_model_next);
+    gui_add_button_smallfont(3, y - 3, 15, 10, "<", &gui_cb_model_prev);
+    gui_add_button_smallfont(LCD_WIDTH - 3 - 15, y - 3, 15, 10, ">", &gui_cb_model_next);
     y += 1 + font[FONT_HEIGHT];
 
     // add line
@@ -758,19 +793,112 @@ static void gui_config_model_render(void) {
     y += 2;
 
     // now use smaller font
-    font = font_tomthumb3x5;
-    screen_set_font(font);
+    // font = font_tomthumb3x5;
+    // screen_set_font(font);
 
     // add stick scaling
-    screen_puts_xy(3, y, 1, "SCALE");
-    uint32_t x = 45;
-    screen_put_uint8(x, y, 1, storage.model[storage.current_model].stick_scale);
-    gui_add_button(x - 15, y - 1, 15, 9, "-", &gui_cb_model_stickscale_dec);
-    gui_add_button(x + 15, y - 1, 15, 9, "+", &gui_cb_model_stickscale_inc);
+    gui_add_button_smallfont(3, y, 40, 13, "SCALE", &gui_cb_setting_model_stickscale);
+    y += 13 + 1;
+
+    // time
+    gui_add_button_smallfont(3, y, 40, 13, "TIMER", &gui_cb_setting_model_timer);
 
     // render buttons and set callback
-    gui_add_button(89, 34 + 0*15, 35, 13, "SAVE", &gui_cb_config_save);
-    gui_add_button(89, 34 + 1*15, 35, 13, "BACK", &gui_cb_config_exit);
+    gui_add_button_smallfont(89, 34 + 0*15, 35, 13, "SAVE", &gui_cb_config_save);
+    gui_add_button_smallfont(89, 34 + 1*15, 35, 13, "BACK", &gui_cb_config_exit);
+}
+
+
+static void gui_render_option_window(uint8_t *opt_name, f_ptr_32_32_t func) {
+    // render window
+    // clear region for window
+    uint32_t window_w = LCD_WIDTH - 20;
+    uint32_t window_h = 55;
+    uint32_t y = (LCD_HEIGHT - window_h) / 2;
+    uint32_t x = (LCD_WIDTH - window_w) / 2;
+    // clear
+    screen_fill_round_rect(x, y , window_w, window_h, 4, 0);
+    // render border
+    screen_draw_round_rect(x, y, window_w, window_h, 4, 1);
+    y += 5;
+
+    // font selection
+    const uint8_t *font = font_system5x7;
+    screen_set_font(font);
+
+    // render text
+    screen_puts_centered(y, 1, opt_name);
+    y += font[FONT_HEIGHT] + 1;
+    uint32_t len = screen_strlen(opt_name);
+    screen_draw_hline((LCD_WIDTH - len) / 2, y, len, 1);
+    y += 5;
+
+    // render change modifier
+    if (func != 0) {
+        func(x, y);
+    }
+
+    // add buttons
+    screen_set_font(font_tomthumb3x5);
+    y = LCD_HEIGHT - (LCD_HEIGHT - window_h) / 2 - 16;
+    gui_add_button_smallfont((LCD_WIDTH - 40) / 2, y, 40, 13, "OK", &gui_cb_setting_option_leave);
+}
+
+static void gui_cb_render_option_stickscale(uint32_t x, uint32_t y) {
+    screen_set_font(font_system5x7);
+
+    // render +/- button
+    gui_add_button(15, y, 15, 15, "-", &gui_cb_model_stickscale_dec);
+    gui_add_button(LCD_WIDTH - 15 - 15, y, 15, 15, "+", &gui_cb_model_stickscale_inc);
+
+    // render value
+    screen_put_uint8(LCD_WIDTH / 2 - screen_strlen("123") / 2,
+                     y, 1, storage.model[storage.current_model].stick_scale);
+}
+
+static void gui_cb_render_option_timer(uint32_t x, uint32_t y) {
+    screen_set_font(font_system5x7);
+
+    // render +/- button
+    gui_add_button(15, y, 15, 15, "-", &gui_cb_model_timer_dec);
+    gui_add_button(LCD_WIDTH - 15 - 15, y, 15, 15, "+", &gui_cb_model_timer_inc);
+
+    // render timer value
+    screen_put_time(LCD_WIDTH / 2 - screen_strlen("1234") / 2,
+                     y, 1, storage.model[storage.current_model].timer);
+}
+
+static uint32_t gui_config_temp;
+
+static void gui_config_model_render(void) {
+    // header
+    gui_config_header_render("MODEL SETTINGS");
+
+    // render normal options
+    gui_config_model_render_main();
+
+    // single item selected?
+    if (gui_page & GUI_PAGE_SETTING_OPTION_FLAG) {
+        // render single settings above main!
+        // but first: remove all button callbacks
+        gui_touch_callback_clear();
+
+        // which options have to be changed?
+        switch (gui_sub_page) {
+            default:
+            case (GUI_SUBPAGE_SETTING_MODEL_NAME) :
+                gui_render_option_window("MODEL NAME", 0);
+                break;
+
+            case (GUI_SUBPAGE_SETTING_MODEL_SCALE) :
+                gui_render_option_window("STICK SCALE", &gui_cb_render_option_stickscale);
+                break;
+
+            case (GUI_SUBPAGE_SETTING_MODEL_TIMER) :
+                gui_render_option_window("TIMER", &gui_cb_render_option_timer);
+                break;
+        }
+    }
 }
 
 
@@ -812,9 +940,9 @@ static void gui_config_stick_calibration_render(void) {
     }
 
     // render buttons and set callback
-    gui_add_button(89, 34 + 0*15, 35, 13, "SAVE", &gui_cb_config_save);
-    gui_add_button(89, 34 + 1*15, 35, 13, "BACK", &gui_cb_config_exit);
+    gui_add_button_smallfont(89, 34 + 0*15, 35, 13, "SAVE", &gui_cb_config_save);
+    gui_add_button_smallfont(89, 34 + 1*15, 35, 13, "BACK", &gui_cb_config_exit);
 
-    // gui_add_button(94, 34 + 0*18, font, " SAVE ", &gui_cb_config_save);
-    // gui_add_button(94, 34 + 1*18, font, " BACK ", &gui_cb_config_back);
+    // gui_add_button_smallfont(94, 34 + 0*18, font, " SAVE ", &gui_cb_config_save);
+    // gui_add_button_smallfont(94, 34 + 1*18, font, " BACK ", &gui_cb_config_back);
 }

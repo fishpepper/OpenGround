@@ -29,12 +29,13 @@
 
 
 #define GUI_LOOP_DELAY_MS 100
-#define GUI_SHUTDOWN_PRESS_S 5.0
+#define GUI_SHUTDOWN_PRESS_S 2.0
 #define GUI_SHUTDOWN_PRESS_COUNT_FROM_MS(_ms) ((_ms)/GUI_LOOP_DELAY_MS)
 #define GUI_SHUTDOWN_PRESS_COUNT (GUI_SHUTDOWN_PRESS_COUNT_FROM_MS(1000*GUI_SHUTDOWN_PRESS_S))
 
 // touch function pointer
 typedef void (*f_ptr_t)(void);
+typedef void (*f_ptr_32_32_t)(uint32_t x, uint32_t y);
 
 // touch callback
 typedef struct {
@@ -53,7 +54,13 @@ static void gui_touch_callback_clear(void);
 
 
 #define GUI_PAGE_SETTING_FLAG 0x80
+#define GUI_PAGE_SETTING_OPTION_FLAG 0x40
+#define GUI_PAGE_NOFLAGS (~(GUI_PAGE_SETTING_FLAG | GUI_PAGE_SETTING_OPTION_FLAG))
 
+
+#define GUI_SUBPAGE_SETTING_MODEL_NAME  0
+#define GUI_SUBPAGE_SETTING_MODEL_SCALE 1
+#define GUI_SUBPAGE_SETTING_MODEL_TIMER 2
 
 void gui_init(void);
 void gui_loop(void);
@@ -78,12 +85,15 @@ static void gui_render_settings(void);
 
 static void gui_touch_callback_execute(uint8_t i);
 static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *str, f_ptr_t cb);
-
+static void gui_add_button_smallfont(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                                     uint8_t *str, f_ptr_t cb);
 static void gui_cb_model_timer_reload(void);
 static void gui_cb_model_prev(void);
 static void gui_cb_model_next(void);
-static void gui_cb_model_stickscale_dec(void);
-static void gui_cb_model_stickscale_inc(void);
+static void gui_cb_setting_model_stickscale(void);
+static void gui_cb_setting_model_name(void);
+static void gui_cb_setting_model_timer(void);
+static void gui_cb_setting_option_leave(void);
 static void gui_cb_previous_page(void);
 static void gui_cb_next_page(void);
 static void gui_cb_config_back(void);

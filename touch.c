@@ -170,6 +170,24 @@ void EXTI4_15_IRQHandler(void) {
                         touch_event.y = (touch_event.y >> 1);
                         touch_event.x = (buf.points[0].yhi & 0x0F) << 8 | (buf.points[0].ylo);
                         touch_event.x = 128 - (touch_event.x >> 1);
+
+                        // correct for strange offset bug in screen center
+                        // on my touch screen the touch points in the center
+                        // are off... no idea why
+                        /* if (touch_event.x > (LCD_WIDTH / 2 - 10) &&
+                            (touch_event.x < (LCD_WIDTH / 2 + 10))) {
+                            // substract a value of 10 at center, linear to the sides
+                            if (touch_event.x > LCD_WIDTH / 2) {
+                                touch_event.y -= 10 - (touch_event.x - (LCD_WIDTH / 2));
+                            } else {
+                                touch_event.y -= 10 - ((LCD_WIDTH / 2) - touch_event.x);
+                            }
+                        }
+                        debug_put_uint16(touch_event.x);
+                        debug_putc(' ');
+                        debug_put_uint16(touch_event.y);
+                        debug_put_newline();
+                        debug_flush();*/
                     }
                 }
             }

@@ -579,16 +579,16 @@ uint32_t screen_strlen(uint8_t *str) {
             break;
         }
     }
-    return len;
+    return (screen_font_ptr[FONT_FIXED_WIDTH] + 1) * len;
 }
 
 void screen_puts_xy_centered(uint8_t x, uint8_t y, uint8_t color, uint8_t *str) {
     uint32_t font_w = screen_font_ptr[FONT_FIXED_WIDTH];
     uint32_t font_h = screen_font_ptr[FONT_HEIGHT];
 
-    uint32_t char_count = screen_strlen(str);
-    uint32_t sx = x - font_w/2 - (char_count*(font_w+1))/2;
-    uint32_t sy = y - font_h/2;
+    uint32_t len = screen_strlen(str);
+    uint32_t sx = x - (len) / 2;
+    uint32_t sy = y - font_h / 2;
     screen_puts_xy(sx, sy, color, str);
 }
 
