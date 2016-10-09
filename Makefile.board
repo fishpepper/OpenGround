@@ -74,7 +74,7 @@ HEADER_FILES  = $(wildcard $(SELF_DIR)/*.h)
 HEADER_FILES += $(wildcard ./*.h)
 
 # Build executable
-board: stylecheck $(RESULT).elf size
+board: size stylecheck $(RESULT).elf
 
 $(STARTUP_OBJS): $(STARTUP)
 	$(AS) -I $(DEVICE) -o $@ $<
@@ -107,9 +107,6 @@ ALL_DEPS := $(patsubst %.c,%.d,$(BOARD_SRCS))
 %.o: %.s
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) $< -o $@
 
-map: $(RESULT).elf
-	@$(MAP)  $(RESULT).elf
-
 stylecheck: $(HEADER_FILES) $(GENERIC_SRCS)
 	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --linelength=100 $(HEADER_FILES) $(GENERIC_SRCS) || true
 
@@ -138,4 +135,4 @@ flash : $(RESULT).bin
 	#st-flash write $(RESULT).bin 0x8000000
 	st-flash --reset write $(RESULT).bin 0x8000000 
 
-.PHONY: board clean flash debug flasherase stylecheck
+.PHONY: board clean flash debug flasherase stylecheck size
