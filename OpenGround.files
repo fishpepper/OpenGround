@@ -106,3 +106,7 @@ peripheral_lib/eeprom_emulation/src/st_eeprom.c
 eeprom.c
 eeprom.h
 wdt.h
+fifo.c
+fifo.h
+telemetry.c
+telemetry.h

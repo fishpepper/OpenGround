@@ -43,6 +43,8 @@ void frsky_handle_overflows(void);
 void frsky_fetch_txid_and_hoptable(void);
 void frsky_calib_pll(void);
 void frsky_main(void);
+void frsky_handle_telemetry(void);
+
 uint8_t frsky_extract_rssi(uint8_t rssi_raw);
 void frsky_increment_channel(int8_t cnt);
 void frsky_tx_set_enabled(uint32_t enabled);

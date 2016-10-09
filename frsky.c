@@ -30,6 +30,7 @@
 #include "io.h"
 #include "storage.h"
 #include "adc.h"
+#include "telemetry.h"
 
 #include "stm32f0xx_tim.h"
 #include "stm32f0xx_misc.h"
@@ -44,7 +45,7 @@
 
 
 static volatile uint8_t frsky_frame_counter;
-static uint8_t frsky_last_received_telemetry_id;
+static uint8_t frsky_last_requested_telemetry_id;
 static volatile uint32_t frsky_state;
 
 // hop data & config
@@ -83,6 +84,8 @@ static volatile uint8_t frsky_packet_sent;
 void frsky_init(void) {
     // uint8_t i;
     debug("frsky: init\n"); debug_flush();
+
+    telemetry_init();
 
     cc2500_init();
 
@@ -203,7 +206,7 @@ static void frsky_send_packet(void) {
     // frame counter
     frsky_packet_buffer[3] = frsky_frame_counter;
     // last received telemtry frame
-    frsky_packet_buffer[4] = frsky_last_received_telemetry_id;
+    frsky_packet_buffer[4] = frsky_last_requested_telemetry_id;
     // ?
     frsky_packet_buffer[5] = 0x01;
     // 6 .. 9 is LO(channel data 0..3)
@@ -252,6 +255,31 @@ static void frsky_receive_packet(void) {
                                         (uint32_t)frsky_extract_rssi(frsky_packet_buffer[18]) -
                                         (uint32_t)frsky_rssi_telemetry)) / 128;
 
+            // extract telemetry packets:
+            // buffer[0]  = bytes used
+            // buffer[1]  = last received telemetry id
+            // buffer[2]  = byte 1
+            // ...
+            // buffer[11] = byte 10
+            //
+            // NOTES:
+            // * buffer[ 0] corresponds to frsky_buffer[ 6]
+            // * buffer[11] corresponds to frsky_buffer[17]
+            // * not all 10 bytes has to be filled in, only the number of bytes that were received
+            //   will be sent in one frame
+            //
+            uint8_t telemetry_frame_id = frsky_packet_buffer[7];
+            if (telemetry_frame_id == frsky_last_requested_telemetry_id) {
+                // request new data with next packet
+                frsky_last_requested_telemetry_id++;
+
+                // extract data
+                uint8_t bytecount = min(frsky_packet_buffer[6], 10);
+                uint8_t i;
+                for (i = 0; i < bytecount; i++) {
+                    telemetry_enqueue(frsky_packet_buffer[8 + i]);
+                }
+            }
 
             /*debug_flush();
             uint32_t i;
@@ -268,6 +296,12 @@ static void frsky_receive_packet(void) {
     // handle any ovf conditions
     frsky_handle_overflows();
 }
+
+void frsky_handle_telemetry(void) {
+    // handle incoming telemetry data
+    telemetry_process();
+}
+
 
 void frsky_get_rssi(uint8_t *rssi, uint8_t *rssi_telemetry) {
     if (frsky_packet_lost_counter > 20) {
@@ -1278,6 +1312,7 @@ void frsky_frame_sniffer(void) {
 
     // start with any channel:
     frsky_current_ch_idx = 0;
+
     // first set channel uses enter rxmode, this will set up dma etc
     frsky_enter_rxmode(storage.frsky_hop_table[frsky_current_ch_idx]);
 
@@ -1292,6 +1327,8 @@ void frsky_frame_sniffer(void) {
 
     // start main loop
     while (1) {
+        wdt_reset();
+
         if (timeout_timed_out()) {
             led_button_r_on();
 

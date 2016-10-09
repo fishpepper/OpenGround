@@ -336,6 +336,9 @@ void gui_loop(void) {
 
     gui_page = 0;  // GUI_PAGE_SETTING_FLAG | 3;
 
+    // prepare timeout
+    timeout_set_100us(10 * GUI_LOOP_DELAY_MS);
+
     // this is the main GUI loop. rf stuff is done inside an ISR
     while (gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT) {
         // process adc values
@@ -369,8 +372,17 @@ void gui_loop(void) {
         }
 
         gui_loop_counter++;
+
         wdt_reset();
-        delay_ms(GUI_LOOP_DELAY_MS);
+
+        // wait for next gui iteration
+        while (!timeout_timed_out()) {
+            // do some processing instead of wasting cpu cycles
+            frsky_handle_telemetry();
+        }
+
+        // prepare next timeout:
+        timeout_set_100us(10 * GUI_LOOP_DELAY_MS);
     }
 
     debug("will power down now\n"); debug_flush();
@@ -616,16 +628,22 @@ static void gui_render_main_screen(void) {
     screen_set_font(font_metric7x12);
     x = 1;
     y = 10;
-    screen_put_fixed2_1digit(x, y, 1, 1640);
+    screen_put_fixed2_1digit(x, y, 1, telemetry_get_voltage());
     x += (font_metric7x12[FONT_FIXED_WIDTH]+1)*3 + 3;
     screen_puts_xy(x, y, 1, "V");
 
     x = 1;
     y += font_metric7x12[FONT_HEIGHT]+1;
-    screen_put_fixed2_1digit(x, y, 1, 3010);
+    screen_put_fixed2_1digit(x, y, 1, telemetry_get_current());
     x += (font_metric7x12[FONT_FIXED_WIDTH]+1)*3 + 3;
     screen_puts_xy(x, y, 1, "A");
 
+    x = LCD_WIDTH - (font_metric7x12[FONT_FIXED_WIDTH]+1)*7 - 1;
+    y += font_metric7x12[FONT_HEIGHT]+1;
+    y += 5;
+    screen_put_uint14(x, y, 1, telemetry_get_mah());
+    x += (font_metric7x12[FONT_FIXED_WIDTH]+1)*4 + 1;
+    screen_puts_xy(x, y, 1, "MAH");
 
     // screen_set_font(font_metric7x12);
     screen_set_font(font_metric15x26);
