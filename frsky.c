@@ -271,7 +271,7 @@ static void frsky_receive_packet(void) {
             uint8_t telemetry_frame_id = frsky_packet_buffer[7];
             if (telemetry_frame_id == frsky_last_requested_telemetry_id) {
                 // request new data with next packet
-                frsky_last_requested_telemetry_id++;
+                frsky_last_requested_telemetry_id = (frsky_last_requested_telemetry_id + 1) & 0x1F;
 
                 // extract data
                 uint8_t bytecount = min(frsky_packet_buffer[6], 10);
