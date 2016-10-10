@@ -205,10 +205,10 @@ static void frsky_send_packet(void) {
     frsky_packet_buffer[2] = storage.frsky_txid[1];
     // frame counter
     frsky_packet_buffer[3] = frsky_frame_counter;
-    // last received telemtry frame
+    // last received telemetry frame
     frsky_packet_buffer[4] = frsky_last_requested_telemetry_id;
-    // ?
-    frsky_packet_buffer[5] = 0x01;
+    // my tgy 9x sends 0x0B (is this how many bytes are free in hub buf?)
+    frsky_packet_buffer[5] = 0x0B;
     // 6 .. 9 is LO(channel data 0..3)
     frsky_packet_buffer[6] = adc_data[0] & 0xFF;
     frsky_packet_buffer[7] = adc_data[1] & 0xFF;
@@ -362,7 +362,7 @@ void TIM3_IRQHandler(void) {
                 // enable LNA
                 cc2500_enter_rxmode();
                 // the next hop will now in 1.3ms (after freq stabilised)
-                TIM_SetAutoreload(TIM3, 1300-1);
+                TIM_SetAutoreload(TIM3, 1300-1-0*200);
                 frsky_state = 4;
                 break;
 
@@ -374,7 +374,7 @@ void TIM3_IRQHandler(void) {
                 frsky_frame_counter++;
                 // the next hop will now in 9.2ms
                 // 2*9 = 18 = 7.5 + 1.3 + 9.2
-                TIM_SetAutoreload(TIM3, 9200-1);
+                TIM_SetAutoreload(TIM3, 9200-1+0*200);
                 frsky_state = 0;
                 break;
         }

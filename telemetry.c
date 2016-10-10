@@ -44,6 +44,10 @@ void telemetry_init(void) {
     telemetry_decoded_data_voltage = 0;
     telemetry_decoded_data_current = 0;
     telemetry_last_value = 0;
+    telemetry_data_id = 0;
+    telemetry_last_id = 0;
+    telemetry_high_byte = 0;
+    telemetry_low_byte = 0;
 
     // init isr safe fifo
     fifo_init(&telemetry_fifo_buffer, telemetry_buffer, TELEMETRY_BUFFER_LENGTH);
@@ -53,7 +57,7 @@ void telemetry_enqueue(uint8_t byte) {
     // debug("telemetry: enq 0x"); debug_put_hex8(byte); debug_put_newline(); debug_flush();
     // insert into fifo
     if (!fifo_put(&telemetry_fifo_buffer, byte)) {
-        debug("telem: fifo full\n");
+        // debug("telemetry: fifo full\n");
     }
 }
 
@@ -61,8 +65,6 @@ void telemetry_process(void) {
     // handle telemetry packets
     if (!fifo_empty(&telemetry_fifo_buffer)) {
         uint8_t byte = fifo_get(&telemetry_fifo_buffer);
-        // debug_put_hex8(byte);
-        // if (byte == 0x28) debug_put_newline();
         // process incoming telemetry
         telemetry_parse_stream(byte);
     }
@@ -154,7 +156,6 @@ static void telemetry_process_hub_packet(uint8_t id, uint16_t value) {
 
 
         case 0x28:  // Current 0A-100A (0.1A/count)
-            // debug("TEL "); debug_put_uint16(value); debug_put_newline();
             telemetry_decoded_data_current = value * 10;
             /*set_telemetry(TELEM_FRSKY_CURRENT, value);
             if (discharge_time == 0) discharge_time = CLOCK_getms();
