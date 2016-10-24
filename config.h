@@ -122,7 +122,7 @@
 #define CC2500_SPI_MISO_PIN         GPIO_Pin_14
 #define CC2500_SPI_MISO_PINSOURCE   GPIO_PinSource14
 // LABELED RF2
-#define CC2500_SPI_CSN_PIN          GPIO_Pin_10
+#define CC2500_SPI_CSN_PIN          GPIO_Pin_12
 #define CC2500_SPI                  SPI1
 #define CC2500_SPI_CLK              RCC_APB2Periph_SPI1
 #define CC2500_SPI_GPIO_CLK         RCC_AHBPeriph_GPIOE
@@ -140,12 +140,12 @@
 // LABELED RX-W
 #define CC2500_LNA_GPIO     GPIOE
 #define CC2500_LNA_GPIO_CLK RCC_AHBPeriph_GPIOE
-#define CC2500_LNA_PIN      GPIO_Pin_8
+#define CC2500_LNA_PIN      GPIO_Pin_9
 
 // LABELED TX_W
 #define CC2500_PA_GPIO     GPIOE
 #define CC2500_PA_GPIO_CLK RCC_AHBPeriph_GPIOE
-#define CC2500_PA_PIN      GPIO_Pin_9
+#define CC2500_PA_PIN      GPIO_Pin_8
 
 // LABELED GIO2
 #define CC2500_GDO2_GPIO           GPIOB
