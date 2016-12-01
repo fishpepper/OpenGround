@@ -114,7 +114,7 @@ static void storage_load_defaults(void) {
         storage.model[i].name[2] = 'P';
         storage.model[i].name[3] = 'T';
         storage.model[i].name[4] = 'Y';
-        storage.model[i].name[6] = '0' + i;
+        storage.model[i].name[5] = '0' + i;
         storage.model[i].name[6] = 0;
         storage.model[i].timer = 3*60;
         storage.model[i].stick_scale = 100;

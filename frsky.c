@@ -98,7 +98,12 @@ void frsky_init(void) {
     frsky_rssi = 100;
 
     // check if spi is working properly
-    frsky_show_partinfo();
+    if (!frsky_check_transceiver()){
+        // no cc2500 detected - abort
+        debug("frsky: no cc2500 detected. abort\n");
+        debug_flush();
+        return;
+    }
 
     // init frsky registersttings for cc2500
     frsky_configure();
@@ -408,7 +413,7 @@ void TIM3_IRQHandler(void) {
 }
 
 
-void frsky_show_partinfo(void) {
+uint8_t frsky_check_transceiver(void) {
     debug("frsky: partinfo\n"); debug_flush();
 
     uint8_t partnum, version;
@@ -427,10 +432,13 @@ void frsky_show_partinfo(void) {
 
     if (cc2500_partnum_valid(partnum, version)) {
         debug("frsky: got valid part and version info\n");
-    } else {
-        debug("frsky: got INVALID part and version info?!\n");
+        debug_flush();
+        return 1;
     }
+
+    debug("frsky: got INVALID part and version info?!\n");
     debug_flush();
+    return 0;
 }
 
 void frsky_configure(void) {

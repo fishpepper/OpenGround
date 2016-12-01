@@ -31,7 +31,7 @@
 #define FRSKY_COUNT_RXSTATS 20
 
 void frsky_init(void);
-void frsky_show_partinfo(void);
+uint8_t frsky_check_transceiver(void);
 void frsky_configure(void);
 uint8_t frsky_bind_jumper_set(void);
 void frsky_do_bind(void);

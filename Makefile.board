@@ -8,6 +8,7 @@ BOARD_SRCS   += $(SYSTEM_SRCS:%.c=device/%.c)
 BOARD_SRCS   += $(DRIVER_SRCS:%.c=peripheral_lib/src/%.c)
 BOARD_SRCS   += $(EXTERNAL_SRCS:%.c=peripheral_lib/eeprom_emulation/src/%.c)
 
+DFU_UTIL ?= dfu_util
 
 
 #crystal frequency
@@ -134,5 +135,8 @@ flash : $(RESULT).bin
 	#if [ -a $(OPENOCD_PIDFILE) ]; then kill `cat $(OPENOCD_PIDFILE)`; fi;
 	#st-flash write $(RESULT).bin 0x8000000
 	st-flash --reset write $(RESULT).bin 0x8000000 
+
+dfu-flash : $(RESULT).bin
+	$(DFU_UTIL) -a 0 -D $(RESULT).bin -s 0x08000000:131072 -R
 
 .PHONY: board clean flash debug flasherase stylecheck size
