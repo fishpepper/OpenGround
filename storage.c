@@ -38,23 +38,20 @@ void storage_init(void) {
     // reload data from flash
     storage_load();
 
-    if (storage.version != STORAGE_VERSION_ID) {
-        debug("storage: corrupted! bad version\n");
-        debug("got 0x");
-        debug_put_hex8(storage.version);
-        debug_put_newline();
-        delay_ms(1000);
-        debug_flush();
+    if (!storage_is_valid()) {
+        // bad storage -> re init!
         storage_load_defaults();
+        delay_ms(4000);
         storage_save();
+        delay_ms(4000);
         // reload to make sure write was ok
         storage_load();
     }
+delay_ms(4000);
 
     // for debugging
     // storage_load_defaults();
     // storage_save();
-
 
     debug("storage: loaded hoptable[]:\n");
     for (i = 0; i < 9; i++) {
@@ -77,6 +74,49 @@ void storage_init(void) {
         debug_put_newline();
     }
     debug_flush();
+}
+
+static uint8_t  storage_is_valid(void) {
+    uint16_t crc;
+
+    // first of all check revision:
+    if (storage.version != STORAGE_VERSION_ID) {
+        debug("storage: corrupted! bad version\n");
+        debug("got 0x");
+        debug_put_hex8(storage.version);
+        debug_put_newline();
+        debug_flush();
+        return 0;
+    }
+
+    // verify checksum:
+    crc = storage_calc_crc();
+    if (storage.checksum != crc) {
+        debug("storage: crc error: 0x");
+        debug_put_hex16(storage.checksum);
+        debug("\ngot 0x");
+        debug_put_hex16(crc);
+        debug("instead\n");
+        debug_flush();
+        return 0;
+    }
+
+    // fine
+    return 1;
+}
+
+static uint16_t storage_calc_crc(void) {
+    uint16_t crc;
+    uint8_t *storage_ptr;
+
+    // calc pointer to storage mem
+    storage_ptr = (uint8_t*)&storage;
+
+    // calc crc16 over data (without checksum):
+    crc = crc16(storage_ptr, sizeof(storage) - sizeof(storage.checksum));
+
+    // return result
+    return crc;
 }
 
 static void storage_load_defaults(void) {
@@ -163,6 +203,11 @@ void storage_load(void) {
 
 void storage_save(void) {
     debug("storage: save\n"); debug_flush();
+
+    // store the current crc for the storage
+    storage.checksum = storage_calc_crc();
+
+    // and finally write it to eeprom
     eeprom_write_storage();
 }
 

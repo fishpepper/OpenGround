@@ -137,8 +137,8 @@ void eeprom_read_storage(void) {
             debug_put_newline();
             debug_flush();*/
         } else {
-            // debug("eeprom: read 0x"); debug_put_hex16(value); debug_put_newline(); debug_flush();
-            // delay_ms(100);
+            /*debug("eeprom: read 0x"); debug_put_hex16(value); debug_put_newline(); debug_flush();
+            delay_ms(100);*/
 
             // read back into storage:
             if (p < sizeof (storage)) storage_ptr[p++] = (value>>8) & 0xFF;
@@ -153,6 +153,7 @@ void eeprom_read_storage(void) {
             }*/
         }
     }
+    // debug_put_hex16(storage.checksum);
     FLASH_Lock();
     // uint32_t t; for (t = 0; t < 20; t++) { delay_ms(100); wdt_reset(); }
 }

@@ -98,7 +98,7 @@ void frsky_init(void) {
     frsky_rssi = 100;
 
     // check if spi is working properly
-    if (!frsky_check_transceiver()){
+    if (!frsky_check_transceiver()) {
         // no cc2500 detected - abort
         debug("frsky: no cc2500 detected. abort\n");
         debug_flush();

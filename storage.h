@@ -24,7 +24,7 @@
 
 #include "frsky.h"
 
-#define STORAGE_VERSION_ID 0x02
+#define STORAGE_VERSION_ID 0x03
 #define STORAGE_MODEL_NAME_LEN 11
 #define STORAGE_MODEL_MAX_COUNT 10
 
@@ -38,6 +38,8 @@ void storage_mode_set_name(uint8_t index, uint8_t *str);
 static void storage_load_defaults(void);
 /*static void storage_write(uint8_t *buffer, uint16_t len);
 static void storage_read(uint8_t *storage_ptr, uint16_t len);*/
+static uint8_t  storage_is_valid(void);
+static uint16_t storage_calc_crc(void);
 
 // model description
 typedef struct {
@@ -63,7 +65,10 @@ typedef struct {
     // model settings
     uint8_t current_model;
     MODEL_DESC model[STORAGE_MODEL_MAX_COUNT];
-    // add further data here...
+    // new data should be placed BEFORE the checksum...
+    //
+    // checksum
+    uint16_t checksum;
 } STORAGE_DESC;
 
 // rounded up
