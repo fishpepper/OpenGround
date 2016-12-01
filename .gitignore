@@ -1,3 +1,4 @@
+*.bak
 # Object files
 *.o
 *.d

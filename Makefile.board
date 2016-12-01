@@ -136,7 +136,7 @@ flash : $(RESULT).bin
 	#st-flash write $(RESULT).bin 0x8000000
 	st-flash --reset write $(RESULT).bin 0x8000000 
 
-dfu-flash : $(RESULT).bin
+dfu : $(RESULT).bin
 	$(DFU_UTIL) -a 0 -D $(RESULT).bin -s 0x08000000:131072 -R
 
 .PHONY: board clean flash debug flasherase stylecheck size
