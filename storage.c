@@ -41,13 +41,10 @@ void storage_init(void) {
     if (!storage_is_valid()) {
         // bad storage -> re init!
         storage_load_defaults();
-        delay_ms(4000);
         storage_save();
-        delay_ms(4000);
         // reload to make sure write was ok
         storage_load();
     }
-delay_ms(4000);
 
     // for debugging
     // storage_load_defaults();
