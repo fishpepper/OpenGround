@@ -14,6 +14,7 @@
 #include "touch.h"
 
 int main(void) {
+    io_test_prepare()
     delay_init();
     led_init();
     io_init();
@@ -29,8 +30,8 @@ int main(void) {
     touch_init();
 
     //screen_test();
-    touch_test();
-
+    //touch_test();
+    io_test();
 
     led_on();
     debug("main: starting loop\n"); debug_flush();

@@ -72,7 +72,7 @@ void io_test(void){
     while(1){
         console_clear();
         debug("GPIO TEST\n\n");
-        debug("       FEDCBA9876543210\n");
+        debug("       0123456789ABCDEF\n");
         for(p=0; p<6; p++){
             debug("GPIO");
             debug_putc('A'+p);
