@@ -14,7 +14,7 @@
 #include "touch.h"
 
 int main(void) {
-    io_test_prepare()
+    io_test_prepare();
     delay_init();
     led_init();
     io_init();
