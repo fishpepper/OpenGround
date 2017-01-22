@@ -51,34 +51,16 @@ void adc_init(void) {
 }
 
 uint16_t adc_get_channel(uint32_t id) {
-    // remap adc channels:
-    // 0 = 0 (A)
-    // 1 = 1 (E)
-    // 2 = 2 (T)
-    // 3 = 3 (R)
-    // 4 = 4 (SWA)
-    // 5 = 5 (SWB)
-    // 6 = 8 (SWC)
-    // 7 = 9 (SWD)
-    // 8 = 6 (slider left)
-    // 9 = 7 (slider right)
-    if (id < 6) {
-        // AETR map to ch0...3
-        return adc_data[id];
-    } else if (id == 6) {
-        return adc_data[8];
-    } else if (id == 7) {
-        return adc_data[9];
-    } else if (id == 8) {
-        return adc_data[6];
-    } else if (id == 9) {
-        return adc_data[7];
+    uint32_t data_index = id & 0x7F;
+    if (data_index >= ADC_CHANNEL_COUNT) {
+        data_index = ADC_CHANNEL_COUNT-1;
     }
 
-    if (id < ADC_CHANNEL_COUNT) {
-        return adc_data[id];
+    // inverted channel?
+    if (id & ADC_CHANNEL_INVERTED_FLAG) {
+        return 4095 - adc_data[data_index];
     } else {
-        return 0;
+        return adc_data[data_index];
     }
 }
 

@@ -34,7 +34,7 @@ static void adc_dma_arm(void);
 void adc_process(void);
 
 uint16_t adc_get_channel(uint32_t id);
-int32_t adc_get_channel_rescaled(uint8_t idx);
+int32_t  adc_get_channel_rescaled(uint8_t idx);
 uint16_t adc_get_channel_packetdata(uint8_t idx);
 uint32_t adc_get_battery_voltage(void);
 
@@ -42,14 +42,27 @@ uint32_t adc_get_battery_voltage(void);
 #define ADC_DMA_TC_FLAG           DMA1_FLAG_TC1
 #define ADC_CHANNEL_COUNT 11
 
-#define ADC_CHANNEL_AILERON   0
-#define ADC_CHANNEL_ELEVATION 1
-#define ADC_CHANNEL_THROTTLE  2
-#define ADC_CHANNEL_RUDDER    3
-#define ADC_CHANNEL_CH0       4
-#define ADC_CHANNEL_CH1       5
+#define ADC_CHANNEL_INVERTED_FLAG 0x0
+
+#define ADC_CHANNEL_AILERON   3 | ADC_CHANNEL_INVERTED_FLAG
+#define ADC_CHANNEL_ELEVATION 2 | ADC_CHANNEL_INVERTED_FLAG
+#define ADC_CHANNEL_THROTTLE  1 | ADC_CHANNEL_INVERTED_FLAG
+#define ADC_CHANNEL_RUDDER    0 | ADC_CHANNEL_INVERTED_FLAG
+#define ADC_CHANNEL_CH0       5
+#define ADC_CHANNEL_CH1       8
 #define ADC_CHANNEL_CH2       6
-#define ADC_CHANNEL_CH3       7
+#define ADC_CHANNEL_CH3       4
+
+// i6s
+// #define ADC_CHANNEL_AILERON   0
+// #define ADC_CHANNEL_ELEVATION 1
+// #define ADC_CHANNEL_THROTTLE  2
+// #define ADC_CHANNEL_RUDDER    3
+// #define ADC_CHANNEL_CH0       4
+// #define ADC_CHANNEL_CH1       5
+// #define ADC_CHANNEL_CH2       6
+// #define ADC_CHANNEL_CH3       7
+
 
 // rescaled data goes from -3200 to 3200
 // set zero threshold to 10% movement from absolute zero

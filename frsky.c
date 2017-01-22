@@ -197,10 +197,14 @@ static void frsky_send_packet(void) {
 
     // fetch adc channel data
     uint16_t adc_data[8];
-    uint32_t i;
-    for (i = 0; i < 8; i++) {
-        adc_data[i] = adc_get_channel_packetdata(i);
-    }
+    adc_data[0] = adc_get_channel_packetdata(ADC_CHANNEL_AILERON);
+    adc_data[1] = adc_get_channel_packetdata(ADC_CHANNEL_ELEVATION);
+    adc_data[2] = adc_get_channel_packetdata(ADC_CHANNEL_THROTTLE);
+    adc_data[3] = adc_get_channel_packetdata(ADC_CHANNEL_RUDDER);
+    adc_data[4] = adc_get_channel_packetdata(ADC_CHANNEL_CH0);
+    adc_data[5] = adc_get_channel_packetdata(ADC_CHANNEL_CH1);
+    adc_data[6] = adc_get_channel_packetdata(ADC_CHANNEL_CH2);
+    adc_data[7] = adc_get_channel_packetdata(ADC_CHANNEL_CH3);
 
     // build frsky packet
     // packet length

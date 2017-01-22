@@ -235,10 +235,17 @@ static void gui_cb_config_save(void) {
 
 static void gui_cb_config_stick_cal(void) {
     uint32_t i, j;
+    // channels to map
+    uint8_t data_index[4];
+    data_index[0] = ADC_CHANNEL_AILERON;
+    data_index[1] = ADC_CHANNEL_ELEVATION;
+    data_index[2] = ADC_CHANNEL_THROTTLE;
+    data_index[3] = ADC_CHANNEL_RUDDER;
+
     // reinit min/center/max to current value
     for (i = 0; i < 4; i++) {
         for (j = 0; j < 3; j++) {
-            storage.stick_calibration[i][j] = adc_get_channel(i);
+            storage.stick_calibration[i][j] = adc_get_channel(data_index[i]);
         }
     }
 
@@ -484,14 +491,14 @@ static void gui_render_bottombar(void) {
 static uint8_t *gui_get_channel_name(uint8_t i, uint8_t type) {
     switch (i) {
         default  : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "?" : "???");
-        case (0) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "A" : "AIL");
-        case (1) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "E" : "ELE");
-        case (2) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "T" : "THR");
-        case (3) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "R" : "RUD");
-        case (4) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "0" : "CH0");
-        case (5) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "1" : "CH1");
-        case (6) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "2" : "CH2");
-        case (7) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "3" : "CH3");
+        case (ADC_CHANNEL_AILERON)   : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "A" : "AIL");
+        case (ADC_CHANNEL_ELEVATION) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "E" : "ELE");
+        case (ADC_CHANNEL_THROTTLE)  : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "T" : "THR");
+        case (ADC_CHANNEL_RUDDER)    : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "R" : "RUD");
+        case (ADC_CHANNEL_CH0) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "0" : "CH0");
+        case (ADC_CHANNEL_CH1) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "1" : "CH1");
+        case (ADC_CHANNEL_CH2) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "2" : "CH2");
+        case (ADC_CHANNEL_CH3) : return ((type == GUI_CHANNEL_DESCR_SHORT) ? "3" : "CH3");
     }
 }
 
@@ -504,10 +511,22 @@ static void gui_render_sliders(void) {
 
     screen_set_font(font_tomthumb3x5);
 
+    uint8_t data_index[8];
+    data_index[0] = ADC_CHANNEL_AILERON;
+    data_index[1] = ADC_CHANNEL_ELEVATION;
+    data_index[2] = ADC_CHANNEL_THROTTLE;
+    data_index[3] = ADC_CHANNEL_RUDDER;
+    data_index[4] = ADC_CHANNEL_CH0;
+    data_index[5] = ADC_CHANNEL_CH1;
+    data_index[6] = ADC_CHANNEL_CH2;
+    data_index[7] = ADC_CHANNEL_CH3;
+
     for (i = 0; i < 8; i++) {
+        uint8_t ch = data_index[i];
+
         // render channel names
         y = 10 + i*(font_tomthumb3x5[FONT_HEIGHT]+1);
-        screen_puts_xy(1, y, 1, gui_get_channel_name(i, GUI_CHANNEL_DESCR_SHORT));
+        screen_puts_xy(1, y, 1, gui_get_channel_name(ch, GUI_CHANNEL_DESCR_SHORT));
 
         // render sliders
         uint32_t y2 = y + (font_tomthumb3x5[FONT_HEIGHT]+1)/2;
@@ -516,7 +535,7 @@ static void gui_render_sliders(void) {
         screen_draw_hline(8 + 50 + 1, y2 - 1, 50-1, 1);
         screen_draw_hline(8 + 50 + 1, y2 + 1, 50-1, 1);
 
-        int32_t val = adc_get_channel_rescaled(i);
+        int32_t val = adc_get_channel_rescaled(ch);
         // rescale  adc value from +/- 3200 to +/-100
         val = val / 32;
 
@@ -533,15 +552,23 @@ static void gui_render_sliders(void) {
 
 static void gui_config_stick_calibration_store_adc_values(void) {
     uint32_t i;
+    uint8_t data_index[4];
+    data_index[0] = ADC_CHANNEL_AILERON;
+    data_index[1] = ADC_CHANNEL_ELEVATION;
+    data_index[2] = ADC_CHANNEL_THROTTLE;
+    data_index[3] = ADC_CHANNEL_RUDDER;
+
     for (i = 0; i < 4; i++) {
+        uint8_t ch = data_index[i];
+
         // min
-        storage.stick_calibration[i][0] =
-                min(adc_get_channel(i), storage.stick_calibration[i][0]);
+        storage.stick_calibration[ch][0] =
+                min(adc_get_channel(ch), storage.stick_calibration[ch][0]);
         // center
-        storage.stick_calibration[i][1] = adc_get_channel(i);
+        storage.stick_calibration[ch][1] = adc_get_channel(ch);
         // max
-        storage.stick_calibration[i][2] =
-                max(adc_get_channel(i), storage.stick_calibration[i][2]);
+        storage.stick_calibration[ch][2] =
+                max(adc_get_channel(ch), storage.stick_calibration[ch][2]);
     }
 }
 
@@ -922,6 +949,7 @@ static void gui_config_model_render(void) {
 
 static void gui_config_stick_calibration_render(void) {
     uint32_t idx;
+    uint8_t i;
     uint32_t a;
 
     const uint8_t *font = font_tomthumb3x5;
@@ -949,7 +977,14 @@ static void gui_config_stick_calibration_render(void) {
     screen_puts_xy(x+3*4*w+2*2*w+w, y, 1, "max");
     y += h;
 
-    for (idx = 0; idx < 4; idx++) {
+    uint8_t data_index[4];
+    data_index[0] = ADC_CHANNEL_AILERON;
+    data_index[1] = ADC_CHANNEL_ELEVATION;
+    data_index[2] = ADC_CHANNEL_THROTTLE;
+    data_index[3] = ADC_CHANNEL_RUDDER;
+
+    for (i = 0; i < 4; i++) {
+        uint8_t idx = data_index[i];
         screen_puts_xy(x, y, 1, gui_get_channel_name(idx, GUI_CHANNEL_DESCR_LONG));
         for (a = 0; a < 3; a++) {
             screen_put_uint14(x+(a+1)*4*w+a*2*w, y, 1, storage.stick_calibration[idx][a]);

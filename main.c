@@ -59,6 +59,7 @@ int main(void) {
 
     // screen_test();
     // touch_test();
+    // adc_test();
     gui_init();
 
     debug("main: init done.\n"); debug_flush();
