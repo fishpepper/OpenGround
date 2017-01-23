@@ -948,8 +948,7 @@ static void gui_config_model_render(void) {
 
 
 static void gui_config_stick_calibration_render(void) {
-    uint32_t idx;
-    uint8_t i;
+    uint32_t idx, i;
     uint32_t a;
 
     const uint8_t *font = font_tomthumb3x5;

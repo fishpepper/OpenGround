@@ -51,16 +51,15 @@ void adc_init(void) {
 }
 
 uint16_t adc_get_channel(uint32_t id) {
-    uint32_t data_index = id & 0x7F;
-    if (data_index >= ADC_CHANNEL_COUNT) {
-        data_index = ADC_CHANNEL_COUNT-1;
+    if (id >= ADC_CHANNEL_COUNT) {
+        id = ADC_CHANNEL_COUNT-1;
     }
 
     // inverted channel?
-    if (id & ADC_CHANNEL_INVERTED_FLAG) {
-        return 4095 - adc_data[data_index];
+    if (ADC_CHANNEL_INVERSION_MASK & (1 << id)) {
+        return 4095 - adc_data[id];
     } else {
-        return adc_data[data_index];
+        return adc_data[id];
     }
 }
 
@@ -73,6 +72,7 @@ int32_t adc_get_channel_rescaled(uint8_t idx) {
 
     // fetch raw stick value (0..4095)
     int32_t value = adc_get_channel(idx);
+
 
     // sticks are ch0..3 and use calibration coefficents:
     if (idx < 4) {
