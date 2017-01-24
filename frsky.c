@@ -408,6 +408,15 @@ void frsky_send_bindpacket(uint8_t bind_packet_id) {
     // Stop RX DMA
     cc2500_strobe(RFST_SFRX);
 
+    // frequency offset to zero(will do auto tune later on)
+    storage.frsky_freq_offset = 0;
+
+    // init txid matching
+    frsky_configure_address();
+
+    // set channel 0
+    frsky_tune_channel(0);
+
     // enable tx
     cc2500_enter_txmode();
 

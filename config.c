@@ -20,7 +20,7 @@
 #include "config.h"
 
 void config_init(void) {
-    //config_hw_revision = CONFIG_HW_REVISION_I6S;
+    // config_hw_revision = CONFIG_HW_REVISION_I6S;
     config_hw_revision = CONFIG_HW_REVISION_EVOLUTION;
 }
 

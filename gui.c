@@ -794,7 +794,7 @@ static void gui_config_bindmode_render(void) {
     // header
     gui_config_header_render("BIND");
     screen_puts_xy(3, 9, 1, "Sending bind packets...");
-    screen_puts_xy(3, 9 + 3*h, 1, "CAUTION: NOT WORKING YET");
+    screen_puts_xy(3, 9 + 3*h, 1, "CAUTION: UNTESTED...");
 
     screen_puts_xy(3, 9 + 7*h, 1, "Switch off TX to leave...");
 
