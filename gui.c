@@ -794,14 +794,16 @@ static void gui_config_bindmode_render(void) {
     // header
     gui_config_header_render("BIND");
     screen_puts_xy(3, 9, 1, "Sending bind packets...");
-    screen_puts_xy(3, 9 + 7*h, 1, "Switch off TX to leave bind mode");
+    screen_puts_xy(3, 9 + 3*h, 1, "CAUTION: NOT WORKING YET");
 
-    if (gui_config_counter = 0) {
+    screen_puts_xy(3, 9 + 7*h, 1, "Switch off TX to leave...");
+
+    if (gui_config_counter == 0) {
         frsky_enter_bindmode();
-        gui_config_counter++;
     }
+    gui_config_counter++;
 
-    if (gui_config_counter > 2000/GUI_LOOP_DELAY_MS) {
+    if (gui_config_counter > 500/GUI_LOOP_DELAY_MS) {
         // play a sound every 2 seconds
         sound_play_bind();
 

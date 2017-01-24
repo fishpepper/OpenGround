@@ -437,6 +437,15 @@ void frsky_send_bindpacket(uint8_t bind_packet_id) {
         frsky_packet_buffer[i] = 0;
     }
 
+    debug("frsky: BIND");
+    debug_put_hex8(frsky_packet_buffer[5]);
+    debug_putc(' ');
+    for (i=0; i < 5; i++) {
+        debug_put_hex8(frsky_packet_buffer[6 + i]);
+        debug_putc(' ');
+    }
+    debug("\n"); debug_flush();
+
     // send packet
     cc2500_transmit_packet(frsky_packet_buffer, frsky_packet_buffer[0] + 1);
 }
