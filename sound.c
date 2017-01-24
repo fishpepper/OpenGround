@@ -57,13 +57,21 @@ void sound_init(void) {
     sound_tone_duration = 0;
 }
 
+void sound_play_bind(void) {
+    sound_queue[0].frequency   = 5000;
+    sound_queue[0].duration_ms = 300;
+    sound_queue[1].frequency   = 1000;
+    sound_queue[1].duration_ms = 300;
+    sound_queue[2].duration_ms = 0;
+    sound_queue_state = 1;
+}
+
 void sound_play_click(void) {
     sound_queue[0].frequency   = 20000;
     sound_queue[0].duration_ms = 80;
     sound_queue[1].duration_ms = 0;
     sound_queue_state = 1;
 }
-
 
 void sound_play_low_time(void) {
     sound_queue[0].frequency   = 4000;

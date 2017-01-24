@@ -39,6 +39,7 @@
 #include "eeprom.h"
 
 int main(void) {
+    config_init();
 //    wdt_init();
     delay_init();
     led_init();

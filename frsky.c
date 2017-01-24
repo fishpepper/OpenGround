@@ -197,14 +197,10 @@ static void frsky_send_packet(void) {
 
     // fetch adc channel data
     uint16_t adc_data[8];
-    adc_data[0] = adc_get_channel_packetdata(ADC_CHANNEL_AILERON);
-    adc_data[1] = adc_get_channel_packetdata(ADC_CHANNEL_ELEVATION);
-    adc_data[2] = adc_get_channel_packetdata(ADC_CHANNEL_THROTTLE);
-    adc_data[3] = adc_get_channel_packetdata(ADC_CHANNEL_RUDDER);
-    adc_data[4] = adc_get_channel_packetdata(ADC_CHANNEL_CH0);
-    adc_data[5] = adc_get_channel_packetdata(ADC_CHANNEL_CH1);
-    adc_data[6] = adc_get_channel_packetdata(ADC_CHANNEL_CH2);
-    adc_data[7] = adc_get_channel_packetdata(ADC_CHANNEL_CH3);
+    uint32_t i;
+    for (i = 0; i < 8; i++) {
+        adc_data[i] = adc_get_channel_packetdata(i);
+    }
 
     // build frsky packet
     // packet length
@@ -386,34 +382,63 @@ void TIM3_IRQHandler(void) {
                 TIM_SetAutoreload(TIM3, 9200-1+0*200);
                 frsky_state = 0;
                 break;
-        }
 
-        /*if ((frsky_frame_counter % 4) == 2) {
-            // we should have received an telemetry frame by now!
-            // handle any ovf conditions
-            frsky_handle_overflows();
+            case (0x80) :
+                // bind mode, set timeout to 9ms
+                TIM_SetAutoreload(TIM3, 9000);
 
-            // fetch incoming packet
-            cc2500_process_packet(&frsky_packet_received, \
-                                  (volatile uint8_t *)&frsky_packet_buffer, \
-                                  FRSKY_PACKET_BUFFER_SIZE);
-
-            if (frsky_packet_received) {
-                // show data
-                debug("frsky: RX ");
-                debug_flush();
-                uint32_t i;
-                for (i = 0; i < FRSKY_PACKET_BUFFER_SIZE; i++) {
-                    debug_put_hex8(frsky_packet_buffer[i]);
-                    debug_putc(' ');
+                // get bind packet index
+                frsky_frame_counter++;
+                if ((frsky_frame_counter * 5) > FRSKY_HOPTABLE_SIZE) {
+                    frsky_frame_counter = 0;
                 }
-                debug_put_newline();
 
-            }
-        } else {
-            // time to transmit!
-        }*/
+                // send bind packet
+                frsky_send_bindpacket(frsky_frame_counter);
+                frsky_state = 0x80;
+                break;
+        }
     }
+}
+
+
+void frsky_send_bindpacket(uint8_t bind_packet_id) {
+    uint8_t i;
+
+    // Stop RX DMA
+    cc2500_strobe(RFST_SFRX);
+
+    // enable tx
+    cc2500_enter_txmode();
+
+    // length of byte(always 0x11 = 17 bytes)
+    frsky_packet_buffer[0] = 0x11;
+    // bind identifier?
+    frsky_packet_buffer[1] = 0x03;
+    frsky_packet_buffer[2] = 0x01;
+    // txid
+    frsky_packet_buffer[3] = storage.frsky_txid[0];
+    frsky_packet_buffer[4] = storage.frsky_txid[1];
+    // hoptable index
+    frsky_packet_buffer[5] = bind_packet_id * 5;
+
+    // add a maximum of 5 bytes hoptable data
+    for (i = 0; i < 5; i++) {
+        uint8_t index = bind_packet_id * 5 + i;
+        if (index < FRSKY_HOPTABLE_SIZE) {
+            frsky_packet_buffer[6 + i] = storage.frsky_hop_table[index];
+        } else {
+            frsky_packet_buffer[6 + i] = 0;
+        }
+    }
+
+    // fill with zeros
+    for (i = 11; i < 17; i++) {
+        frsky_packet_buffer[i] = 0;
+    }
+
+    // send packet
+    cc2500_transmit_packet(frsky_packet_buffer, frsky_packet_buffer[0] + 1);
 }
 
 
@@ -506,8 +531,8 @@ uint8_t frsky_bind_jumper_set(void) {
     }
 }
 
-void frsky_do_bind_prepare(void) {
-    debug("frsky: do bind\n"); debug_flush();
+void frsky_do_clone_prepare(void) {
+    debug("frsky: do clone\n"); debug_flush();
 
     // set txid to bind channel
     storage.frsky_txid[0] = 0x03;
@@ -518,12 +543,23 @@ void frsky_do_bind_prepare(void) {
     // init txid matching
     frsky_configure_address();
 
-    // set up leds:frsky_txid
+    // set up leds:
     led_button_r_off();
     led_button_l_on();
 }
 
-void frsky_do_bind_finish(void) {
+void frsky_enter_bindmode(void) {
+    debug("frsky: do bind\n"); debug_flush();
+
+    frsky_state = 0x80;
+
+    // set up leds:
+    led_button_r_on();
+    led_button_l_off();
+}
+
+
+void frsky_do_clone_finish(void) {
     // important: stop RF interrupts:
     cc2500_disable_rf_interrupt();
 

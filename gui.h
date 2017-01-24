@@ -21,6 +21,7 @@
 #define GUI_H_
 
 #include <stdint.h>
+#include "adc.h"
 
 #define GUI_PREV_CLICK_X 10
 #define GUI_NEXT_CLICK_X (LCD_WIDTH - GUI_PREV_CLICK_X)
@@ -104,11 +105,9 @@ static void gui_cb_config_model(void);
 static void gui_cb_config_exit(void);
 
 static void gui_config_main_render(void);
-static void gui_config_clonetx_render(void);
 static void gui_config_model_render(void);
-static uint8_t *gui_get_channel_name(uint8_t i, uint8_t shortname);
+static void gui_config_clonetx_render(void);
+static void gui_config_bindmode_render(void);
 
-#define GUI_CHANNEL_DESCR_SHORT 1
-#define GUI_CHANNEL_DESCR_LONG  0
 
 #endif  // GUI_H_

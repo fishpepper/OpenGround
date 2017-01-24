@@ -30,8 +30,11 @@ void sound_enqueue(uint32_t freq, uint32_t duration_ms);
 
 void sound_init(void);
 void sound_set_frequency(uint32_t freq);
+
 void sound_play_click(void);
 void sound_play_low_time(void);
+void sound_play_bind(void);
+
 static void sound_init_rcc(void);
 static void sound_init_gpio(void);
 void sound_handle_playback(void);

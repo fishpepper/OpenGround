@@ -112,3 +112,5 @@ telemetry.c
 telemetry.h
 crc16.c
 crc16.h
+config.c
+Makefile
