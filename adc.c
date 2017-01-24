@@ -51,15 +51,51 @@ void adc_init(void) {
 }
 
 uint16_t adc_get_channel(uint32_t id) {
-    if (id >= ADC_CHANNEL_COUNT) {
-        id = ADC_CHANNEL_COUNT-1;
-    }
-
-    // inverted channel?
-    if (ADC_CHANNEL_INVERSION_MASK & (1 << id)) {
-        return 4095 - adc_data[id];
+    // fetch correct adc channel based on hw revision
+    if (config_hw_revision == CONFIG_HW_REVISION_I6S) {
+        // FS-i6S mapping:
+        switch (id) {
+            case (CHANNEL_ID_AILERON)  : return adc_data[0];
+            case (CHANNEL_ID_ELEVATION): return adc_data[1];
+            case (CHANNEL_ID_THROTTLE) : return adc_data[2];
+            case (CHANNEL_ID_RUDDER)   : return adc_data[3];
+            case (CHANNEL_ID_CH0)      : return adc_data[4];
+            case (CHANNEL_ID_CH1)      : return adc_data[5];
+            case (CHANNEL_ID_CH2)      : return adc_data[6];
+            case (CHANNEL_ID_CH3)      : return adc_data[7];
+        }
+    } else if (config_hw_revision == CONFIG_HW_REVISION_EVOLUTION) {
+        // TGY Evolution mapping:
+        switch (id) {
+            case (CHANNEL_ID_AILERON)  : return 4095 - adc_data[3];
+            case (CHANNEL_ID_ELEVATION): return 4095 - adc_data[2];
+            case (CHANNEL_ID_THROTTLE) : return 4095 - adc_data[1];
+            case (CHANNEL_ID_RUDDER)   : return 4095 - adc_data[0];
+            case (CHANNEL_ID_CH0)      : return adc_data[5];
+            case (CHANNEL_ID_CH1)      : return adc_data[8];
+            case (CHANNEL_ID_CH2)      : return adc_data[6];
+            case (CHANNEL_ID_CH3)      : return adc_data[4];
+        }
     } else {
-        return adc_data[id];
+        // undefined!
+        debug("adc: invalid hw revision ");
+        debug_put_uint8(config_hw_revision);
+        debug(" given!\n"); debug_flush();
+        return 0;
+    }
+}
+
+uint8_t *adc_get_channel_name(uint8_t i, bool short_descr) {
+    switch (i) {
+        default                     : return ((short_descr) ? "?" : "???");
+        case (CHANNEL_ID_AILERON)   : return ((short_descr) ? "A" : "AIL");
+        case (CHANNEL_ID_ELEVATION) : return ((short_descr) ? "E" : "ELE");
+        case (CHANNEL_ID_THROTTLE)  : return ((short_descr) ? "T" : "THR");
+        case (CHANNEL_ID_RUDDER)    : return ((short_descr) ? "R" : "RUD");
+        case (CHANNEL_ID_CH0)       : return ((short_descr) ? "0" : "CH0");
+        case (CHANNEL_ID_CH1)       : return ((short_descr) ? "1" : "CH1");
+        case (CHANNEL_ID_CH2)       : return ((short_descr) ? "2" : "CH2");
+        case (CHANNEL_ID_CH3)       : return ((short_descr) ? "3" : "CH3");
     }
 }
 
@@ -72,7 +108,6 @@ int32_t adc_get_channel_rescaled(uint8_t idx) {
 
     // fetch raw stick value (0..4095)
     int32_t value = adc_get_channel(idx);
-
 
     // sticks are ch0..3 and use calibration coefficents:
     if (idx < 4) {
@@ -101,8 +136,8 @@ int32_t adc_get_channel_rescaled(uint8_t idx) {
         default:
             // do not apply scale
             break;
-        case (ADC_CHANNEL_AILERON):
-        case (ADC_CHANNEL_ELEVATION):
+        case (CHANNEL_ID_AILERON):
+        case (CHANNEL_ID_ELEVATION):
             value = (value * storage.model[storage.current_model].stick_scale) / 100;
             break;
     }

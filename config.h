@@ -21,6 +21,16 @@
 #define CONFIG_H_
 #include "main.h"
 
+
+typedef enum {
+  CONFIG_HW_REVISION_I6S = 0,
+  CONFIG_HW_REVISION_EVOLUTION,
+  CONFIG_HW_REVISION_SIZE
+} config_hw_revision_t;
+
+config_hw_revision_t config_hw_revision;
+void config_init(void);
+
 // see http://fishpepper.de/2016/09/15/openground-part-1-components-pinout/
 // for pin mappings on flysky fs-i6s
 

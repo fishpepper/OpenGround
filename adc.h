@@ -19,6 +19,7 @@
 
 #ifndef ADC_H_
 #define ADC_H_
+#include <stdbool.h>
 #include <stdint.h>
 #include "main.h"
 
@@ -38,31 +39,24 @@ int32_t  adc_get_channel_rescaled(uint8_t idx);
 uint16_t adc_get_channel_packetdata(uint8_t idx);
 uint32_t adc_get_battery_voltage(void);
 
+// internal channel ordering. we will always use AETR0123 internally
+typedef enum {
+  CHANNEL_ID_AILERON = 0,
+  CHANNEL_ID_ELEVATION,
+  CHANNEL_ID_THROTTLE,
+  CHANNEL_ID_RUDDER,
+  CHANNEL_ID_CH0,
+  CHANNEL_ID_CH1,
+  CHANNEL_ID_CH2,
+  CHANNEL_ID_CH3,
+  CHANNEL_ID_SIZE
+} channel_id_t;
+
+uint8_t *adc_get_channel_name(uint8_t i, bool short_descr);
+
 #define ADC_DMA_CHANNEL           DMA1_Channel1
 #define ADC_DMA_TC_FLAG           DMA1_FLAG_TC1
 #define ADC_CHANNEL_COUNT 11
-
-#define ADC_CHANNEL_INVERSION_MASK 0b00001111
-
-#define ADC_CHANNEL_AILERON   3
-#define ADC_CHANNEL_ELEVATION 2
-#define ADC_CHANNEL_THROTTLE  1
-#define ADC_CHANNEL_RUDDER    0
-#define ADC_CHANNEL_CH0       5
-#define ADC_CHANNEL_CH1       8
-#define ADC_CHANNEL_CH2       6
-#define ADC_CHANNEL_CH3       4
-
-// i6s
-// #define ADC_CHANNEL_AILERON   0
-// #define ADC_CHANNEL_ELEVATION 1
-// #define ADC_CHANNEL_THROTTLE  2
-// #define ADC_CHANNEL_RUDDER    3
-// #define ADC_CHANNEL_CH0       4
-// #define ADC_CHANNEL_CH1       5
-// #define ADC_CHANNEL_CH2       6
-// #define ADC_CHANNEL_CH3       7
-
 
 // rescaled data goes from -3200 to 3200
 // set zero threshold to 10% movement from absolute zero
