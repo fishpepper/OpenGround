@@ -47,7 +47,7 @@ static uint8_t gui_loop_counter;
 
 void gui_init(void) {
     debug("gui: init\n"); debug_flush();
-    gui_page = 0;
+    gui_page     = GUI_PAGE_MAIN;
     gui_sub_page = 0;
     gui_shutdown_pressed = 0;
     gui_config_tap_detected = 0;
@@ -278,7 +278,7 @@ static void gui_cb_config_enter(void) {
 
 static void gui_cb_setup_exit(void) {
     // back to setup main menu
-    gui_page = GUI_PAGE_SETUP_MAIN;
+    gui_page = GUI_PAGE_SETTINGS;
 }
 
 
@@ -287,7 +287,7 @@ static void gui_cb_config_exit(void) {
     storage_load();
 
     // back to config main menu
-    gui_page = GUI_PAGE_CONFIG_MAIN;
+    gui_page = GUI_PAGE_SETTINGS;
 }
 
 static void gui_cb_setup_enter(void) {
@@ -351,13 +351,11 @@ void gui_loop(void) {
     gui_active = 1;
 
     // start with main page
-    gui_page = 0;
+    gui_page = GUI_PAGE_MAIN;
     gui_loop_counter = 0;
 
     // re init model timer
     gui_cb_model_timer_reload();
-
-    gui_page = 0;  // GUI_PAGE_CONFIG_FLAG | 3;
 
     // prepare timeout
     timeout_set_100us(10 * GUI_LOOP_DELAY_MS);
@@ -576,17 +574,17 @@ void gui_render(void) {
 
     switch (gui_page) {
         default  :
-        case (0) :
+        case (GUI_PAGE_MAIN) :
             // main status screen
             gui_render_main_screen();
             break;
 
-        case (1) :
+        case (GUI_PAGE_STICKS) :
             // slider screen
             gui_render_sliders();
             break;
 
-        case (2) :
+        case (GUI_PAGE_SETTINGS) :
             // setup and config screen
             gui_render_settings();
             break;
@@ -661,7 +659,7 @@ static void gui_setup_render(void) {
 
         default:
             // invalid, go back
-            gui_page = 3;
+            gui_page = GUI_PAGE_SETTINGS;
             break;
     }
 

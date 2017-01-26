@@ -25,7 +25,10 @@
 
 #define GUI_PREV_CLICK_X 10
 #define GUI_NEXT_CLICK_X (LCD_WIDTH - GUI_PREV_CLICK_X)
-#define GUI_MAX_PAGE 3
+#define GUI_PAGE_MAIN     0
+#define GUI_PAGE_STICKS   1
+#define GUI_PAGE_SETTINGS 2
+#define GUI_MAX_PAGE GUI_PAGE_SETTINGS
 #define GUI_STATUSBAR_FONT font_tomthumb3x5
 
 
