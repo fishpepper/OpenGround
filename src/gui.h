@@ -54,9 +54,20 @@ static void gui_touch_callback_register(uint8_t xs, uint8_t xe, uint8_t ys, uint
 static void gui_touch_callback_clear(void);
 
 
-#define GUI_PAGE_SETTING_FLAG 0x80
-#define GUI_PAGE_SETTING_OPTION_FLAG 0x40
-#define GUI_PAGE_NOFLAGS (~(GUI_PAGE_SETTING_FLAG | GUI_PAGE_SETTING_OPTION_FLAG))
+#define GUI_PAGE_CONFIG_FLAG        0x80
+#define GUI_PAGE_CONFIG_OPTION_FLAG 0x40
+#define GUI_PAGE_SETUP_FLAG         0x20
+#define GUI_PAGE_NOFLAGS (~(GUI_PAGE_CONFIG_FLAG|GUI_PAGE_CONFIG_OPTION_FLAG|GUI_PAGE_SETUP_FLAG))
+
+
+#define GUI_PAGE_SETUP_MAIN       (GUI_PAGE_SETUP_FLAG | 0)
+#define GUI_PAGE_SETUP_CLONETX    (GUI_PAGE_SETUP_FLAG | 1)
+#define GUI_PAGE_SETUP_BIND       (GUI_PAGE_SETUP_FLAG | 2)
+#define GUI_PAGE_SETUP_BOOTLOADER (GUI_PAGE_SETUP_FLAG | 3)
+
+#define GUI_PAGE_CONFIG_MAIN            (GUI_PAGE_CONFIG_FLAG | 0)
+#define GUI_PAGE_CONFIG_STICK_CAL       (GUI_PAGE_CONFIG_FLAG | 1)
+#define GUI_PAGE_CONFIG_MODEL_SETTINGS  (GUI_PAGE_CONFIG_FLAG | 2)
 
 
 #define GUI_SUBPAGE_SETTING_MODEL_NAME  0
@@ -76,6 +87,10 @@ static void gui_process_logic(void);
 static void gui_config_render(void);
 static void gui_config_stick_calibration_store_adc_values(void);
 static void gui_config_stick_calibration_render(void);
+
+static void gui_setup_render(void);
+static void gui_setup_main_render(void);
+
 
 static void gui_render(void);
 static void gui_render_sliders(void);
@@ -100,15 +115,18 @@ static void gui_cb_next_page(void);
 static void gui_cb_config_back(void);
 static void gui_cb_config_save(void);
 static void gui_cb_config_stick_cal(void);
-static void gui_cb_config_clonetx(void);
 static void gui_cb_config_model(void);
 static void gui_cb_config_exit(void);
-static void gui_cb_config_bootloader(void);
+
+static void gui_cb_setup_clonetx(void);
+static void gui_cb_setup_bootloader(void);
+static void gui_cb_setup_exit(void);
 
 static void gui_config_main_render(void);
 static void gui_config_model_render(void);
-static void gui_config_clonetx_render(void);
-static void gui_config_bindmode_render(void);
-static void gui_config_bootloader_render(void);
+
+static void gui_setup_clonetx_render(void);
+static void gui_setup_bindmode_render(void);
+static void gui_setup_bootloader_render(void);
 
 #endif  // GUI_H_

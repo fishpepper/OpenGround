@@ -146,6 +146,11 @@ static void gui_process_touch(void) {
                     (t.y >= gui_touch_callback[i].ys) && (t.y <= gui_touch_callback[i].ye) ) {
                         // play sound
                         sound_play_click();
+
+                        // reset sub pages
+                        gui_config_counter = 0;
+                        gui_sub_page       = 0;
+
                         // execute callback!
                         gui_touch_callback_execute(i);
                 }
@@ -171,22 +176,22 @@ static void gui_cb_model_next(void) {
 }
 
 static void gui_cb_setting_model_stickscale(void) {
-    gui_page    |= GUI_PAGE_SETTING_OPTION_FLAG;
+    gui_page    |= GUI_PAGE_CONFIG_OPTION_FLAG;
     gui_sub_page = GUI_SUBPAGE_SETTING_MODEL_SCALE;
 }
 
 static void gui_cb_setting_model_name(void) {
-    gui_page    |= GUI_PAGE_SETTING_OPTION_FLAG;
+    gui_page    |= GUI_PAGE_CONFIG_OPTION_FLAG;
     gui_sub_page = GUI_SUBPAGE_SETTING_MODEL_NAME;
 }
 
 static void gui_cb_setting_model_timer(void) {
-    gui_page    |= GUI_PAGE_SETTING_OPTION_FLAG;
+    gui_page    |= GUI_PAGE_CONFIG_OPTION_FLAG;
     gui_sub_page = GUI_SUBPAGE_SETTING_MODEL_TIMER;
 }
 
 static void gui_cb_setting_option_leave(void) {
-    gui_page &= ~GUI_PAGE_SETTING_OPTION_FLAG;
+    gui_page &= ~GUI_PAGE_CONFIG_OPTION_FLAG;
 }
 
 static void gui_cb_model_stickscale_dec(void) {
@@ -226,7 +231,7 @@ static void gui_cb_next_page(void) {
 }
 
 static void gui_cb_config_back(void) {
-    gui_page = GUI_PAGE_SETTING_FLAG | 0;
+    gui_page = GUI_PAGE_CONFIG_MAIN;
 }
 
 static void gui_cb_config_save(void) {
@@ -244,48 +249,49 @@ static void gui_cb_config_stick_cal(void) {
         }
     }
 
-    gui_page = GUI_PAGE_SETTING_FLAG | 1;
-}
-
-static void gui_cb_config_clonetx(void) {
-    // disable tx code
-    frsky_tx_set_enabled(0);
-
-    gui_config_counter = 0;
-    gui_page = GUI_PAGE_SETTING_FLAG | 2;
+    gui_page = GUI_PAGE_CONFIG_STICK_CAL;
 }
 
 static void gui_cb_config_model(void) {
-    gui_page = GUI_PAGE_SETTING_FLAG | 3;
-    gui_sub_page = 0;
+    gui_page = GUI_PAGE_CONFIG_MODEL_SETTINGS;
 }
 
-static void gui_cb_config_bind(void) {
-    gui_page = GUI_PAGE_SETTING_FLAG | 4;
-    gui_config_counter = 0;
-    gui_sub_page = 0;
+static void gui_cb_setup_clonetx(void) {
+    // disable tx code
+    frsky_tx_set_enabled(0);
+    gui_page = GUI_PAGE_SETUP_CLONETX;
 }
 
-static void gui_cb_config_bootloader(void) {
-    gui_page = GUI_PAGE_SETTING_FLAG | 5;
-    gui_config_counter = 0;
-    gui_sub_page = 0;
+static void gui_cb_setup_bind(void) {
+    gui_page = GUI_PAGE_SETUP_BIND;
 }
 
+static void gui_cb_setup_bootloader(void) {
+    // disable tx code
+    frsky_tx_set_enabled(0);
+    gui_page = GUI_PAGE_SETUP_BOOTLOADER;
+}
 
 static void gui_cb_config_enter(void) {
-    gui_page = GUI_PAGE_SETTING_FLAG | 0;
+    gui_page = GUI_PAGE_CONFIG_MAIN;
 }
+
+static void gui_cb_setup_exit(void) {
+    // back to setup main menu
+    gui_page = GUI_PAGE_SETUP_MAIN;
+}
+
 
 static void gui_cb_config_exit(void) {
     // restore old settings
     storage_load();
 
-    // restart tx code
-    frsky_tx_set_enabled(1);
-
     // back to config main menu
-    gui_page = 0;
+    gui_page = GUI_PAGE_CONFIG_MAIN;
+}
+
+static void gui_cb_setup_enter(void) {
+    gui_page = GUI_PAGE_SETUP_MAIN;
 }
 
 void gui_handle_button_powerdown(void) {
@@ -351,7 +357,7 @@ void gui_loop(void) {
     // re init model timer
     gui_cb_model_timer_reload();
 
-    gui_page = 0;  // GUI_PAGE_SETTING_FLAG | 3;
+    gui_page = 0;  // GUI_PAGE_CONFIG_FLAG | 3;
 
     // prepare timeout
     timeout_set_100us(10 * GUI_LOOP_DELAY_MS);
@@ -380,8 +386,11 @@ void gui_loop(void) {
             // show console on switch down
             console_render();
             screen_update();
-        } else if (gui_page & GUI_PAGE_SETTING_FLAG) {
-            // render settings ui
+        } else if (gui_page & GUI_PAGE_SETUP_FLAG) {
+            // render setup ui
+            gui_setup_render();
+        } else if (gui_page & GUI_PAGE_CONFIG_FLAG) {
+            // render config gui
             gui_config_render();
         } else if (gui_startup_counter < (2000/GUI_LOOP_DELAY_MS)) {
             // show logo
@@ -566,6 +575,7 @@ void gui_render(void) {
                                 &gui_cb_next_page);
 
     switch (gui_page) {
+        default  :
         case (0) :
             // main status screen
             gui_render_main_screen();
@@ -576,48 +586,82 @@ void gui_render(void) {
             gui_render_sliders();
             break;
 
-        default :
-            gui_add_button_smallfont(64-50/2, 40, 50, 15, "SETUP", &gui_cb_config_enter);
+        case (2) :
+            // setup and config screen
+            gui_render_settings();
             break;
     }
     screen_update();
 }
 
+static void gui_render_settings(void) {
+    const uint8_t *font = font_tomthumb3x5;
+    uint32_t h = font[FONT_HEIGHT] + 1;
+    uint32_t w = font[FONT_FIXED_WIDTH] + 1;
+    screen_set_font(font);
+
+    // render buttons and set callback
+    gui_add_button_smallfont(64-50/2, 10, 50, 15, "SETUP",  &gui_cb_setup_enter);
+    gui_add_button_smallfont(64-50/2, 40, 50, 15, "CONFIG", &gui_cb_config_enter);
+}
+
+
 static void gui_config_render(void) {
     // start with an empty page
     screen_fill(0);
 
-    // register callbacks
-    // none for now...
-    switch (gui_page & GUI_PAGE_NOFLAGS) {
-        case (0) :
+    // render config
+    switch (gui_page) {
+        default  :
+        case (GUI_PAGE_CONFIG_MAIN) :
             // main settings menu
             gui_config_main_render();
             break;
 
-        case (1) :
+        case (GUI_PAGE_CONFIG_STICK_CAL) :
             // stick calibration
             gui_config_stick_calibration_render();
             break;
 
-        case (2) :
-            // clone tx
-            gui_config_clonetx_render();
-            break;
-
-        case (3) :
+        case (GUI_PAGE_CONFIG_MODEL_SETTINGS) :
             // model config
             gui_config_model_render();
             break;
+    }
 
-        case (4) :
-            // bind mode
-            gui_config_bindmode_render();
+    screen_update();
+}
+
+
+
+static void gui_setup_render(void) {
+    // start with an empty page
+    screen_fill(0);
+
+    // show setup pages
+    switch (gui_page) {
+        case (GUI_PAGE_SETUP_MAIN) :
+            gui_setup_main_render();
             break;
 
-        case (5) :
+        case (GUI_PAGE_SETUP_CLONETX) :
+            // clone tx
+            gui_setup_clonetx_render();
+            break;
+
+        case (GUI_PAGE_SETUP_BIND) :
+            // bind mode
+            gui_setup_bindmode_render();
+            break;
+
+        case (GUI_PAGE_SETUP_BOOTLOADER) :
             // bootloader
-            gui_config_bootloader_render();
+            gui_setup_bootloader_render();
+            break;
+
+        default:
+            // invalid, go back
+            gui_page = 3;
             break;
     }
 
@@ -709,17 +753,32 @@ static void gui_config_main_render(void) {
     // render buttons and set callback
     gui_add_button_smallfont(3, 10 + 0*17, 50, 15, "STICK CAL", &gui_cb_config_stick_cal);
     gui_add_button_smallfont(3, 10 + 1*17, 50, 15, "MODEL CFG", &gui_cb_config_model);
-    gui_add_button_smallfont(3, 10 + 2*17, 50, 15, "FW UPDATE", &gui_cb_config_bootloader);
-
-
-    gui_add_button_smallfont(74, 10 + 0*17, 50, 15, "CLONE  TX", &gui_cb_config_clonetx);
-    gui_add_button_smallfont(74, 10 + 1*17, 50, 15, "BIND MODE", &gui_cb_config_bind);
 
     // exit button
     gui_add_button_smallfont(74, 10 + 2*17, 50, 15, "EXIT", &gui_cb_config_exit);
 }
 
-static void gui_config_bootloader_render(void) {
+
+static void gui_setup_main_render(void) {
+    uint32_t idx;
+    const uint8_t *font = font_tomthumb3x5;
+    uint32_t h = font[FONT_HEIGHT] + 1;
+    uint32_t w = font[FONT_FIXED_WIDTH] + 1;
+    screen_set_font(font);
+
+    // header
+    gui_config_header_render("SETUP");
+
+    // render buttons and set callback
+    gui_add_button_smallfont(3, 10 + 0*17, 50, 15, "BIND MODE", &gui_cb_setup_bind);
+    gui_add_button_smallfont(3, 10 + 1*17, 50, 15, "CLONE  TX", &gui_cb_setup_clonetx);
+    gui_add_button_smallfont(74, 10 + 0*17, 50, 15, "FW UPDATE", &gui_cb_setup_bootloader);
+
+    // exit button, go back to main
+    gui_add_button_smallfont(74, 10 + 2*17, 50, 15, "EXIT", &gui_cb_setup_exit);
+}
+
+static void gui_setup_bootloader_render(void) {
     const uint8_t *font = font_tomthumb3x5;
     uint32_t h = font[FONT_HEIGHT]+1;
     uint32_t w = font[FONT_FIXED_WIDTH]+1;
@@ -737,7 +796,7 @@ static void gui_config_bootloader_render(void) {
     NVIC_SystemReset();
 }
 
-static void gui_config_clonetx_render(void) {
+static void gui_setup_clonetx_render(void) {
     const uint8_t *font = font_tomthumb3x5;
     uint32_t h = font[FONT_HEIGHT]+1;
     uint32_t w = font[FONT_FIXED_WIDTH]+1;
@@ -778,8 +837,9 @@ static void gui_config_clonetx_render(void) {
             while (!frsky_autotune_do()) {
                 // screen_fill(0); console_render(); screen_update();
                 if (io_powerbutton_pressed()) {
-                    // abort!
-                    gui_page = GUI_PAGE_SETTING_FLAG | 0;
+                    // abort! reenable tx code
+                    frsky_tx_set_enabled(0);
+                    gui_page = GUI_PAGE_SETUP_MAIN;
                     return;
                 }
             }
@@ -800,8 +860,9 @@ static void gui_config_clonetx_render(void) {
             while (!frsky_fetch_txid_and_hoptable_do()) {
                 // screen_fill(0); console_render(); screen_update();
                 if (io_powerbutton_pressed()) {
-                    // abort!
-                    gui_page = GUI_PAGE_SETTING_FLAG | 0;
+                    // abort! reenable tx code
+                    frsky_tx_set_enabled(0);
+                    gui_page = GUI_PAGE_SETUP_MAIN;
                     return;
                 }
             }
@@ -825,7 +886,7 @@ static void gui_config_clonetx_render(void) {
     }
 }
 
-static void gui_config_bindmode_render(void) {
+static void gui_setup_bindmode_render(void) {
     const uint8_t *font = font_tomthumb3x5;
     uint32_t h = font[FONT_HEIGHT]+1;
     uint32_t w = font[FONT_FIXED_WIDTH]+1;
@@ -958,7 +1019,7 @@ static void gui_config_model_render(void) {
     gui_config_model_render_main();
 
     // single item selected?
-    if (gui_page & GUI_PAGE_SETTING_OPTION_FLAG) {
+    if (gui_page & GUI_PAGE_CONFIG_OPTION_FLAG) {
         // render single settings above main!
         // but first: remove all button callbacks
         gui_touch_callback_clear();

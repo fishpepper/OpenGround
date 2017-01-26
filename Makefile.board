@@ -72,7 +72,7 @@ OPENOCD_PIDFILE = /tmp/openocd_opensky.pid
 LINK_OBJS=$(BOARD_SRCS:%.c=%.o)
 
 HEADER_FILES  = $(wildcard $(SELF_DIR)/*.h)
-HEADER_FILES += $(wildcard ./src/*.h)
+HEADER_FILES += $(wildcard src/*.h)
 
 # Build executable
 board: size stylecheck $(RESULT).elf
