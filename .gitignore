@@ -35,4 +35,4 @@
 # Debug files
 *.dSYM/
 *.su
-.hoptable.h
+src/hoptable.h

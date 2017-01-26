@@ -24,7 +24,7 @@
 #include "led.h"
 #include "frsky.h"
 #include "eeprom.h"
-#include ".hoptable.h"
+#include "hoptable.h"
 
 // run time copy of persistant storage data:
 STORAGE_DESC storage;

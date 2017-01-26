@@ -49,8 +49,13 @@ void debug_flush(void) {
     }
     if (!gui_running()) {
         // if gui is not yet active, render console now
-        console_render();
-        screen_update();
+        if (adc_get_channel_rescaled(CHANNEL_ID_CH3) < 0) {
+            // show console on switch down
+            console_render();
+            screen_update();
+        } else {
+            lcd_show_logo();
+        }
     }
 }
 

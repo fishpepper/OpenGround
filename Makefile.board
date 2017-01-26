@@ -8,7 +8,7 @@ BOARD_SRCS   += $(SYSTEM_SRCS:%.c=device/%.c)
 BOARD_SRCS   += $(DRIVER_SRCS:%.c=peripheral_lib/src/%.c)
 BOARD_SRCS   += $(EXTERNAL_SRCS:%.c=peripheral_lib/eeprom_emulation/src/%.c)
 
-DFU_UTIL ?= dfu_util
+DFU_UTIL ?= dfu-util
 
 
 #crystal frequency
@@ -18,7 +18,7 @@ CRYSTAL_FREQ = 12000000
 RESULT ?= openground
 
 #faster build
-MAKEFLAGS+="-j6 "
+#MAKEFLAGS+="-j6 "
 
 # include path
 CFLAGS += -I./
@@ -55,7 +55,7 @@ vpath %.s $(DEVICE)
 # Processor specific
 PTYPE = STM32F072
 LDSCRIPT = $(LINK)/STM32F072VB_FLASH.ld
-STARTUP = startup_stm32f072.s
+STARTUP = device/startup_stm32f072.s
 STARTUP_OBJS=$(STARTUP:%.s=%.o)
 
 # Compilation Flags
@@ -64,7 +64,7 @@ FULLASSERT = -DUSE_FULL_ASSERT
 LDFLAGS+= -T$(LDSCRIPT) -mthumb -mcpu=cortex-m0
 CFLAGS+= -mcpu=cortex-m0 -mthumb -Wl,-Map,$(RESULT).map
 CFLAGS+= -DHSE_VALUE=$(CRYSTAL_FREQ)
-CFLAGS+= -I$(DEVICE) -I$(CORE) -I$(PERIPH)/inc -I$(PERIPH)/eeprom_emulation/inc -I.
+CFLAGS+= -I$(DEVICE) -I$(CORE) -I$(PERIPH)/inc -I$(PERIPH)/eeprom_emulation/inc -I./src
 CFLAGS+= -D$(PTYPE) -DUSE_STDPERIPH_DRIVER $(FULLASSERT) -DBUILD_TARGET=$(TARGET)
 
 OPENOCD_PIDFILE = /tmp/openocd_opensky.pid
@@ -72,7 +72,7 @@ OPENOCD_PIDFILE = /tmp/openocd_opensky.pid
 LINK_OBJS=$(BOARD_SRCS:%.c=%.o)
 
 HEADER_FILES  = $(wildcard $(SELF_DIR)/*.h)
-HEADER_FILES += $(wildcard ./*.h)
+HEADER_FILES += $(wildcard ./src/*.h)
 
 # Build executable
 board: size stylecheck $(RESULT).elf
@@ -97,11 +97,11 @@ $(RESULT).elf: $(LINK_OBJS) $(STARTUP_OBJS)
 ALL_DEPS := $(patsubst %.c,%.d,$(BOARD_SRCS))
 -include $(ALL_DEPS)
 
-.hoptable.h: 
-	python ./generate_hoptable.py > .hoptable.h
+src/hoptable.h: 
+	python ./scripts/generate_hoptable.py > src/hoptable.h
 
 # compile and generate dependency info
-%.o: %.c $(HEADER_FILES) .hoptable.h 
+%.o: %.c $(HEADER_FILES) src/hoptable.h 
 	$(CC) -c $(CFLAGS) $< -o $@
 	$(CC) -MM -MP $(CFLAGS) $< > $@.d
 
@@ -109,7 +109,7 @@ ALL_DEPS := $(patsubst %.c,%.d,$(BOARD_SRCS))
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) $< -o $@
 
 stylecheck: $(HEADER_FILES) $(GENERIC_SRCS)
-	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --linelength=100 $(HEADER_FILES) $(GENERIC_SRCS) || true
+	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --root=src --linelength=100 $(HEADER_FILES) $(GENERIC_SRCS) || true
 
 size: $(RESULT).elf
 	@echo
@@ -118,7 +118,7 @@ size: $(RESULT).elf
 	@echo
 
 clean:
-	rm -f *.o *.d $(RESULT).elf $(RESULT).bin
+	rm -f src/*.o src/*.d *.o *.d $(RESULT).elf $(RESULT).bin
 
 debug: $(RESULT).elf
 	openocd -f /usr/share/openocd/scripts/interface/stlink-v2.cfg -f /usr/share/openocd/scripts/target/stm32f1x.cfg & echo $$! > $(OPENOCD_PIDFILE)
@@ -137,6 +137,6 @@ flash : $(RESULT).bin
 	st-flash --reset write $(RESULT).bin 0x8000000 
 
 dfu : $(RESULT).bin
-	$(DFU_UTIL) -a 0 -D $(RESULT).bin -s 0x08000000:131072 -R
+	$(DFU_UTIL) -a 0 -D $(RESULT).bin -s 0x08000000:leave -R
 
 .PHONY: board clean flash debug flasherase stylecheck size
