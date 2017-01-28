@@ -30,6 +30,7 @@ typedef enum {
 
 config_hw_revision_t config_hw_revision;
 void config_init(void);
+void config_detect_hw_revision(void);
 
 // see http://fishpepper.de/2016/09/15/openground-part-1-components-pinout/
 // for pin mappings on flysky fs-i6s
