@@ -35,6 +35,14 @@ void debug_init(void) {
     debug("###  OpenGround  ###\n");
     debug(" (c) by fishpepper  \n\n");
     debug("debug: init done\n");
+
+    debug("debug: ");
+    if (config_hw_revision == CONFIG_HW_REVISION_EVOLUTION) {
+        debug("TGY EVOLUTION");
+    } else {
+        debug("FLYSKY/TGY I6S");
+    }
+    debug("\n");
 }
 
 void debug_putc(uint8_t ch) {
