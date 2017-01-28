@@ -149,7 +149,6 @@ static void gui_process_touch(void) {
 
                         // reset sub pages
                         gui_config_counter = 0;
-                        gui_sub_page       = 0;
 
                         // execute callback!
                         gui_touch_callback_execute(i);
@@ -287,7 +286,7 @@ static void gui_cb_config_exit(void) {
     storage_load();
 
     // back to config main menu
-    gui_page = GUI_PAGE_SETTINGS;
+    gui_page = GUI_PAGE_CONFIG_MAIN;
 }
 
 static void gui_cb_setup_enter(void) {
@@ -609,7 +608,7 @@ static void gui_config_render(void) {
     screen_fill(0);
 
     // render config
-    switch (gui_page) {
+    switch (gui_page & (~(GUI_PAGE_CONFIG_OPTION_FLAG))) {
         default  :
         case (GUI_PAGE_CONFIG_MAIN) :
             // main settings menu
@@ -753,7 +752,7 @@ static void gui_config_main_render(void) {
     gui_add_button_smallfont(3, 10 + 1*17, 50, 15, "MODEL CFG", &gui_cb_config_model);
 
     // exit button
-    gui_add_button_smallfont(74, 10 + 2*17, 50, 15, "EXIT", &gui_cb_config_exit);
+    gui_add_button_smallfont(74, 10 + 2*17, 50, 15, "EXIT", &gui_cb_setup_exit);
 }
 
 
