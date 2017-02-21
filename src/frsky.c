@@ -196,6 +196,7 @@ static void frsky_send_packet(void) {
     cc2500_enter_txmode();
 
     // fetch adc channel data
+    adc_process();
     uint16_t adc_data[8];
     uint32_t i;
     for (i = 0; i < 8; i++) {
