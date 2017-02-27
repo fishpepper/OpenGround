@@ -22,25 +22,24 @@
 #include "delay.h"
 #include "led.h"
 #include "sound.h"
-#include "stm32f0xx_rcc.h"
+#include <libopencm3/stm32/rcc.h>
 
-volatile static __IO uint32_t timeout_100us;
-volatile static __IO uint32_t timeout2_100us;
-volatile static __IO uint32_t timeout_100us_delay;
+static volatile __IO uint32_t timeout_100us;
+static volatile __IO uint32_t timeout2_100us;
+static volatile __IO uint32_t timeout_100us_delay;
 
 void timeout_init(void) {
     debug("timeout: init\n"); debug_flush();
 
     // configure 0.1ms sys tick:
-    if (SysTick_Config(SystemCoreClock / 10000)) {
-        debug("timeout: failed to set systick timeout\n");
-        debug_flush();
-    }
+    // div8 per ST, stays compatible with M3/M4 parts, well done ST
+    systick_set_clocksource(STK_CSR_CLKSOURCE_EXT);
+    // clear counter so it starts right away 
+    STK_CVR = 0;
 
-    // set prio
-    NVIC_SetPriority(SysTick_IRQn, NVIC_PRIO_SYSTICK);
-    NVIC_EnableIRQ(SysTick_IRQn);
-    // SysTick_CLKSourceConfig(SysTick_CLKSource_HCLK_Div8);
+    systick_set_reload(rcc_ahb_frequency / 8 / 10000);
+    systick_counter_enable();
+    systick_interrupt_enable();
 
     timeout_100us = 0;
     timeout2_100us = 0;
@@ -77,7 +76,8 @@ void timeout_delay_ms(uint32_t timeout) {
     }
 }
 
-void SysTick_Handler(void) {
+
+void sys_tick_handler(void) {
     if (timeout_100us != 0) {
         timeout_100us--;
     }

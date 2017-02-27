@@ -18,30 +18,32 @@
 */
 
 #include "main.h"
-#include "timeout.h"
-#include "stm32f0xx_gpio.h"
+#include "clocksource.h"
+//#include "timeout.h"
 #include "config.h"
 #include "delay.h"
-#include "led.h"
-#include "io.h"
-#include "lcd.h"
-#include "debug.h"
-#include "screen.h"
-#include "console.h"
-#include "adc.h"
-#include "sound.h"
-#include "touch.h"
-#include "cc2500.h"
-#include "frsky.h"
-#include "storage.h"
-#include "wdt.h"
-#include "gui.h"
-#include "eeprom.h"
+//#include "led.h"
+//#include "io.h"
+//#include "lcd.h"
+//#include "debug.h"
+//#include "screen.h"
+//#include "console.h"
+//#include "adc.h"
+//////#include "sound.h"
+//#include "touch.h"
+//#include "cc2500.h"
+//#include "frsky.h"
+//#include "storage.h"
+//#include "wdt.h"
+//#include "gui.h"
+//#include "eeprom.h"
 
 int main(void) {
+    clocksource_init();
     config_init();
 //    wdt_init();
     delay_init();
+#if 0
     led_init();
     io_init();
 
@@ -75,5 +77,6 @@ int main(void) {
         // while (1);
         //
     }
+#endif
 }
 

@@ -21,8 +21,7 @@
 #define SOUND_H_
 
 #include <stdint.h>
-
-#include "stm32f0xx.h"
+#include <libopencmsis/core_cm3.h>
 
 volatile __IO uint32_t sound_tone_duration;
 

@@ -28,7 +28,7 @@ typedef enum {
   CONFIG_HW_REVISION_SIZE
 } config_hw_revision_t;
 
-config_hw_revision_t config_hw_revision;
+extern config_hw_revision_t config_hw_revision;
 void config_init(void);
 void config_detect_hw_revision(void);
 
@@ -37,17 +37,17 @@ void config_detect_hw_revision(void);
 
 // LEDS
 #define LED_BACKLIGHT_GPIO                  GPIOF
-#define LED_BACKLIGHT_GPIO_CLK              RCC_AHBPeriph_GPIOF
-#define LED_BACKLIGHT_PIN                   GPIO_Pin_3
+#define LED_BACKLIGHT_GPIO_CLK              RCC_GPIOF
+#define LED_BACKLIGHT_PIN                   GPIO3
 
 // L BUTTON BLUE = PD10
 // R BUTTON BLUE = PD11
 #define LED_BUTTON_L_GPIO      GPIOD
-#define LED_BUTTON_L_GPIO_CLK  RCC_AHBPeriph_GPIOD
-#define LED_BUTTON_L_PIN       GPIO_Pin_10
+#define LED_BUTTON_L_GPIO_CLK  RCC_GPIOD
+#define LED_BUTTON_L_PIN       GPIO10
 #define LED_BUTTON_R_GPIO      GPIOD
-#define LED_BUTTON_R_GPIO_CLK  RCC_AHBPeriph_GPIOD
-#define LED_BUTTON_R_PIN       GPIO_Pin_11
+#define LED_BUTTON_R_GPIO_CLK  RCC_GPIOD
+#define LED_BUTTON_R_PIN       GPIO11
 
 // POWERDOWN TRIGGER
 #define POWERDOWN_GPIO      GPIOB

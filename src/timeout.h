@@ -21,8 +21,7 @@
 #define TIMEOUT_H_
 
 #include <stdint.h>
-
-#include "stm32f0xx.h"
+#include <libopencmsis/core_cm3.h>
 
 void timeout_init(void);
 // void timeout_set(__IO uint32_t ms);
@@ -34,7 +33,5 @@ uint8_t timeout_timed_out(void);
 uint8_t timeout2_timed_out(void);
 void timeout_delay_ms(uint32_t timeout);
 uint32_t timeout_time_remaining(void);
-
-void SysTick_Handler(void);
 
 #endif  // TIMEOUT_H_

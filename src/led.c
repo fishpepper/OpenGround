@@ -19,30 +19,34 @@
 
 
 #include "led.h"
-#include  "stm32f0xx_rcc.h"
+#include <libopencm3/stm32/rcc.h>
 
 void led_init(void) {
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
-
-    // clock enable
-    RCC_AHBPeriphClockCmd(LED_BACKLIGHT_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(LED_BUTTON_R_GPIO_CLK, ENABLE);
+    // peripheral clocks enable
+    rcc_periph_clock_enable(LED_BACKLIGHT_GPIO_CLK);
+    rcc_periph_clock_enable(LED_BUTTON_R_GPIO_CLK);
+    rcc_periph_clock_enable(LED_BUTTON_L_GPIO_CLK);
 
     // set led pin as output
-    gpio_init.GPIO_Pin   = LED_BACKLIGHT_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    GPIO_Init(LED_BACKLIGHT_GPIO, &gpio_init);
+    gpio_mode_setup(
+        LED_BACKLIGHT_GPIO,
+        GPIO_MODE_OUTPUT,
+        GPIO_PUPD_NONE, 
+        LED_BACKLIGHT_PIN);
 
-    gpio_init.GPIO_Pin   = LED_BUTTON_R_PIN;
-    GPIO_Init(LED_BUTTON_R_GPIO, &gpio_init);
+    // left button led
+    gpio_mode_setup(
+        LED_BUTTON_L_GPIO,
+        GPIO_MODE_OUTPUT,
+        GPIO_PUPD_NONE,
+        LED_BUTTON_L_PIN);
 
-
-    gpio_init.GPIO_Pin   = LED_BUTTON_L_PIN;
-    GPIO_Init(LED_BUTTON_L_GPIO, &gpio_init);
+    // right button led
+    gpio_mode_setup(
+        LED_BUTTON_R_GPIO,
+        GPIO_MODE_OUTPUT,
+        GPIO_PUPD_NONE,
+        LED_BUTTON_R_PIN);
 
     led_button_l_on();
     led_button_r_on();

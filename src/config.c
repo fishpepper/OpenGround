@@ -18,7 +18,10 @@
 */
 
 #include "config.h"
-#include  "stm32f0xx_rcc.h"
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+
+config_hw_revision_t config_hw_revision;
 
 void config_init(void) {
     config_detect_hw_revision();
@@ -28,19 +31,17 @@ void config_init(void) {
 // tgy evolution has a pulldown on RF0 (=PE.10)
 void config_detect_hw_revision(void) {
     // enable peripheral clock
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE, ENABLE);
+    rcc_periph_clock_enable(RCC_GPIOE);
 
     // init PE.10 as intput with PULLUP
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
-    gpio_init.GPIO_Pin   = GPIO_Pin_10;
-    gpio_init.GPIO_Mode  = GPIO_Mode_IN;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_Init(GPIOE, &gpio_init);
+    gpio_mode_setup(
+        GPIOE,
+        GPIO_MODE_INPUT,
+        GPIO_PUPD_PULLUP,
+        GPIO10);
 
     // now we can check for the pullwon resistor:
-    if (GPIO_ReadInputDataBit(GPIOE, GPIO_Pin_10) == 0) {
+    if (gpio_get(GPIOE, GPIO10) == 0) {
         // pulled down -> tgy evolution
         config_hw_revision = CONFIG_HW_REVISION_EVOLUTION;
     } else {
