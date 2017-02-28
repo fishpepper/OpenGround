@@ -24,10 +24,10 @@
 #include "delay.h"
 #include "sound.h"
 #include "led.h"
-//#include "io.h"
-//#include "lcd.h"
-//#include "debug.h"
-//#include "screen.h"
+#include "io.h"
+#include "lcd.h"
+#include "debug.h"
+#include "screen.h"
 //#include "console.h"
 //#include "adc.h"
 //////#include "sound.h"
@@ -51,36 +51,29 @@ int main(void) {
 #if 0
 //    wdt_init();
 
-    io_init();
 #endif
+    //io_init();
     timeout_init();
 
     lcd_init();
 
     lcd_show_logo();
-
-    while(1){
-        timeout_delay_ms(1000);
-        //delay_us(100*1000);
-        led_button_r_toggle();
-    }
-#if 0
-#if 0
     screen_init();
+
+
     console_init();
     debug_init();
-    adc_init();
-#endif
-    sound_init();
-#if 0
-    touch_init();
-    eeprom_init();
-    storage_init();
-    frsky_init();
+    //adc_init();
+    //sound_init();
 
-    // screen_test();
-    // touch_test();
-    // adc_test();
+    //touch_init();
+    //eeprom_init();
+    //storage_init();
+    //frsky_init();
+
+    //// screen_test();
+    //// touch_test();
+    //// adc_test();
     gui_init();
 
     debug("main: init done.\n"); debug_flush();
@@ -95,7 +88,7 @@ int main(void) {
         // while (1);
         //
     }
-#endif
-    #endif
+
+
 }
 

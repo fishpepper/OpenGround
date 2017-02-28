@@ -36,8 +36,8 @@ void cc2500_wait_for_transmission_complete(void);
 #define cc2500_rx_sleep() { delay_us(1352); }
 #define cc2500_tx_sleep() { delay_us(1250); }
 
-#define cc2500_csn_lo() { CC2500_SPI_GPIO->BRR  = (CC2500_SPI_CSN_PIN); delay_us(1); }
-#define cc2500_csn_hi() { delay_us(1); CC2500_SPI_GPIO->BSRR = (CC2500_SPI_CSN_PIN); }
+#define cc2500_csn_lo() { gpio_clear(CC2500_SPI_GPIO, CC2500_SPI_CSN_PIN); delay_us(1); }
+#define cc2500_csn_hi() { delay_us(1); gpio_set(CC2500_SPI_GPIO, CC2500_SPI_CSN_PIN); }
 
 // not used on d4rii
 #define cc2500_disable_rf_interrupt() {}

@@ -1,7 +1,7 @@
 ROOT         := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 SOURCE_DIR   = $(ROOT)/src
 INCLUDE_DIR  = $(SOURCE_DIR)
-SOURCE_FILES  = led.c delay.c clocksource.c config.c io.c debug.c lcd.c timeout.c
+SOURCE_FILES  = led.c delay.c clocksource.c config.c io.c debug.c lcd.c timeout.c gui.c adc.c console.c screen.c storage.c font.c sound.c wdt.c frsky.c touch.c telemetry.c crc16.c cc2500.c fifo.c spi.c
 #config.c delay.c timeout.c clocksource.c led.c sound.c debug.c adc.c storage.c gui.c touch.c console.c 
 #$(wildcard $(SRC_DIR)/*.c)
 OBJECT_DIR   := $(ROOT)/obj

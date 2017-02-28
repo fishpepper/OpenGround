@@ -195,7 +195,7 @@ void storage_mode_set_name(uint8_t index, uint8_t *str) {
 
 void storage_load(void) {
     debug("storage: load\n"); debug_flush();
-    eeprom_read_storage();
+    //FIXME//eeprom_read_storage();
 }
 
 void storage_save(void) {
@@ -205,7 +205,7 @@ void storage_save(void) {
     storage.checksum = storage_calc_crc();
 
     // and finally write it to eeprom
-    eeprom_write_storage();
+    //FIXME//eeprom_write_storage();
 }
 
 

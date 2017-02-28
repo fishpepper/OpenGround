@@ -19,8 +19,10 @@
 
 #include "cc2500.h"
 #include "spi.h"
-#include "stm32f0xx_gpio.h"
-#include "stm32f0xx_rcc.h"
+
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+
 #include "debug.h"
 #include "timeout.h"
 #include <string.h>
@@ -31,54 +33,55 @@ void cc2500_init(void) {
     spi_init();
 }
 static void cc2500_init_gpio(void) {
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
+
+
+    // set high:
+    gpio_set(POWERDOWN_GPIO, POWERDOWN_PIN);
+
+    // set powerdown trigger pin as output
+    gpio_mode_setup(
+        POWERDOWN_GPIO,
+        GPIO_MODE_OUTPUT,
+        GPIO_PUPD_NONE,
+        POWERDOWN_PIN);
+
 
     // PA/ LNA:
     // periph clock enable for port
-    RCC_AHBPeriphClockCmd(CC2500_LNA_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(CC2500_PA_GPIO_CLK, ENABLE);
+    rcc_periph_clock_enable(CC2500_LNA_GPIO_CLK);
+    rcc_periph_clock_enable(CC2500_PA_GPIO_CLK);
 
     // CTX:
     // set all gpio directions to output
-    gpio_init.GPIO_Pin = CC2500_LNA_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    GPIO_Init(CC2500_LNA_GPIO, &gpio_init);
+    gpio_mode_setup(CC2500_LNA_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, CC2500_LNA_PIN);
+    gpio_set_output_options(CC2500_LNA_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, CC2500_LNA_PIN);
+
     // CRX:
-    gpio_init.GPIO_Pin = CC2500_PA_PIN;
-    GPIO_Init(CC2500_PA_GPIO, &gpio_init);
+    gpio_mode_setup(CC2500_PA_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, CC2500_PA_PIN);
+    gpio_set_output_options(CC2500_PA_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, CC2500_PA_PIN);
 
     cc2500_enter_rxmode();
 
     // enable clock for GDO1
-    RCC_AHBPeriphClockCmd(CC2500_GDO1_GPIO_CLK, ENABLE);
+    rcc_periph_clock_enable(CC2500_GDO1_GPIO_CLK);
 
     // setup gdo1
-    gpio_init.GPIO_Pin = CC2500_GDO1_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_IN;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_Init(CC2500_GDO1_GPIO, &gpio_init);
-
+    gpio_mode_setup(CC2500_GDO1_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, CC2500_GDO1_PIN);
+    gpio_set_output_options(CC2500_GDO1_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, CC2500_GDO1_PIN);
 
     // periph clock enable for port
-    RCC_AHBPeriphClockCmd(CC2500_GDO2_GPIO_CLK, ENABLE);
+    rcc_periph_clock_enable(CC2500_GDO2_GPIO_CLK);
 
     // configure GDO2 pins as Input
-    gpio_init.GPIO_Pin  = CC2500_GDO2_PIN;
-    gpio_init.GPIO_Mode = GPIO_Mode_IN;
-    GPIO_Init(CC2500_GDO2_GPIO, &gpio_init);
+    gpio_mode_setup(CC2500_GDO2_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, CC2500_GDO2_PIN);
+    gpio_set_output_options(CC2500_GDO2_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, CC2500_GDO2_PIN);
 }
 
 inline void cc2500_enter_rxmode(void) {
     // LNA = 1, PA = 0
-    CC2500_LNA_GPIO->BSRR = (CC2500_LNA_PIN);  // 1
+    gpio_set(CC2500_LNA_GPIO, CC2500_LNA_PIN);  // 1
     delay_us(20);
-    CC2500_PA_GPIO->BRR = (CC2500_PA_PIN);     // 0
+    gpio_clear(CC2500_PA_GPIO, CC2500_PA_PIN);     // 0
     delay_us(5);
 }
 
@@ -86,11 +89,11 @@ inline void cc2500_enter_rxmode(void) {
 inline uint32_t cc2500_set_antenna(uint8_t id) {
     // select antenna 0 or 1:
     if (id) {
-        CC2500_ANT_SW_CTX_GPIO->BRR  = (CC2500_ANT_SW_CTX_PIN);  // 0
-        CC2500_ANT_SW_CRX_GPIO->BSRR = (CC2500_ANT_SW_CRX_PIN);  // 1
+        gpio_clear(CC2500_ANT_SW_CTX_GPIO, CC2500_ANT_SW_CTX_PIN);  // 0
+        gpio_set(CC2500_ANT_SW_CRX_GPIO, CC2500_ANT_SW_CRX_PIN);  // 1
     } else {
-        CC2500_ANT_SW_CTX_GPIO->BSRR = (CC2500_ANT_SW_CTX_PIN);  // 1
-        CC2500_ANT_SW_CRX_GPIO->BRR  = (CC2500_ANT_SW_CRX_PIN);  // 0
+        gpio_set(CC2500_ANT_SW_CTX_GPIO, CC2500_ANT_SW_CTX_PIN);  // 1
+        gpio_clear(CC2500_ANT_SW_CRX_GPIO, CC2500_ANT_SW_CRX_PIN);  // 0
     }
     return id;
 }
@@ -109,7 +112,7 @@ inline void cc2500_set_register(uint8_t address, uint8_t data) {
 
 
     // wait for ready signal
-    while (GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
+    while (gpio_get(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
 
     spi_tx(address);
     spi_tx(data);
@@ -125,7 +128,7 @@ inline uint8_t cc2500_get_register(uint8_t address) {
     cc2500_csn_lo();
 
     // wait for RDY signal:
-    while (GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
+    while (gpio_get(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
 
     // request address(read request has bit7 set)
     uint8_t status = spi_tx(address | 0x80);
@@ -164,9 +167,9 @@ uint8_t cc2500_transmission_completed(void) {
 
 inline void cc2500_enter_txmode(void) {
     // LNA = 0, PA = 1
-    CC2500_LNA_GPIO->BRR = (CC2500_LNA_PIN);  // 0
+    gpio_clear(CC2500_LNA_GPIO, CC2500_LNA_PIN);  // 0
     delay_us(20);
-    CC2500_PA_GPIO->BSRR = (CC2500_PA_PIN);   // 1
+    gpio_set(CC2500_PA_GPIO, CC2500_PA_PIN);   // 1
     delay_us(5);
 }
 
@@ -178,7 +181,7 @@ inline void cc2500_enable_receive(void) {
 
 
 inline uint8_t cc2500_get_gdo_status(void) {
-    if (GPIO_ReadInputDataBit(CC2500_GDO1_GPIO, CC2500_GDO1_PIN)) {
+    if (gpio_get(CC2500_GDO1_GPIO, CC2500_GDO1_PIN)) {
         return 1;
     } else {
         return 0;

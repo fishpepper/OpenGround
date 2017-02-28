@@ -787,7 +787,7 @@ static void gui_setup_bootloader_render(void) {
     *((uint32_t *)0x20003FF0) = 0xDEADBEEF;
 
     // reset the processor
-    NVIC_SystemReset();
+    scb_reset_system();
 }
 
 static void gui_setup_clonetx_render(void) {

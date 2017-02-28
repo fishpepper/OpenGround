@@ -20,39 +20,25 @@
 #include "wdt.h"
 #include "debug.h"
 #include "delay.h"
-#include "stm32f0xx_iwdg.h"
-#include "stm32f0xx_rcc.h"
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/iwdg.h>
 
 void wdt_init(void) {
     // detect resets from wdt
-    if (RCC_GetFlagStatus(RCC_FLAG_IWDGRST) != RESET) {
+    if (RCC_CSR & RCC_CSR_IWDGRSTF) {
         debug("hal_wdt: watchdog reset detected\n"); debug_flush();
-        RCC_ClearFlag();
+        RCC_CSR &= ~(RCC_CSR_IWDGRSTF);
     }
 
     // set wdg timeout to roughly 1000ms(varies due to LSI freq dispersion)
-    uint32_t timeout_ms = 1000;
-
-    // enable write access to IWDG_PR and IWDG_RLR registers
-    IWDG_WriteAccessCmd(IWDG_WriteAccess_Enable);
-
-    // IWDG counter clock: LSI/ 32
-    IWDG_SetPrescaler(IWDG_Prescaler_32);
-
-    // set counter reload value
-    // 250ms timeout -> reload value = 0.25 * (LSI/ 32) = 0.25 * 40000 / 32 = 312.5
-    // --> 1ms = 312.5 / 250 = 1.25 = 5/ 4
-    IWDG_SetReload(timeout_ms * 5 / 4);
-
-    // reload IWDG counter
-    IWDG_ReloadCounter();
+    iwdg_set_period_ms(1000);
 
     // enable IWDG(the LSI oscillator will be enabled by hardware)
-    IWDG_Enable();
+    iwdg_start();
 }
 
 inline void wdt_reset(void) {
     // reset wdt
-     IWDG_ReloadCounter();
+     iwdg_reset();
 }
 

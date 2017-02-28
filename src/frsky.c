@@ -32,8 +32,7 @@
 #include "adc.h"
 #include "telemetry.h"
 
-#include "stm32f0xx_tim.h"
-#include "stm32f0xx_misc.h"
+#include <libopencm3/stm32/timer.h>
 
 // this will make binding not very reliable, use for debugging only!
 #define FRSKY_DEBUG_BIND_DATA 0
@@ -131,6 +130,9 @@ void frsky_init(void) {
 
 void frsky_init_timer(void) {
     // init timer3 for 9ms
+    /*
+    FIXME
+
     TIM_TimeBaseInitTypeDef timebase_init;
     TIM_OCInitTypeDef oc_init;
     NVIC_InitTypeDef nvic_init;
@@ -171,6 +173,7 @@ void frsky_init_timer(void) {
 
     // TIM3 enable counter
     TIM_Cmd(TIM3, ENABLE);
+    */
 }
 
 void frsky_tx_set_enabled(uint32_t enabled) {
@@ -178,10 +181,10 @@ void frsky_tx_set_enabled(uint32_t enabled) {
     if (enabled) {
         frsky_frame_counter = 0;
         frsky_state = 0;
-        TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+        //FIXME//TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
     } else {
         // stop ISR
-        TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
+        //FIXME//TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
         // make sure last packet was sent
         delay_ms(20);
     }
@@ -320,6 +323,8 @@ void frsky_get_rssi(uint8_t *rssi, uint8_t *rssi_telemetry) {
 }
 
 void TIM3_IRQHandler(void) {
+    /* FIXME
+
     if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
         TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
 
@@ -400,6 +405,7 @@ void TIM3_IRQHandler(void) {
                 break;
         }
     }
+    */
 }
 
 
