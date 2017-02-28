@@ -37,6 +37,11 @@
 #include "wdt.h"
 #include "gui.h"
 #include "eeprom.h"
+#include "usbd_hid_core.h"
+#include "usbd_usr.h"
+
+USB_CORE_HANDLE  USB_Device_dev ;
+
 
 int main(void) {
     config_init();
@@ -62,6 +67,15 @@ int main(void) {
     // touch_test();
     // adc_test();
     gui_init();
+
+    USBD_Init(&USB_Device_dev,
+            &USR_desc, 
+            &USBD_HID_cb, 
+            &USR_cb);
+
+    while (1){
+
+    };
 
     debug("main: init done.\n"); debug_flush();
     // frsky_main();

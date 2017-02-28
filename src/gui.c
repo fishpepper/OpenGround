@@ -361,6 +361,9 @@ void gui_loop(void) {
 
     // this is the main GUI loop. rf stuff is done inside an ISR
     while (gui_shutdown_pressed < GUI_SHUTDOWN_PRESS_COUNT) {
+        // process adc values
+        adc_process();
+
         // handle buttons
         gui_handle_buttons();
 

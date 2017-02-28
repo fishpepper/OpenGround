@@ -2,11 +2,25 @@
 SYSTEM_SRCS   = system_stm32f0xx.c
 DRIVER_SRCS   = stm32f0xx_gpio.c stm32f0xx_rcc.c stm32f0xx_adc.c stm32f0xx_dma.c stm32f0xx_tim.c stm32f0xx_i2c.c 
 DRIVER_SRCS  += stm32f0xx_exti.c stm32f0xx_syscfg.c stm32f0xx_misc.c stm32f0xx_spi.c stm32f0xx_iwdg.c stm32f0xx_flash.c
+DRIVER_SRCS  += stm32f0xx_crs.c
+
+USB_HID_SRCS =  usbd_hid_core.c
+USB_CORE_SRCS = usbd_core.c usbd_ioreq.c usbd_req.c
+USB_DRV_SRCS =  usb_core.c usb_dcd.c usb_dcd_int.c
+
 EXTERNAL_SRCS = st_eeprom.c
+
 BOARD_SRCS    = $(GENERIC_SRCS)
 BOARD_SRCS   += $(SYSTEM_SRCS:%.c=device/%.c)
 BOARD_SRCS   += $(DRIVER_SRCS:%.c=peripheral_lib/src/%.c)
+BOARD_SRCS   += $(USB_CORE_SRCS:%.c=peripheral_lib/STM32_USB_Device_Library/Core/src/%.c)
+BOARD_SRCS   += $(USB_HID_SRCS:%.c=peripheral_lib/STM32_USB_Device_Library/Class/hid/src/%.c)
+BOARD_SRCS   += $(USB_DRV_SRCS:%.c=peripheral_lib/STM32_USB_Device_Driver/src/%.c)
+
 BOARD_SRCS   += $(EXTERNAL_SRCS:%.c=peripheral_lib/eeprom_emulation/src/%.c)
+#BOARD_SRCS   += $(EXTERNAL_SRCS:%.c=peripheral_lib/src/%.c)
+
+
 
 DFU_UTIL ?= dfu-util
 
@@ -49,6 +63,9 @@ vpath %.c $(SELF_DIR)
 vpath %.c $(CORE)
 vpath %.c $(PERIPH)/src
 vpath %.c $(PERIPH)/eeprom_emulation/src
+vpath %.c $(PERIPH)/STM32_USB_Device_Library/Core/src
+vpath %.c $(PERIPH)/STM32_USB_Device_Library/Class/hid/src
+vpath %.c $(PERIPH)/STM32_USB_Device_Driver/src
 vpath %.c $(DEVICE)
 vpath %.s $(DEVICE)
 
@@ -65,6 +82,7 @@ LDFLAGS+= -T$(LDSCRIPT) -mthumb -mcpu=cortex-m0
 CFLAGS+= -mcpu=cortex-m0 -mthumb -Wl,-Map,$(RESULT).map
 CFLAGS+= -DHSE_VALUE=$(CRYSTAL_FREQ)
 CFLAGS+= -I$(DEVICE) -I$(CORE) -I$(PERIPH)/inc -I$(PERIPH)/eeprom_emulation/inc -I./src
+CFLAGS+= -I$(PERIPH)/STM32_USB_Device_Driver/inc -I$(PERIPH)/STM32_USB_Device_Library/Core/inc -I$(PERIPH)/STM32_USB_Device_Library/Class/hid/inc
 CFLAGS+= -D$(PTYPE) -DUSE_STDPERIPH_DRIVER $(FULLASSERT) -DBUILD_TARGET=$(TARGET)
 
 OPENOCD_PIDFILE = /tmp/openocd_opensky.pid
@@ -73,6 +91,8 @@ LINK_OBJS=$(BOARD_SRCS:%.c=%.o)
 
 HEADER_FILES  = $(wildcard $(SELF_DIR)/*.h)
 HEADER_FILES += $(wildcard src/*.h)
+#HEADER_FILES += $(wildcard peripheral_lib/STM32_USB_Device_Library/Core/inc/*.h)
+#HEADER_FILES += $(wildcard peripheral_lib/STM32_USB_Device_Library/Class/hid/inc/*.h)
 
 # Build executable
 board: size stylecheck $(RESULT).elf
@@ -108,8 +128,8 @@ src/hoptable.h:
 %.o: %.s
 	$(CC) -c $(CFLAGS) $(DEPFLAGS) $< -o $@
 
-stylecheck: $(HEADER_FILES) $(GENERIC_SRCS)
-	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --root=src --linelength=100 $(HEADER_FILES) $(GENERIC_SRCS) || true
+#stylecheck: $(HEADER_FILES) $(GENERIC_SRCS)
+#	./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --root=src --linelength=100 $(HEADER_FILES) $(GENERIC_SRCS) || true
 
 size: $(RESULT).elf
 	@echo
