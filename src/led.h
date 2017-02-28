@@ -31,10 +31,10 @@ void led_init(void);
 
 #define led_button_r_on()      { gpio_set(LED_BUTTON_R_GPIO, LED_BUTTON_R_PIN); }
 #define led_button_r_off()     { gpio_clear(LED_BUTTON_R_GPIO, LED_BUTTON_R_PIN); }
-#define led_button_r_toggle()  { gpio_toggle(LED_BUTTON_R_GPIO, LED_BUTTON_R_GPIO); }
+#define led_button_r_toggle()  { gpio_toggle(LED_BUTTON_R_GPIO, LED_BUTTON_R_PIN); }
 
 #define led_button_l_on()      { gpio_set(LED_BUTTON_L_GPIO, LED_BUTTON_L_PIN); }
 #define led_button_l_off()     { gpio_clear(LED_BUTTON_L_GPIO, LED_BUTTON_L_PIN); }
-#define led_button_l_toggle()  { gpio_toggle(LED_BUTTON_L_GPIO, LED_BUTTON_L_GPIO); }
+#define led_button_l_toggle()  { gpio_toggle(LED_BUTTON_L_GPIO, LED_BUTTON_L_PIN); }
 
 #endif  // LED_H_

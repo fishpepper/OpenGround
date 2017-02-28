@@ -24,7 +24,9 @@
 #include "console.h"
 #include "led.h"
 #include "delay.h"
-#include  "stm32f0xx_rcc.h"
+
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
 
 
 void io_init(void) {
@@ -33,52 +35,41 @@ void io_init(void) {
 }
 
 void io_init_gpio(void) {
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
-
     // enable clocks
-    RCC_AHBPeriphClockCmd(POWERDOWN_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(BUTTON_POWER_BOTH_GPIO_CLK, ENABLE);
+    rcc_periph_clock_enable(POWERDOWN_GPIO_CLK);
+    rcc_periph_clock_enable(BUTTON_POWER_BOTH_GPIO_CLK);
 
     // set high:
-    POWERDOWN_GPIO->BSRR = (POWERDOWN_PIN);
+    gpio_set(POWERDOWN_GPIO, POWERDOWN_PIN);
 
     // set powerdown trigger pin as output
-    gpio_init.GPIO_Pin   = POWERDOWN_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    GPIO_Init(POWERDOWN_GPIO, &gpio_init);
+    gpio_mode_setup(
+        POWERDOWN_GPIO,
+        GPIO_MODE_OUTPUT,
+        GPIO_PUPD_NONE,
+        POWERDOWN_PIN);
 
     // set buttons as input:
-    gpio_init.GPIO_Pin   = BUTTON_POWER_BOTH_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_IN;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_Init(BUTTON_POWER_BOTH_GPIO, &gpio_init);
+    gpio_mode_setup(
+        BUTTON_POWER_BOTH_GPIO,
+        GPIO_MODE_INPUT,
+        GPIO_PUPD_PULLUP,
+        BUTTON_POWER_BOTH_PIN);
 }
 
 
 void io_test_prepare(void) {
     // set all ios to input
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
-    gpio_init.GPIO_Pin   = 0xFFFF;
-    gpio_init.GPIO_Mode  = GPIO_Mode_IN;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
-
-    GPIO_Init(GPIOA, &gpio_init);
-    GPIO_Init(GPIOB, &gpio_init);
-    GPIO_Init(GPIOC, &gpio_init);
-    GPIO_Init(GPIOD, &gpio_init);
-    GPIO_Init(GPIOE, &gpio_init);
-    GPIO_Init(GPIOF, &gpio_init);
+    gpio_mode_setup(GPIOA, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xFFFF);
+    gpio_mode_setup(GPIOB, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xFFFF);
+    gpio_mode_setup(GPIOC, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xFFFF);
+    gpio_mode_setup(GPIOD, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xFFFF);
+    gpio_mode_setup(GPIOE, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xFFFF);
+    gpio_mode_setup(GPIOF, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, 0xFFFF);
 }
 
 uint32_t io_powerbutton_pressed(void) {
-    return(GPIO_ReadInputDataBit(BUTTON_POWER_BOTH_GPIO, BUTTON_POWER_BOTH_PIN) == 0);
+    return(gpio_get(BUTTON_POWER_BOTH_GPIO, BUTTON_POWER_BOTH_PIN) == 0);
 }
 
 // show status of all gpios on screen
@@ -94,8 +85,7 @@ void io_test(void) {
             debug_putc('A'+p);
             debug("  ");
             for (i = 0; i < 16; i++) {
-                if (GPIO_ReadInputDataBit(((GPIO_TypeDef *) (GPIOA_BASE + p*0x00000400)), \
-                                          (1 << (15-i)))) {
+                if (gpio_get((GPIO_PORT_A_BASE + p*0x00000400), (1 << (15-i)))) {
                     debug_putc('1');
                 } else {
                     debug_putc('0');
@@ -109,7 +99,7 @@ void io_test(void) {
 }
 
 void io_powerdown(void) {
-    POWERDOWN_GPIO->BRR = (POWERDOWN_PIN);
+    gpio_clear(POWERDOWN_GPIO, POWERDOWN_PIN);
 
     // system is powered off now...
     while (1) { }

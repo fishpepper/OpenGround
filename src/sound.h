@@ -23,24 +23,25 @@
 #include <stdint.h>
 #include <libopencmsis/core_cm3.h>
 
-volatile __IO uint32_t sound_tone_duration;
-
-void sound_enqueue(uint32_t freq, uint32_t duration_ms);
+extern volatile __IO uint32_t sound_tone_duration;
 
 void sound_init(void);
-void sound_set_frequency(uint32_t freq);
-
-void sound_play_click(void);
-void sound_play_low_time(void);
-void sound_play_bind(void);
-
-static void sound_init_rcc(void);
-static void sound_init_gpio(void);
-void sound_handle_playback(void);
 
 typedef struct {
     uint16_t frequency;
     uint16_t duration_ms;
 } tone_t;
+
+void sound_enqueue(uint32_t freq, uint32_t duration_ms);
+void sound_set_frequency(uint32_t freq);
+void sound_play_click(void);
+void sound_play_low_time(void);
+void sound_play_bind(void);
+void sound_handle_playback(void);
+
+static void sound_init_rcc(void);
+static void sound_init_gpio(void);
+static void sound_play_sample(tone_t *tone);
+
 
 #endif  // SOUND_H_

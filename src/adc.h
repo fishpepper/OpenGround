@@ -52,9 +52,9 @@ typedef enum {
   CHANNEL_ID_SIZE
 } channel_id_t;
 
-uint8_t *adc_get_channel_name(uint8_t i, bool short_descr);
+char *adc_get_channel_name(uint8_t i, bool short_descr);
 
-#define ADC_DMA_CHANNEL           DMA1_Channel1
+#define ADC_DMA_CHANNEL           DMA_CHANNEL1
 #define ADC_DMA_TC_FLAG           DMA1_FLAG_TC1
 #define ADC_CHANNEL_COUNT 11
 

@@ -68,8 +68,8 @@ void debug_flush(void) {
 }
 
 
-void debug(uint8_t *data) {
-    uint8_t c = *data++;
+void debug(char *data) {
+    uint8_t c = (uint8_t)*data++;
     while (c) {
         debug_putc(c);
         c = *data++;

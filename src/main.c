@@ -22,7 +22,8 @@
 //#include "timeout.h"
 #include "config.h"
 #include "delay.h"
-//#include "led.h"
+#include "sound.h"
+#include "led.h"
 //#include "io.h"
 //#include "lcd.h"
 //#include "debug.h"
@@ -41,20 +42,37 @@
 int main(void) {
     clocksource_init();
     config_init();
-//    wdt_init();
     delay_init();
-#if 0
-    led_init();
-    io_init();
 
+
+    led_init();
+    led_backlight_on();
+
+#if 0
+//    wdt_init();
+
+    io_init();
+#endif
     timeout_init();
+
     lcd_init();
 
+    lcd_show_logo();
+
+    while(1){
+        timeout_delay_ms(1000);
+        //delay_us(100*1000);
+        led_button_r_toggle();
+    }
+#if 0
+#if 0
     screen_init();
     console_init();
     debug_init();
     adc_init();
+#endif
     sound_init();
+#if 0
     touch_init();
     eeprom_init();
     storage_init();
@@ -78,5 +96,6 @@ int main(void) {
         //
     }
 #endif
+    #endif
 }
 

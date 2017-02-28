@@ -26,7 +26,7 @@ uint32_t debug_is_initialized(void);
 void debug_init(void);
 void debug_putc(uint8_t ch);
 void debug_flush(void);
-void debug(uint8_t *data);
+void debug(char *data);
 void debug_put_hex8(uint8_t val);
 void debug_put_hex16(uint16_t val);
 void debug_put_hex32(uint32_t val);

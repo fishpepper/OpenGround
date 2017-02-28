@@ -21,7 +21,7 @@
 #define LCD_H_
 
 #include <stdint.h>
-#include "stm32f0xx_gpio.h"
+#include <libopencm3/stm32/gpio.h>
 #include "config.h"
 
 // the screen itself is 128 x 64
@@ -37,23 +37,22 @@ void lcd_send_data(const uint8_t *buf);
 void lcd_powerdown(void);
 void lcd_show_logo(void);
 
-#define LCD_RW_HI()   { LCD_RW_GPIO->BSRR = (LCD_RW_PIN);  }
-#define LCD_RW_LO()   { LCD_RW_GPIO->BRR  = (LCD_RW_PIN); }
+#define LCD_RW_HI()   { gpio_set(LCD_RW_GPIO, LCD_RW_PIN);  }
+#define LCD_RW_LO()   { gpio_clear(LCD_RW_GPIO, LCD_RW_PIN); }
 
-#define LCD_RST_HI()  { LCD_RST_GPIO->BSRR = (LCD_RST_PIN); }
-#define LCD_RST_LO()  { LCD_RST_GPIO->BRR  = (LCD_RST_PIN); }
+#define LCD_RST_HI()  { gpio_set(LCD_RST_GPIO, LCD_RST_PIN); }
+#define LCD_RST_LO()  { gpio_clear(LCD_RST_GPIO, LCD_RST_PIN); }
 
-#define LCD_RS_HI()   { LCD_RS_GPIO->BSRR = (LCD_RS_PIN); }
-#define LCD_RS_LO()   { LCD_RS_GPIO->BRR  = (LCD_RS_PIN); }
+#define LCD_RS_HI()   { gpio_set(LCD_RS_GPIO, LCD_RS_PIN); }
+#define LCD_RS_LO()   { gpio_clear(LCD_RS_GPIO, LCD_RS_PIN); }
 
-#define LCD_RD_HI()   { LCD_RD_GPIO->BSRR = (LCD_RD_PIN); }
-#define LCD_RD_LO()   { LCD_RD_GPIO->BRR  = (LCD_RD_PIN); }
+#define LCD_RD_HI()   { gpio_set(LCD_RD_GPIO, LCD_RD_PIN); }
+#define LCD_RD_LO()   { gpio_clear(LCD_RD_GPIO, LCD_RD_PIN); }
 
-#define LCD_CS_HI()   { LCD_CS_GPIO->BSRR = (LCD_CS_PIN); }
-#define LCD_CS_LO()   { LCD_CS_GPIO->BRR  = (LCD_CS_PIN); }
+#define LCD_CS_HI()   { gpio_set(LCD_CS_GPIO, LCD_CS_PIN); }
+#define LCD_CS_LO()   { gpio_clear(LCD_CS_GPIO, LCD_CS_PIN); }
 
-#define LCD_DATA_SET(data) { ((uint8_t __IO*)&LCD_DATA_GPIO->ODR)[0] = (data); }
-
+#define LCD_DATA_SET(data) {((uint8_t __IO*)&GPIO_ODR(LCD_DATA_GPIO))[0] = (data); }
 
 
 #define LCD_CMD_RESET            0xE2

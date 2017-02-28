@@ -40,10 +40,10 @@ void screen_draw_round_rect(uint8_t x, uint8_t y, uint8_t width, \
                             uint8_t height, uint8_t radius, uint8_t color);
 void screen_draw_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
 void screen_draw_hline(uint8_t x, uint8_t y, uint8_t width, uint8_t color);
-void screen_draw_round_rect(uint8_t x, uint8_t y, uint8_t width, \
-                            uint8_t height, uint8_t radius, uint8_t color);
-void screen_draw_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
-void screen_draw_hline(uint8_t x, uint8_t y, uint8_t width, uint8_t color);
+// void screen_draw_round_rect(uint8_t x, uint8_t y, uint8_t width,
+//                            uint8_t height, uint8_t radius, uint8_t color);
+// void screen_draw_rect(uint8_t x, uint8_t y, uint8_t width, uint8_t height, uint8_t color);
+// void screen_draw_hline(uint8_t x, uint8_t y, uint8_t width, uint8_t color);
 void screen_draw_vline(uint8_t x, uint8_t y, uint8_t height, uint8_t color);
 void screen_set_pixels(uint8_t x, uint8_t y, uint8_t x2, uint8_t y2, uint8_t color);
 void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);

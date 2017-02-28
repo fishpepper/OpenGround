@@ -843,3 +843,5 @@ src/touch.h
 src/wdt.c
 src/wdt.h
 stylecheck/cpplint_test_header.h
+src/clocksource.c
+src/clocksource.h

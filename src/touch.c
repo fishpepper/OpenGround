@@ -23,12 +23,13 @@
 #include "timeout.h"
 #include "lcd.h"
 #include "io.h"
-#include "stm32f0xx_gpio.h"
-#include "stm32f0xx_rcc.h"
-#include "stm32f0xx_misc.h"
-#include "stm32f0xx_i2c.h"
-#include "stm32f0xx_exti.h"
-#include "stm32f0xx_syscfg.h"
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/exti.h>
+#include <libopencm3/stm32/i2c.h>
+#include <libopencm3/stm32/syscfg.h>
+#include <libopencm3/stm32/common/i2c_common_v2.h>
+
 
 #define TOUCH_I2C_DEBUG         0
 #define TOUCH_I2C_TIMEOUT      20
@@ -58,87 +59,61 @@ void touch_init(void) {
 
 static void touch_deinit_i2c(void) {
     // disable i2c:
-    I2C_Cmd(TOUCH_I2C, DISABLE);
-    I2C_DeInit(TOUCH_I2C);
+    i2c_peripheral_disable(TOUCH_I2C);
+    i2c_reset(TOUCH_I2C);
 }
+
 
 static void touch_init_i2c_rcc(void) {
     // I2C CLK source
-    RCC_I2CCLKConfig(RCC_I2C1CLK_HSI);
+    rcc_periph_clock_enable(TOUCH_I2C_CLK);
 
     // gpio clocks
-    RCC_AHBPeriphClockCmd(TOUCH_I2C_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(TOUCH_INT_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(TOUCH_RESET_GPIO_CLK, ENABLE);
-
-    // peripheral clock for i2c
-    RCC_APB1PeriphClockCmd(TOUCH_I2C_CLK, ENABLE);
+    rcc_periph_clock_enable(TOUCH_I2C_GPIO_CLK);
+    rcc_periph_clock_enable(TOUCH_INT_GPIO_CLK);
+    rcc_periph_clock_enable(TOUCH_RESET_GPIO_CLK);
 }
 
 static void touch_init_i2c_gpio(void) {
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
-
     // set up alternate function
-    GPIO_PinAFConfig(TOUCH_I2C_GPIO, GPIO_PinSource8, GPIO_AF_1);
-    GPIO_PinAFConfig(TOUCH_I2C_GPIO, GPIO_PinSource9, GPIO_AF_1);
+    gpio_set_af(TOUCH_I2C_GPIO, GPIO_AF1, TOUCH_I2C_SCL_PIN);
+    gpio_set_af(TOUCH_I2C_GPIO, GPIO_AF1, TOUCH_I2C_SDA_PIN);
 
     // SCL
-    gpio_init.GPIO_Pin   = TOUCH_I2C_SCL_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_AF;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    gpio_init.GPIO_OType = GPIO_OType_OD;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
+    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_AF, GPIO_PUPD_NONE, TOUCH_I2C_SCL_PIN);
+    gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, TOUCH_I2C_SCL_PIN);
 
     // SDA
-    gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN;
-    GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
+    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_AF, GPIO_PUPD_NONE, TOUCH_I2C_SDA_PIN);
+    gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, TOUCH_I2C_SDA_PIN);
 
     // INT pin
-    gpio_init.GPIO_Pin  = TOUCH_INT_PIN;
-    gpio_init.GPIO_Mode = GPIO_Mode_IN;
-    gpio_init.GPIO_PuPd = GPIO_PuPd_UP;
-    gpio_init.GPIO_OType = GPIO_OType_OD;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(TOUCH_INT_GPIO, &gpio_init);
+    gpio_mode_setup(TOUCH_INT_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, TOUCH_INT_PIN);
 
     // RESET pin
-    gpio_init.GPIO_Pin  = TOUCH_RESET_PIN;
-    gpio_init.GPIO_Mode = GPIO_Mode_OUT;
-    gpio_init.GPIO_PuPd = GPIO_PuPd_NOPULL;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    GPIO_Init(TOUCH_RESET_GPIO, &gpio_init);
+    gpio_mode_setup(TOUCH_RESET_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TOUCH_RESET_PIN);
 }
 
 static void touch_init_isr(void) {
-    EXTI_InitTypeDef   exti_init;
-    NVIC_InitTypeDef   nvic_init;
+    // enable a pin change interrupt on the INT line (falling edge)
 
-    // enable a pin change interrupt on the INT line
-    // falling edge
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_SYSCFG, ENABLE);
+    // clock for syscfg
+    rcc_periph_clock_enable(RCC_SYSCFG_COMP);
 
-    // connect EXTI0 Line to TOUCH controller INT pin
-    SYSCFG_EXTILineConfig(TOUCH_INT_EXTI_SOURCE, TOUCH_INT_EXTI_SOURCE_PIN);
+    // connect EXTI12 Line to TOUCH controller INT pin
+    exti_select_source(TOUCH_INT_EXTI_SOURCE_LINE, TOUCH_INT_EXTI_SOURCE);
+    exti_set_trigger(TOUCH_INT_EXTI_SOURCE_LINE, EXTI_TRIGGER_FALLING);
+    exti_enable_request(TOUCH_INT_EXTI_SOURCE_LINE);
 
-    // configure EXTI0 line
-    exti_init.EXTI_Line    = TOUCH_INT_EXTI_SOURCE_LINE;
-    exti_init.EXTI_Mode    = EXTI_Mode_Interrupt;
-    exti_init.EXTI_Trigger = EXTI_Trigger_Falling;
-    exti_init.EXTI_LineCmd = ENABLE;
-    EXTI_Init(&exti_init);
-
-    // enable and set EXTI* Interrupt
-    nvic_init.NVIC_IRQChannel = TOUCH_INT_EXTI_IRQN;
-    nvic_init.NVIC_IRQChannelPriority = NVIC_PRIO_TOUCH;
-    nvic_init.NVIC_IRQChannelCmd = ENABLE;
-    NVIC_Init(&nvic_init);
+    //enable irq
+    nvic_enable_irq(TOUCH_INT_EXTI_IRQN);
+    nvic_set_priority(TOUCH_INT_EXTI_IRQN, NVIC_PRIO_TOUCH);
 }
 
 void EXTI4_15_IRQHandler(void) {
-    if (EXTI_GetITStatus(TOUCH_INT_EXTI_SOURCE_LINE) != RESET) {
+    if (exti_get_flag_status(TOUCH_INT_EXTI_SOURCE_LINE) != 0) {
+        exti_reset_request(TOUCH_INT_EXTI_SOURCE_LINE);
+
         // interrupt(falling edge) on Touch INT line, event detected!
         if (touch_event.event_id == 0) {
             // last event has been processed
@@ -194,7 +169,7 @@ void EXTI4_15_IRQHandler(void) {
         }
 
         // clear the EXTI line pending bit
-        EXTI_ClearITPendingBit(TOUCH_INT_EXTI_SOURCE_LINE);
+        //EXTI_ClearITPendingBit(TOUCH_INT_EXTI_SOURCE_LINE);
     }
 }
 
@@ -206,80 +181,63 @@ touch_event_t touch_get_last_event(void) {
 }
 
 static void touch_init_i2c_free_bus(void) {
-    uint8_t i;
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
-
     debug("touch: freeing i2c bus\n");
     debug_flush();
 
     // gpio init:
     // reset i2c bus by setting clk as output and sending manual clock pulses
-    gpio_init.GPIO_Pin   = TOUCH_I2C_SCL_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
+    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TOUCH_I2C_SCL_PIN);
+    gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, TOUCH_I2C_SCL_PIN);
 
-    gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_IN;
-    gpio_init.GPIO_OType = GPIO_OType_OD;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
+    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, TOUCH_I2C_SDA_PIN);
+    gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, TOUCH_I2C_SDA_PIN);
 
     // send 100khz clock train for some 100ms
     timeout_set(100);
     while (!timeout_timed_out()) {
-        if (GPIO_ReadInputDataBit(TOUCH_I2C_GPIO, TOUCH_I2C_SDA_PIN) == 1) {
+        if (gpio_get(TOUCH_I2C_GPIO, TOUCH_I2C_SDA_PIN) == 1) {
             debug("touch: i2c free again\n");
             break;
         }
-        TOUCH_I2C_GPIO->BSRR = TOUCH_I2C_SCL_PIN;
+        gpio_set(TOUCH_I2C_GPIO, TOUCH_I2C_SCL_PIN);
         delay_us(10);
-        TOUCH_I2C_GPIO->BRR  = TOUCH_I2C_SCL_PIN;
+        gpio_clear(TOUCH_I2C_GPIO, TOUCH_I2C_SCL_PIN);
         delay_us(10);
     }
 
     // send stop condition:
-    gpio_init.GPIO_Pin   = TOUCH_I2C_SDA_PIN;
-    gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_Speed = GPIO_Speed_2MHz;
-    GPIO_Init(TOUCH_I2C_GPIO, &gpio_init);
+    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, TOUCH_I2C_SDA_PIN);
+    gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, TOUCH_I2C_SDA_PIN);
 
     // clock is low
-    TOUCH_I2C_GPIO->BRR = TOUCH_I2C_SCL_PIN;
+    gpio_clear(TOUCH_I2C_GPIO, TOUCH_I2C_SCL_PIN);
     delay_us(10);
     // sda = lo
-    TOUCH_I2C_GPIO->BRR = TOUCH_I2C_SDA_PIN;
+    gpio_clear(TOUCH_I2C_GPIO, TOUCH_I2C_SDA_PIN);
     delay_us(10);
     // clock goes high
-    TOUCH_I2C_GPIO->BSRR = TOUCH_I2C_SCL_PIN;
+    gpio_set(TOUCH_I2C_GPIO, TOUCH_I2C_SCL_PIN);
     delay_us(10);
     // sda = hi
-    TOUCH_I2C_GPIO->BRR = TOUCH_I2C_SDA_PIN;
+    gpio_clear(TOUCH_I2C_GPIO, TOUCH_I2C_SDA_PIN);
     delay_us(10);
 }
 
 static void touch_init_i2c_mode(void) {
-    I2C_InitTypeDef  i2c_init;
-    I2C_StructInit(&i2c_init);
+    // disable during init
+    i2c_peripheral_disable(TOUCH_I2C);
 
-    i2c_init.I2C_Mode          = I2C_Mode_I2C;
-    i2c_init.I2C_AnalogFilter  = I2C_AnalogFilter_Enable;
-    i2c_init.I2C_DigitalFilter = 0x00;
-    i2c_init.I2C_OwnAddress1   = 0x00;
-    i2c_init.I2C_Ack           = I2C_Ack_Enable;
-    i2c_init.I2C_AcknowledgedAddress = I2C_AcknowledgedAddress_7bit;
+    i2c_enable_analog_filter(TOUCH_I2C);
+    i2c_set_digital_filter(TOUCH_I2C, 0x00);
+    i2c_set_own_7bit_slave_address(TOUCH_I2C, 0x00);
+    i2c_set_7bit_addr_mode(TOUCH_I2C);
+
     // 400KHz | 8MHz-0x00310309; 16MHz-0x10320309; 48MHz-50330309
-    i2c_init.I2C_Timing        = 0x50330309;
+    I2C_TIMINGR(TOUCH_I2C) = 0x50330309;
 
-    // apply I2C configuration
-    I2C_Init(TOUCH_I2C, &i2c_init);
+    i2c_peripheral_enable(TOUCH_I2C);
 
-    // enable i2c
-    I2C_Cmd(TOUCH_I2C, ENABLE);
+    //ACK ENABLE? set?? CR2 &= ~(I2C_CR2_NACK)
 }
 
 static void touch_ft6236_reset(void) {
@@ -353,82 +311,101 @@ static void touch_ft6236_debug_info(void) {
     debug_put_newline();
 }
 
-static uint32_t touch_i2c_read(uint8_t address, uint8_t *data, uint8_t len) {
+static uint32_t touch_i2c_read(uint8_t reg, uint8_t *data, uint8_t len) {
+    int wait;
+    int i;
+
     if (TOUCH_I2C_DEBUG) {
         debug("touch: i2c read_buffer(0x");
-        debug_put_hex8(address);
+        debug_put_hex8(reg);
         debug(", ..., ");
         debug_put_uint8(len);
         debug(")\n");
         debug_flush();
     }
 
+
+    // wait for not busy
     timeout_set(TOUCH_I2C_TIMEOUT);
-    while (I2C_GetFlagStatus(TOUCH_I2C, I2C_ISR_BUSY) != RESET) {
+    while (i2c_busy(TOUCH_I2C)) {
         if (timeout_timed_out()) {
             debug("touch: bus busy... timeout!\n");
             return 0;
         }
     }
 
-    // configure slave address, nbytes, reload, end mode and start or stop generation
-    I2C_TransferHandling(TOUCH_I2C, TOUCH_FT6236_I2C_ADDRESS, 1, I2C_SoftEnd_Mode, \
-                         I2C_Generate_Start_Write);
-
-    // wait for completion
-    timeout_set(TOUCH_I2C_FLAG_TIMEOUT);
-    while (I2C_GetFlagStatus(TOUCH_I2C, I2C_ISR_TXIS) == RESET) {
+    // wait for not start busy
+    timeout_set(TOUCH_I2C_TIMEOUT);
+    while (i2c_is_start(TOUCH_I2C) == 1) {
         if (timeout_timed_out()) {
-            debug("touch: start error... timeout!\n");
-            debug_flush();
-            delay_ms(5000);
+            debug("touch: is start timeout!\n");
             return 0;
         }
     }
 
-    // send the address to read from
-    I2C_SendData(TOUCH_I2C, address);
+    // setting transfer properties
+    i2c_set_bytes_to_transfer(TOUCH_I2C, 1);
+    i2c_set_7bit_address(TOUCH_I2C, TOUCH_FT6236_I2C_ADDRESS);
+    i2c_set_write_transfer_dir(TOUCH_I2C);
+    i2c_disable_autoend(TOUCH_I2C);
 
-    // wait for completion
-    timeout_set(TOUCH_I2C_FLAG_TIMEOUT);
-    while (I2C_GetFlagStatus(TOUCH_I2C, I2C_ISR_TC) == RESET) {
+    // start transfer
+    i2c_send_start(TOUCH_I2C);
+
+    wait = true;
+
+    // wait for tx finish
+    timeout_set(TOUCH_I2C_TIMEOUT);
+    while (wait) {
+        if (i2c_transmit_int_status(TOUCH_I2C)) {
+                wait = false;
+        }
         if (timeout_timed_out()) {
-            debug("touch: send address... timeout!\n");
+            debug("touch: start timeout!\n");
             return 0;
         }
     }
 
-    // send START condition a second time
-    I2C_TransferHandling(TOUCH_I2C, TOUCH_FT6236_I2C_ADDRESS, len, I2C_AutoEnd_Mode, \
-                         I2C_Generate_Start_Read);
+    // nack?
+    timeout_set(TOUCH_I2C_TIMEOUT);
+    while (i2c_nack(TOUCH_I2C)) {
+        if (timeout_timed_out()) {
+            debug("touch: nack timeout!\n");
+            return 0;
+        }
+    }
 
-    // wait for completion
-    uint16_t i;
+    i2c_send_data(TOUCH_I2C, reg);
+
+    timeout_set(TOUCH_I2C_TIMEOUT);
+    while (i2c_is_start(TOUCH_I2C) == 1) {
+        if (timeout_timed_out()) {
+            debug("touch: is start timeout!\n");
+            return 0;
+        }
+    }
+
+    // Setting transfer properties
+    i2c_set_bytes_to_transfer(TOUCH_I2C, len);
+    i2c_set_7bit_address(TOUCH_I2C, TOUCH_FT6236_I2C_ADDRESS);
+    i2c_set_read_transfer_dir(TOUCH_I2C);
+    i2c_enable_autoend(TOUCH_I2C);
+
+    // start transfer
+    i2c_send_start(TOUCH_I2C);
+
     for (i = 0; i < len; i++) {
-        timeout_set(TOUCH_I2C_FLAG_TIMEOUT);
-        while (I2C_GetFlagStatus(TOUCH_I2C, I2C_ISR_RXNE) == RESET) {
-            if (timeout_timed_out()) {
-                debug("touch: rx error... timeout!\n");
-                return 0;
-            }
-        }
+          // rx timeout
+          timeout_set(TOUCH_I2C_TIMEOUT);
+          while (i2c_received_data(TOUCH_I2C) == 0) {
+              if (timeout_timed_out()) {
+                  debug("touch: rx timeout!\n");
+                  return 0;
+              }
+          }
 
-        // store data
-        data[i] = I2C_ReceiveData(TOUCH_I2C);
-        // if (TOUCH_I2C_DEBUG) debug("\nrx 0x"); debug_put_hex8 (data[i]); debug_flush();
-     }
-
-    // wait for stopf set
-    timeout_set(TOUCH_I2C_FLAG_TIMEOUT);
-    while (I2C_GetFlagStatus(TOUCH_I2C, I2C_ISR_STOPF) == RESET) {
-        if (timeout_timed_out()) {
-            debug("touch: stop error... timeout!\n");
-            return 0;
-        }
+          data[i] = i2c_get_data(TOUCH_I2C);
     }
-
-    // clear STOPF flag
-    I2C_ClearFlag(TOUCH_I2C, I2C_ICR_STOPCF);
 
     return 1;
 }

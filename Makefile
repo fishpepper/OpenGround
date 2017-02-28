@@ -1,7 +1,8 @@
 ROOT         := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 SOURCE_DIR   = $(ROOT)/src
 INCLUDE_DIR  = $(SOURCE_DIR)
-SOURCE_FILES  = config.c delay.c timeout.c clocksource.c led.c sound.c
+SOURCE_FILES  = led.c delay.c clocksource.c config.c io.c debug.c lcd.c timeout.c
+#config.c delay.c timeout.c clocksource.c led.c sound.c debug.c adc.c storage.c gui.c touch.c console.c 
 #$(wildcard $(SRC_DIR)/*.c)
 OBJECT_DIR   := $(ROOT)/obj
 BIN_DIR      = $(ROOT)/bin
@@ -255,6 +256,14 @@ else
 		   -x $(SCRIPT_DIR)/stlink_flash.scr \
 		   $(*).elf
 endif
+sterase : 
+	st-flash erase
+
+stflasherase : sterase stflash
+
+stflash : $(BIN_DIR)/$(BINARY).bin
+	st-flash --reset write $(BIN_DIR)/$(BINARY).bin 0x8000000 
+
 
 .PHONY: images clean stylecheck styleclean elf bin hex srec list
 

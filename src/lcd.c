@@ -21,14 +21,16 @@
 // http://fishpepper.de/2016/09/15/openground-part-1-components-pinout/
 // http://pdf.masters.com.pl/SITRONIX/ST7567.PDF
 // http://edeca.net/wp/electronics/the-st7565-display-controller/
-// https://github.com/opentx/opentx/blob/\
+// https://github.com/opentx/opentx/blob/
 //         dbd8abbfe8343b5d7f542304d47e232140307b95/radio/src/targets/stock/lcd_driver.cpp
 
 #include "lcd.h"
 #include "wdt.h"
 #include "delay.h"
-#include "stm32f0xx_rcc.h"
 #include "logo.h"
+#include <libopencm3/stm32/timer.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/rcc.h>
 
 void lcd_init(void) {
     lcd_init_rcc();
@@ -38,49 +40,36 @@ void lcd_init(void) {
 
 static void lcd_init_rcc(void) {
     // enable all peripheral clocks:
-    RCC_AHBPeriphClockCmd(LCD_DATA_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(LCD_RW_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(LCD_RST_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(LCD_RS_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(LCD_RD_GPIO_CLK, ENABLE);
-    RCC_AHBPeriphClockCmd(LCD_CS_GPIO_CLK, ENABLE);
+    rcc_periph_clock_enable(LCD_DATA_GPIO_CLK);
+    rcc_periph_clock_enable(LCD_RW_GPIO_CLK);
+    rcc_periph_clock_enable(LCD_RST_GPIO_CLK);
+    rcc_periph_clock_enable(LCD_RS_GPIO_CLK);
+    rcc_periph_clock_enable(LCD_RD_GPIO_CLK);
+    rcc_periph_clock_enable(LCD_CS_GPIO_CLK);
 }
 
 static void lcd_init_gpio(void) {
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
-
     // set all gpio directions to output
-    gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
-    gpio_init.GPIO_OType = GPIO_OType_PP;
-    gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
-    gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-
-    // set individual pins
-    // data
-    gpio_init.GPIO_Pin   = 0xFF;  // D0..D7
-    // gpio_init.GPIO_Mode  = GPIO_Mode_IN;
-    // gpio_init.GPIO_PuPd  = GPIO_PuPd_UP;
-    GPIO_Init(LCD_DATA_GPIO, &gpio_init);
-
-    // gpio_init.GPIO_PuPd  = GPIO_PuPd_NOPULL;
-    // gpio_init.GPIO_Mode  = GPIO_Mode_OUT;
+    // set powerdown trigger pin as output
+    // data lines D0..D7
+    gpio_mode_setup(LCD_DATA_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, 0xFF);
+    gpio_set_output_options(LCD_DATA_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, 0xFF);
 
     // rw
-    gpio_init.GPIO_Pin   = LCD_RW_PIN;
-    GPIO_Init(LCD_RW_GPIO, &gpio_init);
+    gpio_mode_setup(LCD_RW_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LCD_RW_PIN);
+    gpio_set_output_options(LCD_RW_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, LCD_RW_PIN);
     // rst
-    gpio_init.GPIO_Pin   = LCD_RST_PIN;
-    GPIO_Init(LCD_RST_GPIO, &gpio_init);
+    gpio_mode_setup(LCD_RST_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LCD_RST_PIN);
+    gpio_set_output_options(LCD_RST_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, LCD_RST_PIN);
     // rs
-    gpio_init.GPIO_Pin   = LCD_RS_PIN;
-    GPIO_Init(LCD_RS_GPIO, &gpio_init);
+    gpio_mode_setup(LCD_RS_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LCD_RS_PIN);
+    gpio_set_output_options(LCD_RS_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, LCD_RS_PIN);
     // rd
-    gpio_init.GPIO_Pin   = LCD_RD_PIN;
-    GPIO_Init(LCD_RD_GPIO, &gpio_init);
+    gpio_mode_setup(LCD_RD_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LCD_RD_PIN);
+    gpio_set_output_options(LCD_RD_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, LCD_RD_PIN);
     // cs
-    gpio_init.GPIO_Pin   = LCD_CS_PIN;
-    GPIO_Init(LCD_CS_GPIO, &gpio_init);
+    gpio_mode_setup(LCD_CS_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LCD_CS_PIN);
+    gpio_set_output_options(LCD_CS_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, LCD_CS_PIN);
 
     // set default pin levels:
     LCD_RST_LO();
@@ -100,6 +89,7 @@ static void lcd_write_command(uint8_t data) {
 
     // write data to port d0...d7
     LCD_DATA_SET(data);
+
     // execute write
     LCD_RD_HI();
     LCD_RD_LO();

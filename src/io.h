@@ -21,7 +21,6 @@
 #define IO_H_
 
 #include <stdint.h>
-#include "stm32f0xx_gpio.h"
 
 void io_init(void);
 void io_init_gpio(void);

@@ -25,10 +25,10 @@
 #include "wdt.h"
 #include "delay.h"
 #include "storage.h"
-#include "stm32f0xx_rcc.h"
-#include "stm32f0xx_gpio.h"
-#include "stm32f0xx_adc.h"
-#include "stm32f0xx_dma.h"
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/adc.h>
+#include <libopencm3/stm32/dma.h>
 
 static uint16_t adc_data[ADC_CHANNEL_COUNT];
 static uint16_t adc_battery_voltage_raw_filtered;
@@ -85,7 +85,7 @@ uint16_t adc_get_channel(uint32_t id) {
     }
 }
 
-uint8_t *adc_get_channel_name(uint8_t i, bool short_descr) {
+char *adc_get_channel_name(uint8_t i, bool short_descr) {
     switch (i) {
         default                     : return ((short_descr) ? "?" : "???");
         case (CHANNEL_ID_AILERON)   : return ((short_descr) ? "A" : "AIL");
@@ -164,40 +164,38 @@ uint16_t adc_get_channel_packetdata(uint8_t idx) {
 static void adc_init_rcc(void) {
     debug("adc: init rcc\n"); debug_flush();
 
-    // ADC CLOCK = 24 / 4 = 6MHz
-    RCC_ADCCLKConfig(RCC_ADCCLK_PCLK_Div2);
+    // enable adc clock
+    rcc_periph_clock_enable(RCC_ADC);
 
-    // enable ADC clock
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_ADC1, ENABLE);
+    // enable adc gpio clock
+    rcc_periph_clock_enable(RCC_GPIOA);
+    rcc_periph_clock_enable(RCC_GPIOB);
+    rcc_periph_clock_enable(RCC_GPIOC);
+
+    // start with adc off
+    adc_power_off(ADC1);
+
+    // ADC CLOCK = 48 / 4 = 12MHz
+    adc_set_clk_source(ADC1, ADC_CLKSOURCE_PCLK_DIV4);
+
+    // run calibration
+    adc_calibrate(ADC1);
 
     // enable dma clock
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_DMA1, ENABLE);
-
-    // periph clock enable for port
-    RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
+    rcc_periph_clock_enable(RCC_DMA);
 }
 
 static void adc_init_gpio(void) {
     debug("adc: init gpio\n"); debug_flush();
 
-    GPIO_InitTypeDef gpio_init;
-    GPIO_StructInit(&gpio_init);
-
     // set up analog inputs ADC0...ADC7(PA0...PA7)
-    gpio_init.GPIO_Pin  = 0b11111111;
-    gpio_init.GPIO_Mode = GPIO_Mode_AN;
-    GPIO_Init(GPIOA, &gpio_init);
+    gpio_mode_setup(GPIOA, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, 0b11111111);
 
     // set up analog inputs ADC8, ADC9(PB0, PB1)
-    gpio_init.GPIO_Pin  = 0b11;
-    gpio_init.GPIO_Mode = GPIO_Mode_AN;
-    GPIO_Init(GPIOB, &gpio_init);
-
+    gpio_mode_setup(GPIOB, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, 0b00000011);
 
     // battery voltage is on PC0(ADC10)
-    gpio_init.GPIO_Pin  = 0b1;
-    gpio_init.GPIO_Mode = GPIO_Mode_AN;
-    GPIO_Init(GPIOC, &gpio_init);
+    gpio_mode_setup(GPIOC, GPIO_MODE_ANALOG, GPIO_PUPD_NONE, 0b00000001);
 }
 
 uint32_t adc_get_battery_voltage(void) {
@@ -218,87 +216,80 @@ uint32_t adc_get_battery_voltage(void) {
 static void adc_init_mode(void) {
     debug("adc: init mode\n"); debug_flush();
 
-    ADC_InitTypeDef adc_init;
-    ADC_StructInit(&adc_init);
 
-    // ADC configuration
-    adc_init.ADC_ContinuousConvMode   = ENABLE;  // ! select continuous conversion mode
-    adc_init.ADC_ExternalTrigConv     = 0;
-    adc_init.ADC_ExternalTrigConvEdge = ADC_ExternalTrigConvEdge_None;  // select no ext triggering
-    adc_init.ADC_DataAlign            = ADC_DataAlign_Right;  // r 12-bit data alignment in ADC reg
-    adc_init.ADC_Resolution           = ADC_Resolution_12b;
-    adc_init.ADC_ScanDirection        = ADC_ScanDirection_Upward;
+    // set mode to scan
+    adc_set_operation_mode(ADC1, ADC_MODE_SCAN);
+    // no ext trigger
+    adc_disable_external_trigger_regular(ADC1);
+    // right 12-bit data alignment in ADC reg
+    adc_set_right_aligned(ADC1);
+    adc_set_resolution(ADC1, ADC_RESOLUTION_12BIT);
 
-    // load structure values to control and status registers
-    ADC_Init(ADC1, &adc_init);
+    // adc_enable_temperature_sensor();
+    adc_disable_analog_watchdog(ADC1);
 
-    // configure each channel
-    ADC_ChannelConfig(ADC1, ADC_Channel_0, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_1, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_2, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_3, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_4, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_5, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_6, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_7, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_8, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_9, ADC_SampleTime_41_5Cycles);
-    ADC_ChannelConfig(ADC1, ADC_Channel_10, ADC_SampleTime_41_5Cycles);
+    // sample times for all channels
+    adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_041DOT5);
 
-    // enable ADC
-    ADC_Cmd(ADC1, ENABLE);
+    // configure channels 0...10
+    uint8_t channels[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
+    adc_set_regular_sequence(ADC1, 1, channels);
+
+    adc_power_on(ADC1);
+
+    // wait for ADC starting up
+    int i;
+    for (i = 0; i < 800000; i++) {
+        asm("nop");
+    }
 
     // enable DMA for ADC
-    ADC_DMACmd(ADC1, ENABLE);
+    adc_enable_dma(ADC1);
 }
+
 
 static void adc_init_dma(void) {
     debug("adc: init dma\n"); debug_flush();
 
-    DMA_InitTypeDef  dma_init;
-    DMA_StructInit(&dma_init);
+    // setting circular mode
+    dma_enable_circular_mode(DMA1, ADC_DMA_CHANNEL);
 
-    // reset DMA1 channe1 to default values
-    DMA_DeInit(ADC_DMA_CHANNEL);
+    // high priority
+    dma_set_priority(DMA1, ADC_DMA_CHANNEL, DMA_CCR_PL_HIGH);
 
-    // set up dma to convert 2 adc channels to two mem locations:
-    // channel will be used for memory to memory transfer
-    dma_init.DMA_M2M                 = DMA_M2M_Disable;
-    // setting normal mode(non circular)
-    dma_init.DMA_Mode                = DMA_Mode_Circular;
-    // medium priority
-    dma_init.DMA_Priority            = DMA_Priority_High;
     // source and destination 16bit
-    dma_init.DMA_PeripheralDataSize  = DMA_PeripheralDataSize_HalfWord;
-    dma_init.DMA_MemoryDataSize      = DMA_MemoryDataSize_HalfWord;
-    // automatic memory destination increment enable.
-    dma_init.DMA_MemoryInc           = DMA_MemoryInc_Enable;
-    // source address increment disable
-    dma_init.DMA_PeripheralInc       = DMA_PeripheralInc_Disable;
-    // Location assigned to peripheral register will be source
-    dma_init.DMA_DIR                 = DMA_DIR_PeripheralSRC;
-    // chunk of data to be transfered
-    dma_init.DMA_BufferSize          = ADC_CHANNEL_COUNT;
-    // source and destination start addresses
-    dma_init.DMA_PeripheralBaseAddr  = (uint32_t)&ADC1->DR;
-    dma_init.DMA_MemoryBaseAddr      = (uint32_t)adc_data;
-    // send values to DMA registers
-    DMA_Init(ADC_DMA_CHANNEL, &dma_init);
+    dma_set_memory_size(DMA1, ADC_DMA_CHANNEL, DMA_CCR_MSIZE_16BIT);
+    dma_set_peripheral_size(DMA1, ADC_DMA_CHANNEL, DMA_CCR_PSIZE_16BIT);
 
-    // enable the DMA1 - Channel1
-    DMA_Cmd(ADC_DMA_CHANNEL, ENABLE);
+    // automatic memory destination increment enable.
+    dma_enable_memory_increment_mode(DMA1, ADC_DMA_CHANNEL);
+
+    // source address increment disable
+    dma_disable_peripheral_increment_mode(DMA1, ADC_DMA_CHANNEL);
+
+    // Location assigned to peripheral register will be source
+    dma_set_read_from_peripheral(DMA1, ADC_DMA_CHANNEL);
+
+    // source and destination start addresses
+    dma_set_peripheral_address(DMA1, ADC_DMA_CHANNEL, (uint32_t)&ADC1_DR);
+    dma_set_memory_address(DMA1, ADC_DMA_CHANNEL, (uint32_t)adc_data);
+
+    // chunk of data to be transfered
+    dma_set_number_of_data(DMA1, ADC_DMA_CHANNEL, ADC_CHANNEL_COUNT);
+
 
     // start conversion:
     adc_dma_arm();
 }
 
 static void adc_dma_arm(void) {
-    ADC_StartOfConversion(ADC1);
+    // start conversion
+    dma_enable_channel(DMA1, ADC_DMA_CHANNEL);
 }
 
 void adc_process(void) {
     // adc dma finished?
-    if (DMA_GetITStatus(ADC_DMA_TC_FLAG)) {
+    if (DMA_ISR(DMA1) & 0x0000001) {
         if (adc_battery_voltage_raw_filtered == 0) {
             // initialise with current value
             adc_battery_voltage_raw_filtered = adc_data[10];
