@@ -84,7 +84,7 @@ void sound_play_low_time(void) {
 
 static void sound_init_rcc(void) {
     // enable peripheral clock
-    rcc_periph_clock_enable(SPEAKER_GPIO_CLK);
+    rcc_periph_clock_enable(GPIO_RCC(SPEAKER_GPIO));
 
     // timer1 clock
     rcc_periph_clock_enable(RCC_TIM1);
@@ -92,14 +92,9 @@ static void sound_init_rcc(void) {
 
 static void sound_init_gpio(void) {
     // set all gpio directions to output
-    gpio_mode_setup(
-        SPEAKER_GPIO,
-        GPIO_MODE_OUTPUT,
-        GPIO_PUPD_NONE,
-        SPEAKER_PIN);
-
-    // connect TIM1 pins to AF
+    gpio_mode_setup(SPEAKER_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, SPEAKER_PIN);
     gpio_mode_setup(SPEAKER_GPIO, GPIO_MODE_AF, GPIO_PUPD_NONE, SPEAKER_PIN);
+    // connect TIM1 pins to AF2 on gpio
     gpio_set_af(SPEAKER_GPIO, GPIO_AF2, SPEAKER_PIN);
 }
 

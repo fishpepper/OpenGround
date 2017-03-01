@@ -40,12 +40,12 @@ void lcd_init(void) {
 
 static void lcd_init_rcc(void) {
     // enable all peripheral clocks:
-    rcc_periph_clock_enable(LCD_DATA_GPIO_CLK);
-    rcc_periph_clock_enable(LCD_RW_GPIO_CLK);
-    rcc_periph_clock_enable(LCD_RST_GPIO_CLK);
-    rcc_periph_clock_enable(LCD_RS_GPIO_CLK);
-    rcc_periph_clock_enable(LCD_RD_GPIO_CLK);
-    rcc_periph_clock_enable(LCD_CS_GPIO_CLK);
+    rcc_periph_clock_enable(GPIO_RCC(LCD_DATA_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(LCD_RW_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(LCD_RST_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(LCD_RS_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(LCD_RD_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(LCD_CS_GPIO));
 }
 
 static void lcd_init_gpio(void) {

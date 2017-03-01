@@ -36,25 +36,19 @@ void io_init(void) {
 
 void io_init_gpio(void) {
     // enable clocks
-    rcc_periph_clock_enable(POWERDOWN_GPIO_CLK);
-    rcc_periph_clock_enable(BUTTON_POWER_BOTH_GPIO_CLK);
+    rcc_periph_clock_enable(GPIO_RCC(POWERDOWN_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(BUTTON_POWER_BOTH_GPIO));
 
     // set high:
     gpio_set(POWERDOWN_GPIO, POWERDOWN_PIN);
 
     // set powerdown trigger pin as output
-    gpio_mode_setup(
-        POWERDOWN_GPIO,
-        GPIO_MODE_OUTPUT,
-        GPIO_PUPD_NONE,
-        POWERDOWN_PIN);
+    gpio_mode_setup(POWERDOWN_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, POWERDOWN_PIN);
+    gpio_set_output_options(POWERDOWN_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, POWERDOWN_PIN);
 
     // set buttons as input:
-    gpio_mode_setup(
-        BUTTON_POWER_BOTH_GPIO,
-        GPIO_MODE_INPUT,
-        GPIO_PUPD_PULLUP,
-        BUTTON_POWER_BOTH_PIN);
+    gpio_mode_setup(BUTTON_POWER_BOTH_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, BUTTON_POWER_BOTH_PIN);
+    gpio_set_output_options(BUTTON_POWER_BOTH_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, BUTTON_POWER_BOTH_PIN);
 }
 
 

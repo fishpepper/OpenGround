@@ -35,54 +35,48 @@ void config_detect_hw_revision(void);
 // see http://fishpepper.de/2016/09/15/openground-part-1-components-pinout/
 // for pin mappings on flysky fs-i6s
 
+
+// revision selection button
+#define HW_REVISION_GPIO        GPIOE
+#define HW_REVISION_PIN         GPIO10
+
 // LEDS
 #define LED_BACKLIGHT_GPIO                  GPIOF
-#define LED_BACKLIGHT_GPIO_CLK              RCC_GPIOF
 #define LED_BACKLIGHT_PIN                   GPIO3
 
 // L BUTTON BLUE = PD10
 // R BUTTON BLUE = PD11
 #define LED_BUTTON_L_GPIO      GPIOD
-#define LED_BUTTON_L_GPIO_CLK  RCC_GPIOD
 #define LED_BUTTON_L_PIN       GPIO10
 #define LED_BUTTON_R_GPIO      GPIOD
-#define LED_BUTTON_R_GPIO_CLK  RCC_GPIOD
 #define LED_BUTTON_R_PIN       GPIO11
 
 // POWERDOWN TRIGGER
 #define POWERDOWN_GPIO      GPIOB
-#define POWERDOWN_GPIO_CLK  RCC_GPIOB
 #define POWERDOWN_PIN       GPIO15
 
 
 // LCD
 // data lines
 #define LCD_DATA_GPIO        GPIOE
-#define LCD_DATA_GPIO_CLK    RCC_GPIOE
 // RW
 #define LCD_RW_GPIO          GPIOB
-#define LCD_RW_GPIO_CLK      RCC_GPIOB
 #define LCD_RW_PIN           GPIO5
 // RST
 #define LCD_RST_GPIO         GPIOB
-#define LCD_RST_GPIO_CLK     RCC_GPIOB
 #define LCD_RST_PIN          GPIO4
 // RS
 #define LCD_RS_GPIO          GPIOB
-#define LCD_RS_GPIO_CLK      RCC_GPIOB
 #define LCD_RS_PIN           GPIO3
 // RD
 #define LCD_RD_GPIO          GPIOD
-#define LCD_RD_GPIO_CLK      RCC_GPIOD
 #define LCD_RD_PIN           GPIO7
 // CS
 #define LCD_CS_GPIO          GPIOD
-#define LCD_CS_GPIO_CLK      RCC_GPIOD
 #define LCD_CS_PIN           GPIO2
 
 // speaker
 #define SPEAKER_GPIO         GPIOA
-#define SPEAKER_GPIO_CLK     RCC_GPIOA
 #define SPEAKER_PIN          GPIO8
 
 // irq priorities
@@ -94,17 +88,14 @@ void config_detect_hw_revision(void);
 #define TOUCH_FT6236_I2C_ADDRESS      0x70
 #define TOUCH_I2C                     I2C1
 #define TOUCH_I2C_CLK                 RCC_I2C1
-#define TOUCH_I2C_GPIO_CLK            RCC_GPIOB
 #define TOUCH_I2C_GPIO                GPIOB
 #define TOUCH_I2C_SDA_PIN             GPIO9
 #define TOUCH_I2C_SCL_PIN             GPIO8
 
 #define TOUCH_RESET_GPIO              GPIOA
-#define TOUCH_RESET_GPIO_CLK          RCC_GPIOA
 #define TOUCH_RESET_PIN               GPIO15
 
 #define TOUCH_INT_GPIO                GPIOC
-#define TOUCH_INT_GPIO_CLK            RCC_GPIOC
 #define TOUCH_INT_PIN                 GPIO12
 
 #define TOUCH_INT_EXTI_SOURCE         GPIOC
@@ -135,7 +126,6 @@ void config_detect_hw_revision(void);
 #define CC2500_SPI_CSN_PIN          GPIO12
 #define CC2500_SPI                  SPI1
 #define CC2500_SPI_CLK              RCC_APB2Periph_SPI1
-#define CC2500_SPI_GPIO_CLK         RCC_GPIOE
 #define CC2500_SPI_DMA_CLOCK        RCC_DMA1
 #define CC2500_SPI_TX_DMA_CHANNEL   DMA1_Channel3
 #define CC2500_SPI_TX_DMA_TC_FLAG   DMA1_FLAG_TC3
@@ -145,26 +135,21 @@ void config_detect_hw_revision(void);
 // LABELED RF1
 #define CC2500_GDO1_PIN            GPIO11
 #define CC2500_GDO1_GPIO           GPIOE
-#define CC2500_GDO1_GPIO_CLK       RCC_GPIOE
 
 // LABELED RX-W
 #define CC2500_LNA_GPIO     GPIOE
-#define CC2500_LNA_GPIO_CLK RCC_GPIOE
 #define CC2500_LNA_PIN      GPIO9
 
 // LABELED TX_W
 #define CC2500_PA_GPIO     GPIOE
-#define CC2500_PA_GPIO_CLK RCC_GPIOE
 #define CC2500_PA_PIN      GPIO8
 
 // LABELED GIO2
 #define CC2500_GDO2_GPIO           GPIOB
 #define CC2500_GDO2_PIN            GPIO2
-#define CC2500_GDO2_GPIO_CLK       RCC_GPIOB
 
 // BUTTONS
 #define BUTTON_POWER_BOTH_GPIO        GPIOB
-#define BUTTON_POWER_BOTH_GPIO_CLK    RCC_GPIOB
 #define BUTTON_POWER_BOTH_PIN         GPIO14
 
 // BUTTON_BACK_RIGHT = PA10

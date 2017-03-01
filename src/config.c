@@ -31,17 +31,14 @@ void config_init(void) {
 // tgy evolution has a pulldown on RF0 (=PE.10)
 void config_detect_hw_revision(void) {
     // enable peripheral clock
-    rcc_periph_clock_enable(RCC_GPIOE);
+    rcc_periph_clock_enable(GPIO_RCC(HW_REVISION_GPIO));
 
     // init PE.10 as intput with PULLUP
-    gpio_mode_setup(
-        GPIOE,
-        GPIO_MODE_INPUT,
-        GPIO_PUPD_PULLUP,
-        GPIO10);
+    gpio_mode_setup(HW_REVISION_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, HW_REVISION_PIN);
+    gpio_set_output_options(HW_REVISION_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, HW_REVISION_PIN);
 
     // now we can check for the pullwon resistor:
-    if (gpio_get(GPIOE, GPIO10) == 0) {
+    if (gpio_get(HW_REVISION_GPIO, HW_REVISION_PIN) == 0) {
         // pulled down -> tgy evolution
         config_hw_revision = CONFIG_HW_REVISION_EVOLUTION;
     } else {
@@ -49,4 +46,5 @@ void config_detect_hw_revision(void) {
         config_hw_revision = CONFIG_HW_REVISION_I6S;
     }
 }
+
 

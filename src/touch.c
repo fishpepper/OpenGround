@@ -69,9 +69,9 @@ static void touch_init_i2c_rcc(void) {
     rcc_periph_clock_enable(TOUCH_I2C_CLK);
 
     // gpio clocks
-    rcc_periph_clock_enable(TOUCH_I2C_GPIO_CLK);
-    rcc_periph_clock_enable(TOUCH_INT_GPIO_CLK);
-    rcc_periph_clock_enable(TOUCH_RESET_GPIO_CLK);
+    rcc_periph_clock_enable(GPIO_RCC(TOUCH_I2C_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(TOUCH_INT_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(TOUCH_RESET_GPIO));
 }
 
 static void touch_init_i2c_gpio(void) {

@@ -17,36 +17,27 @@
     author: fishpepper <AT> gmail.com
 */
 
-
 #include "led.h"
+#include "macros.h"
 #include <libopencm3/stm32/rcc.h>
 
 void led_init(void) {
     // peripheral clocks enable
-    rcc_periph_clock_enable(LED_BACKLIGHT_GPIO_CLK);
-    rcc_periph_clock_enable(LED_BUTTON_R_GPIO_CLK);
-    rcc_periph_clock_enable(LED_BUTTON_L_GPIO_CLK);
+    rcc_periph_clock_enable(GPIO_RCC(LED_BACKLIGHT_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(LED_BUTTON_R_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(LED_BUTTON_L_GPIO));
 
     // set led pin as output
-    gpio_mode_setup(
-        LED_BACKLIGHT_GPIO,
-        GPIO_MODE_OUTPUT,
-        GPIO_PUPD_NONE, 
-        LED_BACKLIGHT_PIN);
+    gpio_mode_setup(LED_BACKLIGHT_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_BACKLIGHT_PIN);
+    gpio_set_output_options(LED_BACKLIGHT_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, LED_BACKLIGHT_PIN);
 
     // left button led
-    gpio_mode_setup(
-        LED_BUTTON_L_GPIO,
-        GPIO_MODE_OUTPUT,
-        GPIO_PUPD_NONE,
-        LED_BUTTON_L_PIN);
+    gpio_mode_setup(LED_BUTTON_L_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_BUTTON_L_PIN);
+    gpio_set_output_options(LED_BUTTON_L_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, LED_BUTTON_L_PIN);
 
     // right button led
-    gpio_mode_setup(
-        LED_BUTTON_R_GPIO,
-        GPIO_MODE_OUTPUT,
-        GPIO_PUPD_NONE,
-        LED_BUTTON_R_PIN);
+    gpio_mode_setup(LED_BUTTON_R_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, LED_BUTTON_R_PIN);
+    gpio_set_output_options(LED_BUTTON_R_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, LED_BUTTON_R_PIN);
 
     led_button_l_on();
     led_button_r_on();

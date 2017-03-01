@@ -33,23 +33,17 @@ void cc2500_init(void) {
     spi_init();
 }
 static void cc2500_init_gpio(void) {
-
-
     // set high:
     gpio_set(POWERDOWN_GPIO, POWERDOWN_PIN);
 
     // set powerdown trigger pin as output
-    gpio_mode_setup(
-        POWERDOWN_GPIO,
-        GPIO_MODE_OUTPUT,
-        GPIO_PUPD_NONE,
-        POWERDOWN_PIN);
-
+    gpio_mode_setup(POWERDOWN_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, POWERDOWN_PIN);
+    gpio_set_output_options(POWERDOWN_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, POWERDOWN_PIN);
 
     // PA/ LNA:
     // periph clock enable for port
-    rcc_periph_clock_enable(CC2500_LNA_GPIO_CLK);
-    rcc_periph_clock_enable(CC2500_PA_GPIO_CLK);
+    rcc_periph_clock_enable(GPIO_RCC(CC2500_LNA_GPIO));
+    rcc_periph_clock_enable(GPIO_RCC(CC2500_PA_GPIO));
 
     // CTX:
     // set all gpio directions to output
@@ -63,14 +57,14 @@ static void cc2500_init_gpio(void) {
     cc2500_enter_rxmode();
 
     // enable clock for GDO1
-    rcc_periph_clock_enable(CC2500_GDO1_GPIO_CLK);
+    rcc_periph_clock_enable(GPIO_RCC(CC2500_GDO1_GPIO));
 
     // setup gdo1
     gpio_mode_setup(CC2500_GDO1_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, CC2500_GDO1_PIN);
     gpio_set_output_options(CC2500_GDO1_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_50MHZ, CC2500_GDO1_PIN);
 
     // periph clock enable for port
-    rcc_periph_clock_enable(CC2500_GDO2_GPIO_CLK);
+    rcc_periph_clock_enable(GPIO_RCC(CC2500_GDO2_GPIO));
 
     // configure GDO2 pins as Input
     gpio_mode_setup(CC2500_GDO2_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, CC2500_GDO2_PIN);

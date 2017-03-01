@@ -22,10 +22,11 @@
 #include "debug.h"
 #include "led.h"
 #include "config.h"
-#include "stm32f0xx_gpio.h"
-#include "stm32f0xx_spi.h"
-#include "stm32f0xx_rcc.h"
-#include "stm32f0xx_dma.h"
+
+#include <libopencm3/stm32/rcc.h>
+#include <libopencm3/stm32/gpio.h>
+#include <libopencm3/stm32/spi.h>
+#include <libopencm3/stm32/dma.h>
 
 
 void spi_init(void) {
@@ -39,8 +40,11 @@ void spi_init(void) {
 
 static void spi_init_rcc(void) {
     // enable clocks
-    RCC_AHBPeriphClockCmd(CC2500_SPI_GPIO_CLK, ENABLE);
-    RCC_APB2PeriphClockCmd(CC2500_SPI_CLK, ENABLE);
+    rcc_periph_clock_enable(GPIO_RCC(CC2500_SPI_GPIO));
+
+    rcc_periph_clock_enable(CC2500_SPI_CLK);
+    rcc_periph_clock_enable(RCC_DMA);
+    rcc_periph_clock_enable(CC2500_SPI);
 }
 
 static void spi_enable(void) {
@@ -64,6 +68,48 @@ static void spi_init_mode(void) {
 
     // set fifo to quarter full(=1 byte)
     SPI_RxFIFOThresholdConfig(CC2500_SPI, SPI_RxFIFOThreshold_QF);
+}
+
+
+
+
+
+/* DMA NVIC */
+nvic_set_priority(NVIC_DMA1_CHANNEL4_5_IRQ, 3);
+nvic_enable_irq(NVIC_DMA1_CHANNEL4_5_IRQ);
+
+/* SPI NVIC */
+nvic_set_priority(NVIC_SPI2_IRQ, 3);
+nvic_enable_irq(NVIC_SPI2_IRQ);
+
+/* INIT DMA SPI RX (DMA CHAN4) */
+DMA1_IFCR = DMA_IFCR_CGIF4;
+DMA1_CCR4 = DMA_CCR_MINC | DMA_CCR_TEIE | DMA_CCR_TCIE;
+DMA1_CNDTR4 = 4;
+DMA1_CPAR4 = (uint32_t)&SPI2_DR;
+DMA1_CMAR4 = (uint32_t)arr_rx;
+
+/* INIT DMA SPI TX (DMA CHAN5) */
+DMA1_IFCR = DMA_IFCR_CGIF5;
+DMA1_CCR5 = DMA_CCR_MINC | DMA_CCR_DIR | DMA_CCR_TEIE | DMA_CCR_TCIE;
+DMA1_CNDTR5 = 4;
+DMA1_CPAR5 = (uint32_t)&SPI2_DR;
+DMA1_CMAR5 = (uint32_t)arr_tx;
+
+/* INIT SPI */
+SPI2_I2SCFGR = 0;
+SPI2_CR1 = SPI_CR1_BAUDRATE_FPCLK_DIV_256 | SPI_CR1_MSTR | SPI_CR1_BIDIMODE | SPI_CR1_SSM | SPI_CR1_SSI;
+SPI2_CR2 = SPI_CR2_DS_8BIT | SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN | SPI_CR2_ERRIE | SPI_CR2_FRXTH;
+
+gpio_clear(GPIOB, GPIO12);
+
+DMA1_CCR4 |= DMA_CCR_EN; /* RX CHAN */
+SPI2_CR1 |= SPI_CR1_SPE;
+DMA1_CCR5 |= DMA_CCR_EN; /* TX CHAN */
+
+/* LOOP */
+for(;;) {
+    __asm__("wfi");
 }
 
 
@@ -161,6 +207,19 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
 
 
 static void spi_init_gpio(void) {
+
+    /* INIT SPI GPIO */
+    gpio_mode_setup(CC2500_SPI_GPIO, GPIO_MODE_AF, GPIO_PUPD_NONE, CC2500_SPI_SCK_PINSOURCE | CC2500_SPI_MOSI_PINSOURCE | CC2500_SPI_MISO_PINSOURCE);
+    gpio_set_output_options(CC2500_SPI_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_HIGH, CC2500_SPI_SCK_PINSOURCE | CC2500_SPI_MOSI_PINSOURCE | CC2500_SPI_MISO_PINSOURCE);
+    gpio_set_af(GPIOB, GPIO_AF0, GPIO13|GPIO14|GPIO15);
+
+    /* INIT SPI SS GPIO */
+    gpio_mode_setup(GPIOB, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, GPIO12);
+    gpio_set_output_options(GPIOB, GPIO_OTYPE_PP, GPIO_OSPEED_HIGH, GPIO12);
+    gpio_set(GPIOB, GPIO12);
+
+
+
     GPIO_InitTypeDef gpio_init;
     GPIO_StructInit(&gpio_init);
 
