@@ -51,7 +51,7 @@ void frsky_tx_set_enabled(uint32_t enabled);
 void frsky_set_channel(uint8_t hop_index);
 void frsky_send_telemetry(uint8_t telemetry_id);
 void frsky_send_bindpacket(uint8_t bind_packet_id);
-void frsky_update_ppm(void);
+
 
 void frsky_do_clone_prepare(void);
 void frsky_do_clone_finish(void);

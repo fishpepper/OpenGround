@@ -1,9 +1,11 @@
 ROOT         := $(patsubst %/,%,$(dir $(lastword $(MAKEFILE_LIST))))
 SOURCE_DIR   = $(ROOT)/src
 INCLUDE_DIR  = $(SOURCE_DIR)
-SOURCE_FILES  = led.c delay.c clocksource.c config.c io.c debug.c lcd.c timeout.c gui.c adc.c console.c screen.c storage.c font.c sound.c wdt.c frsky.c touch.c telemetry.c crc16.c cc2500.c fifo.c spi.c
+#SOURCE_FILES  = led.c delay.c clocksource.c config.c io.c debug.c lcd.c timeout.c gui.c adc.c console.c screen.c storage.c font.c sound.c wdt.c frsky.c touch.c telemetry.c crc16.c cc2500.c fifo.c spi.c
 #config.c delay.c timeout.c clocksource.c led.c sound.c debug.c adc.c storage.c gui.c touch.c console.c 
-#$(wildcard $(SRC_DIR)/*.c)
+SOURCE_FILES_FOUND = $(wildcard $(SOURCE_DIR)/*.c)
+SOURCE_FILES = $(SOURCE_FILES_FOUND:./src/%=%)
+SOURCE_FILES += eeprom_emulation/st_eeprom.c
 OBJECT_DIR   := $(ROOT)/obj
 BIN_DIR      = $(ROOT)/bin
 CFLAGS  = -O1 -g
@@ -13,10 +15,6 @@ ASFLAGS = -g
 #SRC_FILES += adc.c sound.c timeout.c touch.c cc2500.c spi.c frsky.c storage.c wdt.c gui.c
 #SRC_FILES += eeprom.c telemetry.c fifo.c crc16.c config.c
 
-#vpath %.c ./src
-#SOURCES = $(filter-out $(BINARY).c, $(wildcard *.c))
-#OBJS = $(SOURCES:.c=.o)
-
 # opencm3 lib config
 LIBNAME         = opencm3_stm32f0
 DEFS            += -DSTM32F0
@@ -25,7 +23,7 @@ FP_FLAGS        ?= -msoft-float
 ARCH_FLAGS      = -mthumb -mcpu=cortex-m0 $(FP_FLAGS)
 
 LDSCRIPT = linker/stm32f072.ld
-BINARY   = main
+TARGET   = openground
 
 CFLAGS += -I./src
 LDFLAGS += -L./src
@@ -60,22 +58,10 @@ CSTD		?= -std=gnu99
 ###############################################################################
 # Source files
 OBJS            += $(SOURCE_FILES:%.c=$(OBJECT_DIR)/%.o)
-OBJS        	+= $(OBJECT_DIR)/$(BINARY).o
-
-ifeq ($(strip $(OPENCM3_DIR)),)
-# user has not specified the library path, so we try to detect it
 
 # where we search for the library
 LIBPATHS := ./libopencm3 ../../../../libopencm3 ../../../../../libopencm3
-
-OPENCM3_DIR := $(wildcard $(LIBPATHS:=/locm3.sublime-project))
-OPENCM3_DIR := $(firstword $(dir $(OPENCM3_DIR)))
-
-ifeq ($(strip $(OPENCM3_DIR)),)
-$(warning Cannot find libopencm3 library in the standard search paths.)
-$(error Please specify it through OPENCM3_DIR variable!)
-endif
-endif
+OPENCM3_DIR := ./libopencm3
 
 ifeq ($(V),1)
 $(info Using $(OPENCM3_DIR) path to library)
@@ -85,7 +71,6 @@ endif
 DEFS		+= -I$(OPENCM3_DIR)/include
 LDFLAGS		+= -L$(OPENCM3_DIR)/lib
 LDLIBS		+= -l$(LIBNAME)
-LDSCRIPT	?= $(BINARY).ld
 
 SCRIPT_DIR	= $(OPENCM3_DIR)/scripts
 
@@ -97,21 +82,8 @@ TGT_CFLAGS	+= $(ARCH_FLAGS)
 TGT_CFLAGS	+= -Wextra -Wshadow -Wimplicit-function-declaration
 TGT_CFLAGS	+= -Wredundant-decls -Wmissing-prototypes -Wstrict-prototypes
 TGT_CFLAGS	+= -fno-common -ffunction-sections -fdata-sections
-
-###############################################################################
-# C++ flags
-
-TGT_CXXFLAGS	+= $(OPT) $(CXXSTD) -g
-TGT_CXXFLAGS	+= $(ARCH_FLAGS)
-TGT_CXXFLAGS	+= -Wextra -Wshadow -Wredundant-decls  -Weffc++
-TGT_CXXFLAGS	+= -fno-common -ffunction-sections -fdata-sections
-
-###############################################################################
-# C & C++ preprocessor common flags
-
-TGT_CPPFLAGS	+= -MD
-TGT_CPPFLAGS	+= -Wall -Wundef
-TGT_CPPFLAGS	+= $(DEFS)
+TGT_CFLAGS      += -MD -Wall -Wundef
+TGT_CFLAGS      += $(DEFS)
 
 ###############################################################################
 # Linker flags
@@ -140,14 +112,14 @@ LDLIBS		+= -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
 
 all: elf
 
-elf: $(BIN_DIR)/$(BINARY).elf
-bin: $(BINARY).bin
-hex: $(BINARY).hex
-srec: $(BINARY).srec
-list: $(BINARY).list
+elf: $(BIN_DIR)/$(TARGET).elf
+bin: $(BIN_DIR)/$(TARGET).bin
+hex: $(BIN_DIR)/$(TARGET).hex
+srec: $(BIN_DIR)/$(TARGET).srec
+list: $(BIN_DIR)/$(TARGET).list
 
-images: $(BINARY).images
-flash: $(BINARY).flash
+images: $(BIN_DIR)/$(TARGET).images
+flash: $(BIN_DIR)/$(TARGET).flash
 
 # Either verify the user provided LDSCRIPT exists, or generate it.
 $(LDSCRIPT):
@@ -162,41 +134,40 @@ $(LDSCRIPT):
 print-%:
 	@echo $*=$($*)
 
-%.images: %.bin %.hex %.srec %.list %.map
+$(BIN_DIR)/%.images: $(BIN_DIR)/%.bin $(BIN_DIR)/%.hex $(BIN_DIR)/%.srec $(BIN_DIR)/%.lst $(BIN_DIR)/%.map
 	@#printf "*** $* images generated ***\n"
 
-%.bin: %.elf
+$(BIN_DIR)/%.bin: $(BIN_DIR)/%.elf
 	@#printf "  OBJCOPY $(*).bin\n"
-	$(Q)$(OBJCOPY) -Obinary $(*).elf $(*).bin
+	$(Q)$(OBJCOPY) -Obinary $(BIN_DIR)/$(*).elf $(BIN_DIR)/$(*).bin
 
-%.hex: %.elf
+$(BIN_DIR)/%.hex: $(BIN_DIR)/%.elf
 	@#printf "  OBJCOPY $(*).hex\n"
-	$(Q)$(OBJCOPY) -Oihex $(*).elf $(*).hex
+	$(Q)$(OBJCOPY) -Oihex $(BIN_DIR)/$(*).elf $(BIN_DIR)/$(*).hex
 
-%.srec: %.elf
+$(BIN_DIR)/%.srec: $(BIN_DIR)/%.elf
 	@#printf "  OBJCOPY $(*).srec\n"
-	$(Q)$(OBJCOPY) -Osrec $(*).elf $(*).srec
+	$(Q)$(OBJCOPY) -Osrec $(BIN_DIR)/$(*).elf $(BIN_DIR)/$(*).srec
 
-%.list: %.elf
+$(BIN_DIR)/%.lst: $(BIN_DIR)/%.elf
 	@#printf "  OBJDUMP $(*).list\n"
-	$(Q)$(OBJDUMP) -S $(*).elf > $(*).list
+	$(Q)$(OBJDUMP) -S $(BIN_DIR)/$(*).elf > $(BIN_DIR)/$(*).lst
 
-$(BIN_DIR)/%.elf $(BIN_DIR)/%.map: $(OBJS) $(LDSCRIPT)
-	echo $(OBJS)
+$(BIN_DIR)/%.elf $(BIN_DIR)/%.map: $(OBJS) $(LDSCRIPT) bin_dir
 	@#printf "  LD      $(*).elf\n"
 	$(Q)$(LD) $(TGT_LDFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(BIN_DIR)/$(*).elf
 
-$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c
+$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c $(submodules_target) obj_dir src/hoptable.h
 	@#printf "  CC      $(*).c\n"
-	$(Q)$(CC) $(TGT_CFLAGS) $(CFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $(OBJECT_DIR)/$(*).o -c $(SOURCE_DIR)/$(*).c
+	$(Q)$(CC) $(TGT_CFLAGS) $(CFLAGS) -o $(OBJECT_DIR)/$(*).o -c $(SOURCE_DIR)/$(*).c
 
-%.o: %.cxx
-	@#printf "  CXX     $(*).cxx\n"
-	$(Q)$(CXX) $(TGT_CXXFLAGS) $(CXXFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $(*).o -c $(*).cxx
+src/hoptable.h: 
+	python ./scripts/generate_hoptable.py > src/hoptable.h
 
-%.o: %.cpp
-	@#printf "  CXX     $(*).cpp\n"
-	$(Q)$(CXX) $(TGT_CXXFLAGS) $(CXXFLAGS) $(TGT_CPPFLAGS) $(CPPFLAGS) -o $(*).o -c $(*).cpp
+
+# build libopencm3
+libopencm3/lib/libopencm3_stm32f0.ld :
+	$(MAKE) -C libopencm3	
 
 clean:
 	@#printf "  CLEAN\n"
@@ -221,6 +192,14 @@ styleclean: $(STYLECHECKFILES:=.styleclean)
 %.stlink-flash: %.bin
 	@printf "  FLASH  $<\n"
 	$(STFLASH) write $(*).bin 0x8000000
+
+
+bin_dir:
+	@mkdir -p ${BIN_DIR}
+
+obj_dir:
+	@mkdir -p ${OBJECT_DIR}
+	@mkdir -p ${OBJECT_DIR}/eeprom_emulation
 
 ifeq ($(STLINK_PORT),)
 ifeq ($(BMP_PORT),)
@@ -261,10 +240,14 @@ sterase :
 
 stflasherase : sterase stflash
 
-stflash : $(BIN_DIR)/$(BINARY).bin
-	st-flash --reset write $(BIN_DIR)/$(BINARY).bin 0x8000000 
+stflash : $(BIN_DIR)/$(TARGET).bin
+	st-flash --reset write $(BIN_DIR)/$(TARGET).bin 0x8000000 
+
+#git submodules handling
+submodules:
+	git submodule update --init -- libopencm3
 
 
-.PHONY: images clean stylecheck styleclean elf bin hex srec list
+.PHONY: images clean stylecheck styleclean elf bin hex srec list submodules bin_dir obj_dir
 
 -include $(OBJS:.o=.d)

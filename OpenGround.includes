@@ -57,3 +57,4 @@ libopencm3/include/libopencm3/stm32/l0
 libopencm3/include/libopencm3/lpc17xx
 libopencm3/include/libopencm3/vf6xx
 libopencm3/include/libopencm3/stm32/f1
+src/eeprom_emulation

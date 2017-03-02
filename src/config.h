@@ -103,6 +103,12 @@ void config_detect_hw_revision(void);
 #define TOUCH_INT_EXTI_SOURCE_LINE    EXTI12
 #define TOUCH_INT_EXTI_IRQN           NVIC_EXTI4_15_IRQ
 
+
+
+#define ADC_DMA_CHANNEL           DMA_CHANNEL1
+#define ADC_DMA_TC_FLAG           DMA1_FLAG_TC1
+#define ADC_CHANNEL_COUNT 11
+
 // cc2500 module connection
 // SI = SDIO
 // SCK = SCK
@@ -115,21 +121,20 @@ void config_detect_hw_revision(void);
 #define CC2500_SPI_GPIO             GPIOE
 // LABELED SCK
 #define CC2500_SPI_SCK_PIN          GPIO13
-#define CC2500_SPI_SCK_PINSOURCE    GPIO_PinSource13
 // LABELED SPIO
 #define CC2500_SPI_MOSI_PIN         GPIO15
-#define CC2500_SPI_MOSI_PINSOURCE   GPIO_PinSource15
 // LABELED GIO1
 #define CC2500_SPI_MISO_PIN         GPIO14
-#define CC2500_SPI_MISO_PINSOURCE   GPIO_PinSource14
 // LABELED RF2
 #define CC2500_SPI_CSN_PIN          GPIO12
 #define CC2500_SPI                  SPI1
-#define CC2500_SPI_CLK              RCC_APB2Periph_SPI1
+#define CC2500_SPI                  SPI1
+#define CC2500_SPI_DR               SPI1_DR
+#define CC2500_SPI_CLK              RCC_SPI1
 #define CC2500_SPI_DMA_CLOCK        RCC_DMA1
-#define CC2500_SPI_TX_DMA_CHANNEL   DMA1_Channel3
+#define CC2500_SPI_TX_DMA_CHANNEL   DMA_CHANNEL3
 #define CC2500_SPI_TX_DMA_TC_FLAG   DMA1_FLAG_TC3
-#define CC2500_SPI_RX_DMA_CHANNEL   DMA1_Channel2
+#define CC2500_SPI_RX_DMA_CHANNEL   DMA_CHANNEL2
 #define CC2500_SPI_RX_DMA_TC_FLAG   DMA1_FLAG_TC2
 
 // LABELED RF1

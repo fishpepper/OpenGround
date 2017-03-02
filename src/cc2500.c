@@ -32,6 +32,7 @@ void cc2500_init(void) {
     cc2500_init_gpio();
     spi_init();
 }
+
 static void cc2500_init_gpio(void) {
     // set high:
     gpio_set(POWERDOWN_GPIO, POWERDOWN_PIN);
@@ -191,7 +192,7 @@ inline void cc2500_register_read_multi(uint8_t address, uint8_t *buffer, uint8_t
     cc2500_csn_lo();
 
     // wait for ready signal
-    while (GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
+    while (gpio_get(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
 
     // debug("read "); debug_put_uint8(len); debug_flush();
     // request address(read request)

@@ -32,8 +32,8 @@
 /* Includes ------------------------------------------------------------------*/
 #include "st_eeprom.h"
 #include "eeprom.h"
-#include "stm32f0xx.h"
 #include "debug.h"
+#include <libopencmsis/core_cm3.h>
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/

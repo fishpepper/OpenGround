@@ -251,8 +251,11 @@ static void adc_init_mode(void) {
 static void adc_init_dma(void) {
     debug("adc: init dma\n"); debug_flush();
 
-    // setting circular mode
-    dma_enable_circular_mode(DMA1, ADC_DMA_CHANNEL);
+    // clean init
+    dma_channel_reset(DMA1, ADC_DMA_CHANNEL);
+
+    // DO NOT use circular mode, we will retrigger dma on our own!
+    /// dma_enable_circular_mode(DMA1, ADC_DMA_CHANNEL);
 
     // high priority
     dma_set_priority(DMA1, ADC_DMA_CHANNEL, DMA_CCR_PL_HIGH);

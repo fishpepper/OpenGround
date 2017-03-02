@@ -22,12 +22,13 @@
 #include "debug.h"
 #include "delay.h"
 #include "storage.h"
-#include "stm32f0xx_flash.h"
+
+#include <libopencm3/stm32/dma.h>
 
 // init for st eeprom emulation, set up number of variables.
 uint16_t EE_virtual_address_table[EE_NB_OF_VAR];
 
-#include "st_eeprom.h"
+#include "eeprom_emulation/st_eeprom.h"
 
 void eeprom_init(void) {
     debug("eeprom: init\n"); debug_flush();
