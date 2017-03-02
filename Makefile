@@ -157,7 +157,7 @@ $(BIN_DIR)/%.elf $(BIN_DIR)/%.map: $(OBJS) $(LDSCRIPT) bin_dir
 	@#printf "  LD      $(*).elf\n"
 	$(Q)$(LD) $(TGT_LDFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(BIN_DIR)/$(*).elf
 
-$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c $(submodules_target) obj_dir src/hoptable.h
+$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c $(submodules) obj_dir src/hoptable.h
 	@#printf "  CC      $(*).c\n"
 	$(Q)$(CC) $(TGT_CFLAGS) $(CFLAGS) -o $(OBJECT_DIR)/$(*).o -c $(SOURCE_DIR)/$(*).c
 
