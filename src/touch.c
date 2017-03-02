@@ -31,7 +31,7 @@
 #include <libopencm3/stm32/common/i2c_common_v2.h>
 
 
-#define TOUCH_I2C_DEBUG         0
+#define TOUCH_I2C_DEBUG         1
 #define TOUCH_I2C_TIMEOUT      20
 #define TOUCH_I2C_FLAG_TIMEOUT 10
 
@@ -46,7 +46,7 @@ void touch_init(void) {
     touch_init_i2c_rcc();
 
     // free bus with pulse train
-    touch_init_i2c_free_bus();
+    ///FIXME///touch_init_i2c_free_bus();
 
     touch_init_i2c_gpio();
     touch_init_i2c_mode();
@@ -259,6 +259,7 @@ static void touch_ft6236_init(void) {
     res = touch_i2c_read(0x00, &data, 1);
     if (!res) {
         debug("touch: failed to detect ft6236\n"); debug_flush();
+        delay_ms(5000);
         return;
     }
 
@@ -327,7 +328,7 @@ static uint32_t touch_i2c_read(uint8_t reg, uint8_t *data, uint8_t len) {
 
     // wait for not busy
     timeout_set(TOUCH_I2C_TIMEOUT);
-    while (i2c_busy(TOUCH_I2C)) {
+    while (i2c_busy(TOUCH_I2C) == 1) {
         if (timeout_timed_out()) {
             debug("touch: bus busy... timeout!\n");
             return 0;

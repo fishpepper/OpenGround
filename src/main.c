@@ -72,9 +72,8 @@ int main(void) {
     //frsky_init();
 
     /// screen_test();
-    //touch_test();
-
-    adc_test();
+    touch_test();
+    //adc_test();
     gui_init();
 
     debug("main: init done.\n"); debug_flush();
