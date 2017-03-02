@@ -65,6 +65,7 @@ void debug_flush(void) {
             lcd_show_logo();
         }
     }
+    //delay_ms(1000);
 }
 
 

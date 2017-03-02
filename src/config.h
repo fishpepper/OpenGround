@@ -106,7 +106,7 @@ void config_detect_hw_revision(void);
 
 
 #define ADC_DMA_CHANNEL           DMA_CHANNEL1
-#define ADC_DMA_TC_FLAG           DMA1_FLAG_TC1
+#define ADC_DMA_TC_FLAG           DMA_ISR_TCIF1
 #define ADC_CHANNEL_COUNT 11
 
 // cc2500 module connection

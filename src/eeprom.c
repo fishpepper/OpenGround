@@ -24,6 +24,7 @@
 #include "storage.h"
 
 #include <libopencm3/stm32/dma.h>
+#include <libopencm3/stm32/flash.h>
 
 // init for st eeprom emulation, set up number of variables.
 uint16_t EE_virtual_address_table[EE_NB_OF_VAR];
@@ -40,7 +41,7 @@ void eeprom_init(void) {
     }
 
     // unlock flash for writing
-    FLASH_Unlock();
+    flash_unlock();
 
     // initialise eeprom emulation
     uint16_t res = EE_Init();
@@ -53,7 +54,7 @@ void eeprom_init(void) {
     }
 
     // lock flash again
-    FLASH_Lock();
+    flash_lock();
 }
 
 void eeprom_write_storage(void) {

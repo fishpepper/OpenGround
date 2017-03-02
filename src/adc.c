@@ -46,7 +46,7 @@ void adc_init(void) {
     // init values(for debugging)
     uint32_t i;
     for (i = 0; i < ADC_CHANNEL_COUNT; i++) {
-        adc_data[i] = 0;
+        adc_data[i] = i;
     }
 }
 
@@ -216,9 +216,9 @@ uint32_t adc_get_battery_voltage(void) {
 static void adc_init_mode(void) {
     debug("adc: init mode\n"); debug_flush();
 
+    // set mode to continous
+    adc_set_continuous_conversion_mode(ADC1);
 
-    // set mode to scan
-    adc_set_operation_mode(ADC1, ADC_MODE_SCAN);
     // no ext trigger
     adc_disable_external_trigger_regular(ADC1);
     // right 12-bit data alignment in ADC reg
@@ -228,12 +228,13 @@ static void adc_init_mode(void) {
     // adc_enable_temperature_sensor();
     adc_disable_analog_watchdog(ADC1);
 
+    // configure channels 0...10
+    uint8_t channels[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+
     // sample times for all channels
     adc_set_sample_time_on_all_channels(ADC1, ADC_SMPTIME_041DOT5);
 
-    // configure channels 0...10
-    uint8_t channels[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1};
-    adc_set_regular_sequence(ADC1, 1, channels);
+    adc_set_regular_sequence(ADC1, sizeof(channels), channels);
 
     adc_power_on(ADC1);
 
@@ -242,6 +243,8 @@ static void adc_init_mode(void) {
     for (i = 0; i < 800000; i++) {
         asm("nop");
     }
+
+
 
     // enable DMA for ADC
     adc_enable_dma(ADC1);
@@ -255,7 +258,8 @@ static void adc_init_dma(void) {
     dma_channel_reset(DMA1, ADC_DMA_CHANNEL);
 
     // DO NOT use circular mode, we will retrigger dma on our own!
-    /// dma_enable_circular_mode(DMA1, ADC_DMA_CHANNEL);
+    dma_enable_circular_mode(DMA1, ADC_DMA_CHANNEL);
+
 
     // high priority
     dma_set_priority(DMA1, ADC_DMA_CHANNEL, DMA_CCR_PL_HIGH);
@@ -280,7 +284,6 @@ static void adc_init_dma(void) {
     // chunk of data to be transfered
     dma_set_number_of_data(DMA1, ADC_DMA_CHANNEL, ADC_CHANNEL_COUNT);
 
-
     // start conversion:
     adc_dma_arm();
 }
@@ -288,11 +291,13 @@ static void adc_init_dma(void) {
 static void adc_dma_arm(void) {
     // start conversion
     dma_enable_channel(DMA1, ADC_DMA_CHANNEL);
+    adc_start_conversion_regular(ADC1);
 }
 
 void adc_process(void) {
     // adc dma finished?
-    if (DMA_ISR(DMA1) & 0x0000001) {
+    if (dma_get_interrupt_flag(DMA1, ADC_DMA_CHANNEL, ADC_DMA_TC_FLAG)) {
+        dma_clear_interrupt_flags(DMA1, ADC_DMA_CHANNEL, ADC_DMA_TC_FLAG);
         if (adc_battery_voltage_raw_filtered == 0) {
             // initialise with current value
             adc_battery_voltage_raw_filtered = adc_data[10];
