@@ -157,17 +157,12 @@ $(BIN_DIR)/%.elf $(BIN_DIR)/%.map: $(OBJS) $(LDSCRIPT) bin_dir
 	@#printf "  LD      $(*).elf\n"
 	$(Q)$(LD) $(TGT_LDFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(BIN_DIR)/$(*).elf
 
-$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c $(submodules) obj_dir src/hoptable.h
+$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c libopencm3 obj_dir src/hoptable.h
 	@#printf "  CC      $(*).c\n"
 	$(Q)$(CC) $(TGT_CFLAGS) $(CFLAGS) -o $(OBJECT_DIR)/$(*).o -c $(SOURCE_DIR)/$(*).c
 
 src/hoptable.h: 
 	python ./scripts/generate_hoptable.py > src/hoptable.h
-
-
-# build libopencm3
-libopencm3/lib/libopencm3_stm32f0.ld :
-	$(MAKE) -C libopencm3	
 
 clean:
 	@#printf "  CLEAN\n"
@@ -243,11 +238,16 @@ stflasherase : sterase stflash
 stflash : $(BIN_DIR)/$(TARGET).bin
 	st-flash --reset write $(BIN_DIR)/$(TARGET).bin 0x8000000 
 
+libopencm3 : libopencm3/lib/libopencm3_stm32f0.a submodules
+
+libopencm3/lib/libopencm3_stm32f0.a: 
+	$(MAKE) -C libopencm3
+
 #git submodules handling
 submodules:
-	git submodule update --init -- libopencm3
+	@git submodule update --init -- libopencm3
 
 
-.PHONY: images clean stylecheck styleclean elf bin hex srec list submodules bin_dir obj_dir
+.PHONY: images clean stylecheck styleclean elf bin hex srec list submodules bin_dir obj_dir 
 
 -include $(OBJS:.o=.d)
