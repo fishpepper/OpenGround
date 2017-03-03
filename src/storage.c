@@ -25,6 +25,13 @@
 #include "frsky.h"
 #include "eeprom.h"
 #include "hoptable.h"
+#include "crc16.h"
+
+// internal functions
+static uint8_t  storage_is_valid(void);
+static uint16_t storage_calc_crc(void);
+static void storage_load_defaults(void);
+
 
 // run time copy of persistant storage data:
 STORAGE_DESC storage;
@@ -164,7 +171,7 @@ static void storage_load_defaults(void) {
     storage.current_model = 0;
 }
 
-void storage_mode_set_name(uint8_t index, uint8_t *str) {
+void storage_mode_set_name(uint8_t index, char *str) {
     debug("storage: set modelname ");
     debug_put_uint8(index);
     debug("\n         ");
@@ -207,12 +214,3 @@ void storage_save(void) {
     // and finally write it to eeprom
     //FIXME//eeprom_write_storage();
 }
-
-
-static void storage_write(uint8_t *buffer, uint16_t len) {
-}
-
-static void storage_read(uint8_t *storage_ptr, uint16_t len) {
-}
-
-

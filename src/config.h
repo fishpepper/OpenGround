@@ -99,7 +99,6 @@ void config_detect_hw_revision(void);
 #define TOUCH_INT_PIN                 GPIO12
 
 #define TOUCH_INT_EXTI_SOURCE         GPIOC
-//#define TOUCH_INT_EXTI_SOURCE_PIN     EXTI_PinSource12
 #define TOUCH_INT_EXTI_SOURCE_LINE    EXTI12
 #define TOUCH_INT_EXTI_IRQN           NVIC_EXTI4_15_IRQ
 

@@ -24,14 +24,19 @@
 #include "led.h"
 #include "delay.h"
 #include "screen.h"
+#include "macros.h"
+#include "assert.h"
+#include <libopencm3/cm3/common.h>
 
-void assert_failed(uint8_t* filename, uint32_t line) {
+void cm3_assert_failed_verbose(const char *filename, int line, const char *func, const char *UNUSED(assert_expr)) {
     // report position
     if (debug_is_initialized()) {
         debug("!ASSERT: line ");
         debug_put_uint16(line);
+        debug("\n func: ");
+        debug((char*)func);
         debug("\nin ");
-        debug(filename);
+        debug((char*) filename);
         debug_put_newline();
         debug_flush();
         console_render();
@@ -47,4 +52,5 @@ void assert_failed(uint8_t* filename, uint32_t line) {
         delay_us(50*1000);
     }
 }
+
 

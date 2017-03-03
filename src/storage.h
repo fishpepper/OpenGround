@@ -34,17 +34,14 @@ void storage_init(void);
 // static void storage_read_from_flash(void);
 void storage_save(void);
 void storage_load(void);
-void storage_mode_set_name(uint8_t index, uint8_t *str);
-static void storage_load_defaults(void);
+void storage_mode_set_name(uint8_t index, char *str);
 /*static void storage_write(uint8_t *buffer, uint16_t len);
 static void storage_read(uint8_t *storage_ptr, uint16_t len);*/
-static uint8_t  storage_is_valid(void);
-static uint16_t storage_calc_crc(void);
 
 // model description
 typedef struct {
     // name of the model
-    uint8_t name[STORAGE_MODEL_NAME_LEN];
+    char name[STORAGE_MODEL_NAME_LEN];
     // timer
     uint16_t timer;
     // scale

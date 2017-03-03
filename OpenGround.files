@@ -847,3 +847,5 @@ src/clocksource.c
 src/clocksource.h
 src/eeprom_emulation/st_eeprom.c
 src/eeprom_emulation/st_eeprom.h
+src/clocksource.h
+src/clocksource.c

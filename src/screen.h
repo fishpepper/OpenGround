@@ -26,7 +26,7 @@
 #include "lcd.h"
 
 #define SCREEN_BUFFER_SIZE ((LCD_WIDTH * LCD_HEIGHT) / 8)
-static uint8_t screen_buffer[SCREEN_BUFFER_SIZE];
+// extern static uint8_t screen_buffer[SCREEN_BUFFER_SIZE];
 
 void screen_init(void);
 void screen_clear(void);
@@ -49,12 +49,12 @@ void screen_set_pixels(uint8_t x, uint8_t y, uint8_t x2, uint8_t y2, uint8_t col
 void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t color);
 
 
-uint32_t screen_strlen(uint8_t *str);
-
-void screen_set_font(const uint8_t *font);
-void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str);
-void screen_puts_xy_centered(uint8_t y, uint8_t x, uint8_t color, uint8_t *str);
-void screen_puts_centered(uint8_t y, uint8_t color, uint8_t *str);
+uint8_t screen_put_char(char c);
+uint32_t screen_strlen(char *str);
+void screen_set_font(const uint8_t *font, uint32_t *h, uint32_t *w);
+void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, char *str);
+void screen_puts_xy_centered(uint8_t y, uint8_t x, uint8_t color, char *str);
+void screen_puts_centered(uint8_t y, uint8_t color, char *str);
 void screen_put_int8(uint8_t x, uint8_t y, uint8_t color, int8_t c);
 void screen_put_uint8(uint8_t x, uint8_t y, uint8_t color, uint8_t c);
 void screen_put_uint8_2dec(uint8_t x, uint8_t y, uint8_t color, uint8_t c);

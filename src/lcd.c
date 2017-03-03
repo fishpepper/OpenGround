@@ -32,6 +32,13 @@
 #include <libopencm3/stm32/gpio.h>
 #include <libopencm3/stm32/rcc.h>
 
+// INTERNAL FUNCTIONS
+static void lcd_init_gpio(void);
+static void lcd_init_rcc(void);
+static void lcd_reset(void);
+static void lcd_write_command(uint8_t data);
+
+
 void lcd_init(void) {
     lcd_init_rcc();
     lcd_init_gpio();

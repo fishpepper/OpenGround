@@ -29,6 +29,6 @@ void eeprom_read_storage(void);
 
 // init for st eeprom emulation, set up number of variables.
 #define EE_NB_OF_VAR             ((uint16_t)(SIZEOF_STORAGE_IN_16BIT))
-extern uint16_t EE_virtual_address_table[EE_NB_OF_VAR];
+// extern uint16_t EE_virtual_address_table[EE_NB_OF_VAR];
 
 #endif  // EEPROM_H_

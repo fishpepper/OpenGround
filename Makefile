@@ -56,8 +56,10 @@ CSTD		?= -std=gnu99
 
 
 ###############################################################################
-# Source files
+# objects
 OBJS            += $(SOURCE_FILES:%.c=$(OBJECT_DIR)/%.o)
+# headers
+HEADER_FILES    = $(SOURCE_FILES_FOUND:%.c=%.h)
 
 # where we search for the library
 LIBPATHS := ./libopencm3 ../../../../libopencm3 ../../../../../libopencm3
@@ -110,7 +112,7 @@ LDLIBS		+= -Wl,--start-group -lc -lgcc -lnosys -Wl,--end-group
 .SECONDEXPANSION:
 .SECONDARY:
 
-all: elf
+all: stylecheck elf 
 
 elf: $(BIN_DIR)/$(TARGET).elf
 bin: $(BIN_DIR)/$(TARGET).bin
@@ -135,30 +137,30 @@ print-%:
 	@echo $*=$($*)
 
 $(BIN_DIR)/%.images: $(BIN_DIR)/%.bin $(BIN_DIR)/%.hex $(BIN_DIR)/%.srec $(BIN_DIR)/%.lst $(BIN_DIR)/%.map
-	@#printf "*** $* images generated ***\n"
+	@printf "*** $* images generated ***\n"
 
 $(BIN_DIR)/%.bin: $(BIN_DIR)/%.elf
-	@#printf "  OBJCOPY $(*).bin\n"
+	@printf "  OBJCOPY $(*).bin\n"
 	$(Q)$(OBJCOPY) -Obinary $(BIN_DIR)/$(*).elf $(BIN_DIR)/$(*).bin
 
 $(BIN_DIR)/%.hex: $(BIN_DIR)/%.elf
-	@#printf "  OBJCOPY $(*).hex\n"
+	@printf "  OBJCOPY $(*).hex\n"
 	$(Q)$(OBJCOPY) -Oihex $(BIN_DIR)/$(*).elf $(BIN_DIR)/$(*).hex
 
 $(BIN_DIR)/%.srec: $(BIN_DIR)/%.elf
-	@#printf "  OBJCOPY $(*).srec\n"
+	@printf "  OBJCOPY $(*).srec\n"
 	$(Q)$(OBJCOPY) -Osrec $(BIN_DIR)/$(*).elf $(BIN_DIR)/$(*).srec
 
 $(BIN_DIR)/%.lst: $(BIN_DIR)/%.elf
-	@#printf "  OBJDUMP $(*).list\n"
+	@printf "  OBJDUMP $(*).lst\n"
 	$(Q)$(OBJDUMP) -S $(BIN_DIR)/$(*).elf > $(BIN_DIR)/$(*).lst
 
 $(BIN_DIR)/%.elf $(BIN_DIR)/%.map: $(OBJS) $(LDSCRIPT) bin_dir
-	@#printf "  LD      $(*).elf\n"
+	@printf "  LD      $(*).elf\n"
 	$(Q)$(LD) $(TGT_LDFLAGS) $(LDFLAGS) $(OBJS) $(LDLIBS) -o $(BIN_DIR)/$(*).elf
 
-$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c libopencm3 obj_dir src/hoptable.h
-	@#printf "  CC      $(*).c\n"
+$(OBJECT_DIR)/%.o: $(SOURCE_DIR)/%.c libopencm3 obj_dir src/hoptable.h 
+	@printf "  CC      $(*).c\n"
 	$(Q)$(CC) $(TGT_CFLAGS) $(CFLAGS) -o $(OBJECT_DIR)/$(*).o -c $(SOURCE_DIR)/$(*).c
 
 src/hoptable.h: 
@@ -166,23 +168,10 @@ src/hoptable.h:
 
 clean:
 	@#printf "  CLEAN\n"
-	$(Q)$(RM) *.o *.d *.elf *.bin *.hex *.srec *.list *.map generated.* ${OBJS} ${OBJS:%.o:%.d}
+	$(Q)$(RM) $(OBJ_DIR)/*.o $(OBJ_DIR)/*.d $(BIN_DIR)/*.elf $(BIN_DIR)*.bin $(BIN_DIR)*.hex $(BIN_DIR)/*.srec $(BIN_DIR)/*.lst $(BIN_DIR)/*.map generated.* ${OBJS} ${OBJS:%.o:%.d}
 
-stylecheck: $(STYLECHECKFILES:=.stylecheck)
-styleclean: $(STYLECHECKFILES:=.styleclean)
-
-# the cat is due to multithreaded nature - we like to have consistent chunks of text on the output
-%.stylecheck: %
-	$(Q)$(SCRIPT_DIR)$(STYLECHECK) $(STYLECHECKFLAGS) $* > $*.stylecheck; \
-		if [ -s $*.stylecheck ]; then \
-			cat $*.stylecheck; \
-		else \
-			rm -f $*.stylecheck; \
-		fi;
-
-%.styleclean:
-	$(Q)rm -f $*.stylecheck;
-
+stylecheck: $(HEADER_FILES) $(SOURCE_FILES_FOUND)
+	@./stylecheck/cpplint.py --filter=-build/include,-build/storage_class,-readability/casting,-runtime/arrays --extensions="h,c" --root=src --linelength=120 $(HEADER_FILES) $(SOURCE_FILES_FOUND) || true
 
 %.stlink-flash: %.bin
 	@printf "  FLASH  $<\n"
@@ -248,6 +237,6 @@ submodules:
 	@git submodule update --init -- libopencm3
 
 
-.PHONY: images clean stylecheck styleclean elf bin hex srec list submodules bin_dir obj_dir 
+.PHONY: images clean stylecheck styleclean elf bin hex srec list submodules bin_dir obj_dir stylecheck
 
 -include $(OBJS:.o=.d)

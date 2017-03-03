@@ -46,7 +46,7 @@
 * ALGORITHM:   none
 * NOTES:       none
 *****************************************************************************/
-static volatile unsigned fifo_count(fifo_buffer_t const *b ) {
+static inline unsigned fifo_count(fifo_buffer_t const *b ) {
     return (b ? (b->head - b->tail) : 0);
 }
 

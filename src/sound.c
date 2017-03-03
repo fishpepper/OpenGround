@@ -26,6 +26,10 @@
 #include <libopencm3/stm32/timer.h>
 #include <libopencm3/stm32/gpio.h>
 
+// internal static functions
+static void sound_init_rcc(void);
+static void sound_init_gpio(void);
+
 
 #define SOUND_QUEUE_SIZE 10
 volatile __IO uint32_t sound_tone_duration;
@@ -98,18 +102,6 @@ static void sound_init_gpio(void) {
     gpio_set_af(SPEAKER_GPIO, GPIO_AF2, SPEAKER_PIN);
 }
 
-#if 0
-
-/* Enable timer clock. */
-rcc_peripheral_enable_clock(reg, en);
-
-/* Reset TIM1 peripheral */
-timer_reset(timer_peripheral);
-
-
-
-#endif
-
 void sound_set_frequency(uint32_t freq) {
     uint32_t prescaler, period;
 
@@ -160,7 +152,7 @@ void sound_set_frequency(uint32_t freq) {
     timer_enable_counter(TIM1);
 }
 
-static void sound_play_sample(tone_t *tone) {
+void sound_play_sample(tone_t *tone) {
     uint8_t i;
     // add this sound sample to the playback queue:
     for (i = 0; i < SOUND_QUEUE_SIZE; i++) {

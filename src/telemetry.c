@@ -37,6 +37,10 @@ static uint16_t telemetry_decoded_data_voltage;
 static uint16_t telemetry_decoded_data_current;
 static uint16_t telemetry_decoded_data_mah;
 
+// internal functions
+static void telemetry_parse_stream(uint8_t byte);
+static void telemetry_process_hub_packet(uint8_t id, uint16_t value);
+
 void telemetry_init(void) {
     debug("telemetry: init\n"); debug_flush();
 

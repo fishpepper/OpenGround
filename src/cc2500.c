@@ -27,6 +27,12 @@
 #include "timeout.h"
 #include <string.h>
 
+// internal functions
+static void cc2500_init_gpio(void);
+
+
+#define CC2500_DEBUG_STATUSBYTE 1
+
 void cc2500_init(void) {
     debug("cc2500: init\n"); debug_flush();
     cc2500_init_gpio();
@@ -126,8 +132,14 @@ inline uint8_t cc2500_get_register(uint8_t address) {
     while (gpio_get(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
 
     // request address(read request has bit7 set)
-    uint8_t status = spi_tx(address | 0x80);
-    // debug_put_hex8(status);
+    #if CC2500_DEBUG_STATUSBYTE
+        uint8_t status = spi_tx(address | 0x80);
+        debug("spi status = ");
+        debug_put_hex8(status);
+        debug_put_newline();
+    #else
+        spi_tx(address | 0x80);
+    #endif  // CC2500_DEBUG_STATUSBYTE
 
     // fetch result:
     result = spi_rx();
@@ -141,7 +153,16 @@ inline uint8_t cc2500_get_register(uint8_t address) {
 
 inline void cc2500_strobe(uint8_t address) {
     cc2500_csn_lo();
-    uint8_t status = spi_tx(address);
+
+    #if CC2500_DEBUG_STATUSBYTE
+        uint8_t status = spi_tx(address);
+        debug("spi status = ");
+        debug_put_hex8(status);
+        debug_put_newline();
+    #else
+        spi_tx(address);
+    #endif  // CC2500_DEBUG_STATUSBYTE
+
     // debug("s"); debug_put_hex8(status); debug_put_newline();
     cc2500_csn_hi();
 }
@@ -149,6 +170,13 @@ inline void cc2500_strobe(uint8_t address) {
 inline uint8_t cc2500_get_status(void) {
     cc2500_csn_lo();
     uint8_t status = spi_tx(0xFF);
+
+    #if CC2500_DEBUG_STATUSBYTE
+        debug("spi status = ");
+        debug_put_hex8(status);
+        debug_put_newline();
+    #endif  // CC2500_DEBUG_STATUSBYT
+
     cc2500_csn_hi();
     return status;
 }
@@ -196,7 +224,14 @@ inline void cc2500_register_read_multi(uint8_t address, uint8_t *buffer, uint8_t
 
     // debug("read "); debug_put_uint8(len); debug_flush();
     // request address(read request)
-    uint8_t status = spi_tx(address);
+    #if CC2500_DEBUG_STATUSBYTE
+        uint8_t status = spi_tx(address);
+        debug("spi status = ");
+        debug_put_hex8(status);
+        debug_put_newline();
+    #else
+        spi_tx(address);
+    #endif  // CC2500_DEBUG_STATUSBYT
 
     // ill buffer with read commands:
     memset(buffer, 0xFF, len);
@@ -218,7 +253,7 @@ inline void cc2500_register_write_multi(uint8_t address, uint8_t *buffer, uint8_
     cc2500_csn_lo();
 
     // wait for RDY signal:
-    while (GPIO_ReadInputDataBit(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN) == 1) {}
+    while (gpio_get(CC2500_SPI_GPIO, CC2500_SPI_MISO_PIN)) {}
 
     // request address(write request)
     spi_tx(address | BURST_FLAG);
@@ -260,7 +295,6 @@ inline void cc2500_process_packet(volatile uint8_t *packet_received, volatile ui
 
             // only accept valid packet lengths:
             if (len == maxlen) {
-                uint8_t i;
                 for (i = 0; i < maxlen; i++) {
                     buffer[i] = tmp_buffer[i];
                 }
@@ -277,7 +311,7 @@ void cc2500_transmit_packet(volatile uint8_t *buffer, uint8_t len) {
     // flush tx fifo
     cc2500_strobe(RFST_SFTX);
     // copy to fifo
-    cc2500_register_write_multi(CC2500_FIFO, (uint8_t *)buffer, buffer[0]+1);
+    cc2500_register_write_multi(CC2500_FIFO, (uint8_t *)buffer, len);
     // and send!
     cc2500_strobe(RFST_STX);
 }

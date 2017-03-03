@@ -45,7 +45,6 @@ void cc2500_wait_for_transmission_complete(void);
 #define cc2500_partnum_valid(p, v) ((p == 0x80) && (v = 0x03))
 
 uint8_t cc2500_get_status(void);
-static void cc2500_init_gpio(void);
 uint32_t cc2500_set_antenna(uint8_t id);
 void cc2500_set_gdo_mode(void);
 uint8_t cc2500_get_gdo_status(void);

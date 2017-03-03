@@ -26,10 +26,6 @@
 #include "delay.h"
 
 void spi_init(void);
-static void spi_init_gpio(void);
-static void spi_init_mode(void);
-static void spi_init_dma(void);
-static void spi_init_rcc(void);
 void spi_dma_xfer(uint8_t *buffer, uint8_t len);
 #define spi_csn_lo() { gpio_clear(CC2500_SPI_GPIO, CC2500_SPI_CSN_PIN); delay_us(1); }
 #define spi_csn_hi() { delay_us(1); gpio_set(CC2500_SPI_GPIO, CC2500_SPI_CSN_PIN); }

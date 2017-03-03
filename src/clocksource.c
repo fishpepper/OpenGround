@@ -1,3 +1,22 @@
+/*
+    Copyright 2016 fishpepper <AT> gmail.com
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+    author: fishpepper <AT> gmail.com
+*/
+
 #include "clocksource.h"
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/systick.h>
@@ -27,7 +46,7 @@ void clocksource_hse_in_8_out_48(void) {
     // Do this before touching the PLL
     rcc_set_hpre(RCC_CFGR_HPRE_NODIV);      // 48Mhz (max 72)
     rcc_set_ppre(RCC_CFGR_PPRE_DIV2);       // 24Mhz (max 36)a
-    rcc_set_prediv(RCC_CFGR2_PREDIV_NODIV);  
+    rcc_set_prediv(RCC_CFGR2_PREDIV_NODIV);
 
     // sysclk runs with 48MHz -> 1 waitstates.
     // * 0WS from 0-24MHz
@@ -43,7 +62,7 @@ void clocksource_hse_in_8_out_48(void) {
     rcc_osc_on(RCC_PLL);
     rcc_wait_for_osc_ready(RCC_PLL);
 
-    // select PLL as SYSCLK source. 
+    // select PLL as SYSCLK source.
     rcc_set_sysclk_source(RCC_PLL);
 
     // set the peripheral clock frequencies used */

@@ -31,6 +31,20 @@
 #include <libopencm3/stm32/common/i2c_common_v2.h>
 
 
+// internal functions
+static void touch_deinit_i2c(void);
+static void touch_init_i2c_mode(void);
+static void touch_init_i2c_gpio(void);
+static void touch_init_i2c_rcc(void);
+static void touch_init_i2c_free_bus(void);
+
+static uint32_t touch_i2c_read(uint8_t address, uint8_t *data, uint8_t len);
+static uint8_t touch_i2c_read_byte(uint8_t reg);
+static void touch_ft6236_debug_info(void);
+static void touch_init_isr(void);
+static void touch_ft6236_init(void);
+
+
 #define TOUCH_I2C_DEBUG         1
 #define TOUCH_I2C_TIMEOUT      20
 #define TOUCH_I2C_FLAG_TIMEOUT 10
@@ -46,7 +60,7 @@ void touch_init(void) {
     touch_init_i2c_rcc();
 
     // free bus with pulse train
-    ///FIXME///touch_init_i2c_free_bus();
+    if (0) touch_init_i2c_free_bus();
 
     touch_init_i2c_gpio();
     touch_init_i2c_mode();
@@ -80,18 +94,18 @@ static void touch_init_i2c_gpio(void) {
     gpio_set_af(TOUCH_I2C_GPIO, GPIO_AF1, TOUCH_I2C_SDA_PIN);
 
     // SCL
-    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_AF, GPIO_PUPD_NONE, TOUCH_I2C_SCL_PIN);
+    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_AF, GPIO_PUPD_PULLUP, TOUCH_I2C_SCL_PIN);
     gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, TOUCH_I2C_SCL_PIN);
 
     // SDA
-    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_AF, GPIO_PUPD_NONE, TOUCH_I2C_SDA_PIN);
+    gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_AF, GPIO_PUPD_PULLUP, TOUCH_I2C_SDA_PIN);
     gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, TOUCH_I2C_SDA_PIN);
 
     // INT pin
     gpio_mode_setup(TOUCH_INT_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, TOUCH_INT_PIN);
 
     // RESET pin
-    gpio_mode_setup(TOUCH_RESET_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, TOUCH_RESET_PIN);
+    gpio_mode_setup(TOUCH_RESET_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_PULLUP, TOUCH_RESET_PIN);
 }
 
 static void touch_init_isr(void) {
@@ -105,7 +119,7 @@ static void touch_init_isr(void) {
     exti_set_trigger(TOUCH_INT_EXTI_SOURCE_LINE, EXTI_TRIGGER_FALLING);
     exti_enable_request(TOUCH_INT_EXTI_SOURCE_LINE);
 
-    //enable irq
+    // enable irq
     nvic_enable_irq(TOUCH_INT_EXTI_IRQN);
     nvic_set_priority(TOUCH_INT_EXTI_IRQN, NVIC_PRIO_TOUCH);
 }
@@ -169,7 +183,7 @@ void EXTI4_15_IRQHandler(void) {
         }
 
         // clear the EXTI line pending bit
-        //EXTI_ClearITPendingBit(TOUCH_INT_EXTI_SOURCE_LINE);
+        // EXTI_ClearITPendingBit(TOUCH_INT_EXTI_SOURCE_LINE);
     }
 }
 
@@ -237,7 +251,7 @@ static void touch_init_i2c_mode(void) {
 
     i2c_peripheral_enable(TOUCH_I2C);
 
-    //ACK ENABLE? set?? CR2 &= ~(I2C_CR2_NACK)
+    // ACK ENABLE? set?? CR2 &= ~(I2C_CR2_NACK)
 }
 
 static void touch_ft6236_reset(void) {

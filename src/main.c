@@ -19,7 +19,7 @@
 
 #include "main.h"
 #include "clocksource.h"
-//#include "timeout.h"
+#include "timeout.h"
 #include "config.h"
 #include "delay.h"
 #include "sound.h"
@@ -30,7 +30,7 @@
 #include "screen.h"
 #include "console.h"
 #include "adc.h"
-//////#include "sound.h"
+// #include "sound.h"
 #include "touch.h"
 #include "cc2500.h"
 #include "frsky.h"
@@ -48,10 +48,9 @@ int main(void) {
     led_init();
     led_backlight_on();
 
-#if 0
+
 //    wdt_init();
 
-#endif
     io_init();
     timeout_init();
 
@@ -69,11 +68,11 @@ int main(void) {
     touch_init();
     eeprom_init();
     storage_init();
-    //frsky_init();
+    // frsky_init();
 
     /// screen_test();
     touch_test();
-    //adc_test();
+    // adc_test();
     gui_init();
 
     debug("main: init done.\n"); debug_flush();
@@ -88,7 +87,5 @@ int main(void) {
         // while (1);
         //
     }
-
-
 }
 

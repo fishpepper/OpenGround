@@ -38,10 +38,6 @@ void sound_play_click(void);
 void sound_play_low_time(void);
 void sound_play_bind(void);
 void sound_handle_playback(void);
-
-static void sound_init_rcc(void);
-static void sound_init_gpio(void);
-static void sound_play_sample(tone_t *tone);
-
+void sound_play_sample(tone_t *tone);
 
 #endif  // SOUND_H_

@@ -26,17 +26,6 @@
 
 void touch_init(void);
 void touch_test(void);
-static void touch_deinit_i2c(void);
-static void touch_init_i2c_mode(void);
-static void touch_init_i2c_gpio(void);
-static void touch_init_i2c_rcc(void);
-static void touch_init_i2c_free_bus(void);
-static void touch_init_i2c_speed(void);
-static uint32_t touch_i2c_read(uint8_t address, uint8_t *data, uint8_t len);
-static uint8_t touch_i2c_read_byte(uint8_t reg);
-static void touch_ft6236_debug_info(void);
-static void touch_init_isr(void);
-static void touch_ft6236_init(void);
 
 
 typedef struct {
@@ -47,7 +36,7 @@ typedef struct {
 
 touch_event_t touch_get_and_clear_last_event(void);
 
-void EXTI4_15_IRQHandler(void);
+// void EXTI4_15_IRQHandler(void);
 
 #define TOUCH_FT6236_MAX_TOUCH_POINTS     2
 

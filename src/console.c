@@ -22,7 +22,7 @@
 #include "font.h"
 #include "delay.h"
 
-static uint8_t console_buffer[CONSOLE_BUFFER_SIZE_Y][CONSOLE_BUFFER_SIZE_X+1];
+static char console_buffer[CONSOLE_BUFFER_SIZE_Y][CONSOLE_BUFFER_SIZE_X+1];
 static uint8_t console_write_x;
 static uint8_t console_write_y;
 
@@ -43,19 +43,19 @@ void console_clear(void) {
     }
 }
 
-static void console_render_str(uint8_t line, uint8_t color, uint8_t *str) {
-    const uint8_t *font = CONSOLE_FONT;
+static void console_render_str(uint8_t line, uint8_t color, char *str) {
+    uint32_t h;
 
-    screen_set_font(font);
+    screen_set_font(CONSOLE_FONT, &h, 0);
 
     // write string to screen at position x,y
-    uint8_t height = font[FONT_HEIGHT];
+    uint8_t height = h + 1;
 
     #if (CONSOLE_FONT_HEIGHT == 5)
     // center image for 5px height font TODO: make this universal
-    uint8_t y = (height+1) * line + 2;
+    uint8_t y = (height) * line + 2;
     #else
-    uint8_t y = (height+1) * line + 0;
+    uint8_t y = (height) * line + 0;
     #endif  // (CONSOLE_FONT_HEIGHT == 5)
 
     // render to screen buffer
@@ -63,13 +63,13 @@ static void console_render_str(uint8_t line, uint8_t color, uint8_t *str) {
 }
 
 
-void console_puts(uint8_t *str) {
+void console_puts(char *str) {
     while (*str) {
         console_putc(*str);
     }
 }
 
-void console_putc(uint8_t c) {
+void console_putc(char c) {
     uint32_t x = 0;
     // print one char to our screen, this function
     // handles the screen layout etc

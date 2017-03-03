@@ -26,6 +26,7 @@
 #include "led.h"
 #include "io.h"
 #include "storage.h"
+#include "telemetry.h"
 #include "wdt.h"
 #include "adc.h"
 #include "sound.h"
@@ -44,6 +45,62 @@ static uint8_t gui_touch_callback_index;
 static touch_callback_entry_t gui_touch_callback[GUI_TOUCH_CALLBACK_COUNT];
 static int16_t gui_model_timer;
 static uint8_t gui_loop_counter;
+
+// internal functions
+static void gui_touch_callback_register(uint8_t xs, uint8_t xe, uint8_t ys, uint8_t ye, f_ptr_t cb);
+static void gui_touch_callback_clear(void);
+static void gui_process_touch(void);
+static void gui_process_logic(void);
+
+static void gui_config_render(void);
+static void gui_config_stick_calibration_store_adc_values(void);
+static void gui_config_stick_calibration_render(void);
+
+static void gui_setup_render(void);
+static void gui_setup_main_render(void);
+static void gui_touch_callback_execute(uint8_t i);
+static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, char *str, f_ptr_t cb);
+static void gui_add_button_smallfont(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
+                                     char *str, f_ptr_t cb);
+
+// callbacks
+static void gui_cb_model_timer_reload(void);
+static void gui_cb_model_prev(void);
+static void gui_cb_model_next(void);
+static void gui_cb_setting_model_stickscale(void);
+static void gui_cb_setting_model_name(void);
+static void gui_cb_setting_model_timer(void);
+static void gui_cb_setting_option_leave(void);
+static void gui_cb_previous_page(void);
+static void gui_cb_next_page(void);
+static void gui_cb_config_back(void);
+static void gui_cb_config_save(void);
+static void gui_cb_config_stick_cal(void);
+static void gui_cb_config_model(void);
+static void gui_cb_config_exit(void);
+static void gui_cb_setup_clonetx(void);
+static void gui_cb_setup_bootloader(void);
+static void gui_cb_setup_exit(void);
+
+// rendering
+static void gui_render_main_screen(void);
+static void gui_render(void);
+static void gui_render_sliders(void);
+static void gui_render_battery(void);
+static void gui_render_statusbar(void);
+static void gui_render_bottombar(void);
+static void gui_render_settings(void);
+static void gui_render_rssi(void);
+static void gui_config_main_render(void);
+static void gui_config_model_render(void);
+static void gui_setup_clonetx_render(void);
+static void gui_setup_bindmode_render(void);
+static void gui_setup_bootloader_render(void);
+
+// buttons
+static void gui_handle_button_powerdown(void);
+static void gui_handle_buttons(void);
+
 
 void gui_init(void) {
     debug("gui: init\n"); debug_flush();
@@ -112,12 +169,12 @@ static void gui_touch_callback_execute(uint8_t i) {
 }
 
 static void gui_add_button_smallfont(uint8_t x, uint8_t y, uint8_t w, uint8_t h,
-                                     uint8_t *str, f_ptr_t cb) {
-    screen_set_font(font_tomthumb3x5);
+                                     char *str, f_ptr_t cb) {
+    screen_set_font(font_tomthumb3x5, 0, 0);
     gui_add_button(x, y, w, h, str, cb);
 }
 
-static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, uint8_t *str, f_ptr_t cb) {
+static void gui_add_button(uint8_t x, uint8_t y, uint8_t w, uint8_t h, char *str, f_ptr_t cb) {
     // render string
     screen_puts_xy_centered(x + w/2, y + h/2, 1, str);
 
@@ -318,7 +375,7 @@ void gui_handle_button_powerdown(void) {
     }
 }
 
-void gui_handle_buttons(void) {
+static void gui_handle_buttons(void) {
     gui_handle_button_powerdown();
 }
 
@@ -416,8 +473,9 @@ void gui_loop(void) {
 }
 
 static void gui_render_battery(void) {
+    uint32_t w;
     uint32_t x = 84;
-    screen_set_font(GUI_STATUSBAR_FONT);
+    screen_set_font(GUI_STATUSBAR_FONT, 0, &w);
 
     // screen_fill_rect(x-1, 0, LCD_WIDTH-x+1, 7, 1);
 
@@ -426,9 +484,9 @@ static void gui_render_battery(void) {
 
     // show voltage
     screen_put_fixed2(x, 1, 0, v_bat);
-    x += (GUI_STATUSBAR_FONT[FONT_FIXED_WIDTH]+1)*4;
+    x += w*4;
     screen_puts_xy(x, 1, 0, "V");
-    x += GUI_STATUSBAR_FONT[FONT_FIXED_WIDTH]+1;
+    x += w;
 
     // render battery symbol
     x += 2;
@@ -449,7 +507,7 @@ static void gui_render_battery(void) {
     screen_fill_rect(x+1, 1+1, fill_px, 3, 0);
 }
 
-static void gui_render_rssi(uint8_t rssi_rx, uint8_t rssi_tx) {
+static void gui_render_rssi(void) {
     #define GUI_RSSI_BAR_W 25
     uint16_t x = 1;
     // render rx rssi bargraph at a given position
@@ -490,38 +548,40 @@ static void gui_render_statusbar(void) {
     // draw battery voltage
     gui_render_battery();
 
-    gui_render_rssi(111, 120);
+    gui_render_rssi();
 }
 
 
 static void gui_render_bottombar(void) {
+    uint32_t h;
     // render modelname at bottom
     // draw black border
     screen_fill_rect(0, LCD_HEIGHT - 7, LCD_WIDTH, 7, 1);
 
-    screen_set_font(font_tomthumb3x5);
-    screen_puts_centered(LCD_HEIGHT - 6 + font_tomthumb3x5[FONT_HEIGHT]/2, 0,
+    screen_set_font(font_tomthumb3x5, &h, 0);
+    screen_puts_centered(LCD_HEIGHT - 6 + h/2, 0,
                          storage.model[storage.current_model].name);
 }
 
 
 
 static void gui_render_sliders(void) {
+    uint32_t h;
     uint32_t i;
     uint32_t y;
 
     // add statusbar
     gui_render_statusbar();
 
-    screen_set_font(font_tomthumb3x5);
+    screen_set_font(font_tomthumb3x5, &h, 0);
 
     for (i = 0; i < 8; i++) {
         // render channel names
-        y = 10 + i*(font_tomthumb3x5[FONT_HEIGHT]+1);
+        y = 10 + i*h;
         screen_puts_xy(1, y, 1, adc_get_channel_name(i, true));
 
         // render sliders
-        uint32_t y2 = y + (font_tomthumb3x5[FONT_HEIGHT]+1)/2;
+        uint32_t y2 = y + (h)/2;
         screen_draw_hline(8, y2 - 1, 50-1, 1);
         screen_draw_hline(8, y2 + 1, 50-1, 1);
         screen_draw_hline(8 + 50 + 1, y2 - 1, 50-1, 1);
@@ -589,10 +649,7 @@ void gui_render(void) {
 }
 
 static void gui_render_settings(void) {
-    const uint8_t *font = font_tomthumb3x5;
-    uint32_t h = font[FONT_HEIGHT] + 1;
-    uint32_t w = font[FONT_FIXED_WIDTH] + 1;
-    screen_set_font(font);
+    screen_set_font(font_tomthumb3x5, 0, 0);
 
     // render buttons and set callback
     gui_add_button_smallfont(64-50/2, 10, 50, 15, "SETUP",  &gui_cb_setup_enter);
@@ -662,46 +719,47 @@ static void gui_setup_render(void) {
     screen_update();
 }
 
-static void gui_config_header_render(uint8_t *str) {
+static void gui_config_header_render(char *str) {
+    uint32_t h;
     // border + header string
     screen_fill_rect(0, 0, LCD_WIDTH, 7, 1);
     screen_draw_round_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, 3, 1);
 
-    screen_set_font(font_tomthumb3x5);
-    screen_puts_centered(1 + font_tomthumb3x5[FONT_HEIGHT]/2, 0, str);
+    screen_set_font(font_tomthumb3x5, &h, 0);
+    screen_puts_centered(1 + h/2, 0, str);
 }
 
 static void gui_render_main_screen(void) {
-    uint32_t x;
-    uint32_t y;
+    uint32_t x, y;
+    uint32_t h, w;
 
     // do statusbars
     gui_render_statusbar();
     gui_render_bottombar();
 
     // render voltage
-    screen_set_font(font_metric7x12);
+    screen_set_font(font_metric7x12, &h, &w);
     x = 1;
     y = 10;
     screen_put_fixed2_1digit(x, y, 1, telemetry_get_voltage());
-    x += (font_metric7x12[FONT_FIXED_WIDTH]+1)*3 + 3;
+    x += w*3 + 3;
     screen_puts_xy(x, y, 1, "V");
 
     x = 1;
-    y += font_metric7x12[FONT_HEIGHT]+1;
+    y += h;
     screen_put_fixed2_1digit(x, y, 1, telemetry_get_current());
-    x += (font_metric7x12[FONT_FIXED_WIDTH]+1)*3 + 3;
+    x += w*3 + 3;
     screen_puts_xy(x, y, 1, "A");
 
     x = LCD_WIDTH - (font_metric7x12[FONT_FIXED_WIDTH]+1)*7 - 1;
-    y += font_metric7x12[FONT_HEIGHT]+1;
+    y += h;
     y += 5;
     screen_put_uint14(x, y, 1, telemetry_get_mah());
-    x += (font_metric7x12[FONT_FIXED_WIDTH]+1)*4 + 1;
+    x += w*4 + 1;
     screen_puts_xy(x, y, 1, "MAH");
 
     // screen_set_font(font_metric7x12);
-    screen_set_font(font_metric15x26);
+    screen_set_font(font_metric15x26, &h, &w);
 
     // render time
     uint32_t color = 1;
@@ -720,26 +778,22 @@ static void gui_render_main_screen(void) {
     // render background
     x = 51;
     y = 10;
-    uint32_t w = (font_metric15x26[FONT_FIXED_WIDTH]/2 + 2) +
-                 (font_metric15x26[FONT_FIXED_WIDTH] + 1) * 4 + 3;
-    uint32_t h = font_metric15x26[FONT_HEIGHT] + 2;
-    screen_fill_round_rect(x, y, w, h, 2, 1 - color);
+    uint32_t bg_w = (w + 1) +
+                 (w) * 4 + 3;
+    uint32_t bg_h = h + 1;
+    screen_fill_round_rect(x, y, bg_w, bg_h, 2, 1 - color);
     x++;
     y++;
 
     // render time
     screen_put_time(x, y, color, gui_model_timer);
     // register the reset callback
-    gui_touch_callback_register(x, x + w, y, y + h, &gui_cb_model_timer_reload);
+    gui_touch_callback_register(x, x + bg_w, y, y + bg_h, &gui_cb_model_timer_reload);
 }
 
 
 static void gui_config_main_render(void) {
-    uint32_t idx;
-    const uint8_t *font = font_tomthumb3x5;
-    uint32_t h = font[FONT_HEIGHT] + 1;
-    uint32_t w = font[FONT_FIXED_WIDTH] + 1;
-    screen_set_font(font);
+    screen_set_font(font_tomthumb3x5, 0, 0);
 
     // header
     gui_config_header_render("MAIN CONFIGURATION");
@@ -754,11 +808,7 @@ static void gui_config_main_render(void) {
 
 
 static void gui_setup_main_render(void) {
-    uint32_t idx;
-    const uint8_t *font = font_tomthumb3x5;
-    uint32_t h = font[FONT_HEIGHT] + 1;
-    uint32_t w = font[FONT_FIXED_WIDTH] + 1;
-    screen_set_font(font);
+    screen_set_font(font_tomthumb3x5, 0, 0);
 
     // header
     gui_config_header_render("SETUP");
@@ -773,9 +823,7 @@ static void gui_setup_main_render(void) {
 }
 
 static void gui_setup_bootloader_render(void) {
-    const uint8_t *font = font_tomthumb3x5;
-    uint32_t h = font[FONT_HEIGHT]+1;
-    uint32_t w = font[FONT_FIXED_WIDTH]+1;
+    screen_set_font(font_tomthumb3x5, 0, 0);
 
     // header
     gui_config_header_render("BOOTLOADER MODE");
@@ -791,15 +839,17 @@ static void gui_setup_bootloader_render(void) {
 }
 
 static void gui_setup_clonetx_render(void) {
-    const uint8_t *font = font_tomthumb3x5;
-    uint32_t h = font[FONT_HEIGHT]+1;
-    uint32_t w = font[FONT_FIXED_WIDTH]+1;
+    uint32_t w, h;
+
+    // set font
+    screen_set_font(font_tomthumb3x5, &h, &w);
 
     // header
     gui_config_header_render("CLONE TX");
     screen_puts_xy(3, 9, 1, "Put TX in Bind Mode now!");
 
-    if (gui_config_counter >= 0) screen_puts_xy(3, 9 + 1*h, 1, "preparing bind...");
+    screen_puts_xy(3, 9 + 1*h, 1, "preparing bind...");
+
     if (gui_config_counter >= 1) screen_puts_xy(3, 9 + 2*h, 1, "preparing autotune");
     if (gui_config_counter >= 2) screen_puts_xy(3, 9 + 3*h, 1, "autotune running (takes long)");
     if (gui_config_counter >= 3) {
@@ -881,9 +931,8 @@ static void gui_setup_clonetx_render(void) {
 }
 
 static void gui_setup_bindmode_render(void) {
-    const uint8_t *font = font_tomthumb3x5;
-    uint32_t h = font[FONT_HEIGHT]+1;
-    uint32_t w = font[FONT_FIXED_WIDTH]+1;
+    uint32_t h;
+    screen_set_font(font_tomthumb3x5, &h, 0);
 
     // header
     gui_config_header_render("BIND");
@@ -907,21 +956,21 @@ static void gui_setup_bindmode_render(void) {
 }
 
 static void gui_config_model_render_main(void) {
-    const uint8_t *font = font_system5x7;
-    screen_set_font(font);
+    uint32_t h;
+    screen_set_font(font_system5x7, &h, 0);
 
     uint32_t y = 12;
 
     // add model name
     screen_puts_centered(y, 1, storage.model[storage.current_model].name);
     // register the callback
-    gui_touch_callback_register(20, LCD_WIDTH - 20, y, y + font[FONT_HEIGHT] + 1,
+    gui_touch_callback_register(20, LCD_WIDTH - 20, y, y + h,
                                 &gui_cb_setting_model_name);
 
     // add < ... > buttons
     gui_add_button_smallfont(3, y - 3, 15, 10, "<", &gui_cb_model_prev);
     gui_add_button_smallfont(LCD_WIDTH - 3 - 15, y - 3, 15, 10, ">", &gui_cb_model_next);
-    y += 1 + font[FONT_HEIGHT];
+    y += h;
 
     // add line
     // screen_draw_hline(0, y, LCD_WIDTH, 1);
@@ -944,7 +993,9 @@ static void gui_config_model_render_main(void) {
 }
 
 
-static void gui_render_option_window(uint8_t *opt_name, f_ptr_32_32_t func) {
+static void gui_render_option_window(char *opt_name, f_ptr_32_32_t func) {
+    uint32_t h;
+
     // render window
     // clear region for window
     uint32_t window_w = LCD_WIDTH - 20;
@@ -958,12 +1009,11 @@ static void gui_render_option_window(uint8_t *opt_name, f_ptr_32_32_t func) {
     y += 5;
 
     // font selection
-    const uint8_t *font = font_system5x7;
-    screen_set_font(font);
+    screen_set_font(font_system5x7, &h, 0);
 
     // render text
     screen_puts_centered(y, 1, opt_name);
-    y += font[FONT_HEIGHT] + 1;
+    y += h;
     uint32_t len = screen_strlen(opt_name);
     screen_draw_hline((LCD_WIDTH - len) / 2, y, len, 1);
     y += 5;
@@ -974,13 +1024,13 @@ static void gui_render_option_window(uint8_t *opt_name, f_ptr_32_32_t func) {
     }
 
     // add buttons
-    screen_set_font(font_tomthumb3x5);
+    screen_set_font(font_tomthumb3x5, 0, 0);
     y = LCD_HEIGHT - (LCD_HEIGHT - window_h) / 2 - 16;
     gui_add_button_smallfont((LCD_WIDTH - 40) / 2, y, 40, 13, "OK", &gui_cb_setting_option_leave);
 }
 
-static void gui_cb_render_option_stickscale(uint32_t x, uint32_t y) {
-    screen_set_font(font_system5x7);
+static void gui_cb_render_option_stickscale(uint32_t UNUSED(x), uint32_t y) {
+    screen_set_font(font_system5x7, 0, 0);
 
     // render +/- button
     gui_add_button(15, y, 15, 15, "-", &gui_cb_model_stickscale_dec);
@@ -991,8 +1041,8 @@ static void gui_cb_render_option_stickscale(uint32_t x, uint32_t y) {
                      y, 1, storage.model[storage.current_model].stick_scale);
 }
 
-static void gui_cb_render_option_timer(uint32_t x, uint32_t y) {
-    screen_set_font(font_system5x7);
+static void gui_cb_render_option_timer(uint32_t UNUSED(x), uint32_t y) {
+    screen_set_font(font_system5x7, 0, 0);
 
     // render +/- button
     gui_add_button(15, y, 15, 15, "-", &gui_cb_model_timer_dec);
@@ -1003,7 +1053,6 @@ static void gui_cb_render_option_timer(uint32_t x, uint32_t y) {
                      y, 1, storage.model[storage.current_model].timer);
 }
 
-static uint32_t gui_config_temp;
 
 static void gui_config_model_render(void) {
     // header
@@ -1038,12 +1087,11 @@ static void gui_config_model_render(void) {
 
 
 static void gui_config_stick_calibration_render(void) {
-    uint32_t idx, i;
+    uint32_t h, w;
+    uint32_t i;
     uint32_t a;
 
-    const uint8_t *font = font_tomthumb3x5;
-    uint32_t h = font[FONT_HEIGHT] + 1;
-    uint32_t w = font[FONT_FIXED_WIDTH] + 1;
+    screen_set_font(font_tomthumb3x5, &h, &w);
 
     // store adc values
     gui_config_stick_calibration_store_adc_values();

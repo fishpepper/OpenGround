@@ -29,10 +29,6 @@
 #define LCD_HEIGHT   64
 
 void lcd_init(void);
-static void lcd_init_gpio(void);
-static void lcd_init_rcc(void);
-static void lcd_reset(void);
-static void lcd_write_command(uint8_t data);
 void lcd_send_data(const uint8_t *buf);
 void lcd_powerdown(void);
 void lcd_show_logo(void);
@@ -52,7 +48,8 @@ void lcd_show_logo(void);
 #define LCD_CS_HI()   { gpio_set(LCD_CS_GPIO, LCD_CS_PIN); }
 #define LCD_CS_LO()   { gpio_clear(LCD_CS_GPIO, LCD_CS_PIN); }
 
-//#define LCD_DATA_SET(data) { GPIO_ODR(LCD_DATA_GPIO) = (GPIO_ODR(LCD_DATA_GPIO) & 0xFF00) | (data);}
+// #define LCD_DATA_SET(data) { GPIO_ODR(LCD_DATA_GPIO)
+// = (GPIO_ODR(LCD_DATA_GPIO) & 0xFF00) | (data);}
 
 #define LCD_DATA_SET(data) {((uint8_t __IO*)&GPIO_ODR(LCD_DATA_GPIO))[0] = (data); }
 

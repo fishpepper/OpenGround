@@ -41,10 +41,10 @@ extern long _emulated_eeprom_page_size;
 #define EEPROM_PAGE_SIZE             ((uint32_t)0x800)  /* Page size = 2KByte */
 
 /* EEPROM start address in Flash */
-#define EEPROM_START_ADDRESS  ((uint32_t)0x08000000+128*1024-2*EEPROM_PAGE_SIZE) /* EEPROM emulation start address:
-    //#define EEPROM_START_ADDRESS  ((uint32_t)0x0801F000) /* EEPROM emulation start address:
-    from sector2, after 8KByte of used
-    Flash memory */
+#define EEPROM_START_ADDRESS  ((uint32_t)0x08000000+128*1024-2*EEPROM_PAGE_SIZE)
+// EEPROM emulation start address:
+// #define EEPROM_START_ADDRESS  ((uint32_t)0x0801F000)
+// EEPROM emulation start address: from sector2, after 8KByte of used Flash memory
 
 /* Pages 0 and 1 base and end addresses */
 #define PAGE0_BASE_ADDRESS    ((uint32_t)(EEPROM_START_ADDRESS + 0x0000))

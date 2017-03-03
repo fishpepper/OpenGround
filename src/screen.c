@@ -48,11 +48,11 @@ void screen_update(void) {
 }
 
 void screen_test(void) {
-    uint32_t x, y;
+    uint32_t x;
     while (1) {
         for (x = 0; x < 64; x++) {
             screen_clear();
-            screen_puts_xy(0, x+0, 1, "0 ABC");
+            screen_puts_xy(0,  x+0, 1, "0 ABC");
             screen_puts_xy(30, x+1, 1, "1 ABC");
             screen_puts_xy(60, x+2, 1, "2 ABC");
             screen_puts_xy(90, x+3, 1, "3 ABC");
@@ -109,7 +109,7 @@ void screen_draw_line(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t co
 // set pixels from upper left edge x,y to lower right edge x1,y1 to the given color
 // the width of the region is x1-x + 1, height is y1-y+1
 void screen_set_pixels(uint8_t x, uint8_t y, uint8_t x2, uint8_t y2, uint8_t color) {
-    uint8_t mask, pageOffset, h, i, data;
+    uint8_t mask, pageOffset, h, i;
     uint8_t height = y2-y+1;
     uint8_t width = x2-x+1;
     uint16_t dpos = 0;
@@ -265,7 +265,7 @@ void screen_fill_round_rect(uint8_t x, uint8_t y, uint8_t width,
     }
 }
 
-uint8_t screen_put_char(uint8_t c) {
+uint8_t screen_put_char(char c) {
     uint8_t thielefont = 0;
     uint8_t width      = 0;
     uint8_t height     = screen_font_ptr[FONT_HEIGHT];
@@ -559,7 +559,7 @@ uint8_t screen_put_char(uint8_t c) {
     return 1;  // valid char
 }
 
-void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str) {
+void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, char *str) {
     screen_font_x = x;
     screen_font_y = y;
     screen_font_color = color;
@@ -570,7 +570,7 @@ void screen_puts_xy(uint8_t x, uint8_t y, uint8_t color, uint8_t *str) {
     }
 }
 
-uint32_t screen_strlen(uint8_t *str) {
+uint32_t screen_strlen(char *str) {
     uint32_t len = 0;
     while (*str++) {
         len++;
@@ -582,17 +582,17 @@ uint32_t screen_strlen(uint8_t *str) {
     return (screen_font_ptr[FONT_FIXED_WIDTH] + 1) * len;
 }
 
-void screen_puts_xy_centered(uint8_t x, uint8_t y, uint8_t color, uint8_t *str) {
-    uint32_t font_w = screen_font_ptr[FONT_FIXED_WIDTH];
+void screen_puts_xy_centered(uint8_t x, uint8_t y, uint8_t color, char *str) {
+    // uint32_t font_w = screen_font_ptr[FONT_FIXED_WIDTH];
     uint32_t font_h = screen_font_ptr[FONT_HEIGHT];
 
-    uint32_t len = screen_strlen(str);
+    uint32_t len = (uint32_t) screen_strlen(str);
     uint32_t sx = x - (len) / 2;
     uint32_t sy = y - font_h / 2;
     screen_puts_xy(sx, sy, color, str);
 }
 
-void screen_puts_centered(uint8_t y, uint8_t color, uint8_t *str) {
+void screen_puts_centered(uint8_t y, uint8_t color, char *str) {
     screen_puts_xy_centered(LCD_WIDTH/2, y, color, str);
 }
 
@@ -636,7 +636,6 @@ void screen_put_int8(uint8_t x, uint8_t y, uint8_t color, int8_t c) {
 void screen_put_time(uint8_t x, uint8_t y, uint8_t c, int16_t time) {
     // print time -00:00 on screen
     uint32_t color = c;
-    uint32_t negative = 0;
 
     if (time < 0) {
         time = -time;
@@ -682,26 +681,26 @@ void screen_put_fixed2_1digit(uint8_t x, uint8_t y, uint8_t color, uint32_t v) {
 
 // output a unsigned 8-bit, only two decimals
 void screen_put_uint8_2dec(uint8_t x, uint8_t y, uint8_t color, uint8_t c) {
+    uint8_t tmp;
+    uint8_t mul;
+    // uint8_t l;
+
     screen_font_x = x;
     screen_font_y = y;
     screen_font_color = color;
-
-    uint8_t tmp;
-    uint8_t mul;
-    uint8_t l;
 
     // this should not happen
     if (c >= 100) {
         return;
     }
 
-    l = 0;
+    // l = 0;
     for (mul = 10; mul > 0; mul = mul/ 10) {
         tmp = '0';
         while (c >= mul) {
             c -= mul;
             tmp++;
-            l = 1;
+            // l = 1;
         }
         screen_put_char(tmp);
     }
@@ -874,8 +873,12 @@ void screen_put_fixed2(uint8_t x, uint8_t y, uint8_t color, uint16_t c) {
     screen_put_char('0' + (uint8_t)c);
 }
 
-void screen_set_font(const uint8_t *font) {
+void screen_set_font(const uint8_t *font, uint32_t *h, uint32_t *w) {
     screen_font_ptr = font;
+
+    // return font size if requested:
+    if (h != 0) *h = screen_font_ptr[FONT_HEIGHT]+1;
+    if (w != 0) *w = screen_font_ptr[FONT_FIXED_WIDTH]+1;
 }
 
 void screen_fill(uint8_t color) {

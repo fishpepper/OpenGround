@@ -129,51 +129,33 @@ void frsky_init(void) {
 }
 
 void frsky_init_timer(void) {
-    // init timer3 for 9ms
-    /*
-    FIXME
-
-    TIM_TimeBaseInitTypeDef timebase_init;
-    TIM_OCInitTypeDef oc_init;
-    NVIC_InitTypeDef nvic_init;
-
-    // pre-initialise structs
-    TIM_TimeBaseStructInit(&timebase_init);
-    TIM_OCStructInit(&oc_init);
-
     // TIM3 clock enable
-    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3, ENABLE);
+    rcc_periph_clock_enable(RCC_TIM3);
 
-    // Enable the TIM3 gloabal Interrupt
-    nvic_init.NVIC_IRQChannel         = TIM3_IRQn;
-    nvic_init.NVIC_IRQChannelPriority = NVIC_PRIO_FRSKY;
-    nvic_init.NVIC_IRQChannelCmd      = ENABLE;
-    NVIC_Init(&nvic_init);
+    // init timer3 for 9ms
+    timer_reset(TIM3);
+
+    // enable the TIM3 gloabal Interrupt
+    nvic_enable_irq(NVIC_TIM3_IRQ);
+    nvic_set_priority(NVIC_TIM3_IRQ, NVIC_PRIO_FRSKY);
+
 
     // compute prescaler value
     // we want one ISR every 9ms
     // setting TIM_Period to 9000 will reuqire
     // a prescaler so that one timer tick is 1us (1MHz)
-    uint16_t prescaler = (uint16_t) (SystemCoreClock  / 1000000) - 1;
+    uint16_t prescaler = (uint16_t) (rcc_apb1_frequency  / 1000000) - 1;
 
-    // time base configuration as calculated above
-    // timer counts with 1MHz thus 9000 ticks = 9ms
-    timebase_init.TIM_Period        = 9000-1;
-    timebase_init.TIM_Prescaler     = prescaler;
-    timebase_init.TIM_ClockDivision = 0;
-    timebase_init.TIM_CounterMode   = TIM_CounterMode_Up;
-    TIM_TimeBaseInit(TIM3, &timebase_init);
+    // time base as calculated above
+    timer_set_prescaler(TIM3, prescaler);
+    timer_set_mode(TIM3, TIM_CR1_CKD_CK_INT, TIM_CR1_CMS_EDGE, TIM_CR1_DIR_UP);
+    // timer should count with 1MHz thus 9000 ticks = 9ms
+    timer_set_period(TIM3, 9000-1);
 
-    // should be done by timebaseinit...
-    // TIM_PrescalerConfig(TIM3, prescaler, TIM_PSCReloadMode_Immediate);
+    // DO NOT ENABLE INT yet!
 
-    // TIM Interrupts enable
-    // DO NOT ENABLE IT YET
-    // TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
-
-    // TIM3 enable counter
-    TIM_Cmd(TIM3, ENABLE);
-    */
+    // enable timer
+    timer_enable_counter(TIM3);
 }
 
 void frsky_tx_set_enabled(uint32_t enabled) {
@@ -181,15 +163,15 @@ void frsky_tx_set_enabled(uint32_t enabled) {
     if (enabled) {
         frsky_frame_counter = 0;
         frsky_state = 0;
-        //FIXME//TIM_ITConfig(TIM3, TIM_IT_Update, ENABLE);
+        // enable ISR
+        timer_enable_irq(TIM3, TIM_DIER_UIE);
     } else {
         // stop ISR
-        //FIXME//TIM_ITConfig(TIM3, TIM_IT_Update, DISABLE);
+        timer_disable_irq(TIM3, TIM_DIER_UIE);
         // make sure last packet was sent
         delay_ms(20);
     }
 }
-
 
 static void frsky_send_packet(void) {
     // Stop RX DMA
@@ -323,10 +305,9 @@ void frsky_get_rssi(uint8_t *rssi, uint8_t *rssi_telemetry) {
 }
 
 void TIM3_IRQHandler(void) {
-    /* FIXME
-
-    if (TIM_GetITStatus(TIM3, TIM_IT_Update) != RESET) {
-        TIM_ClearITPendingBit(TIM3, TIM_IT_Update);
+    if (timer_get_flag(TIM3, TIM_SR_UIF)) {
+        // clear flag (NOTE: this should never be done at the end of the ISR)
+        timer_clear_flag(TIM3, TIM_SR_UIF);
 
         // when will there be the next isr?
         switch (frsky_state) {
@@ -340,7 +321,7 @@ void TIM3_IRQHandler(void) {
                 frsky_send_packet();
                 frsky_frame_counter++;
                 // next hop in 9ms
-                TIM_SetAutoreload(TIM3, 9000-1);
+                timer_set_period(TIM3, 9000-1);
                 frsky_state = 1;
                 break;
 
@@ -351,7 +332,7 @@ void TIM3_IRQHandler(void) {
                 frsky_send_packet();
                 frsky_frame_counter++;
                 // next hop in 9ms
-                TIM_SetAutoreload(TIM3, 9000-1);
+                timer_set_period(TIM3, 9000-1);
                 frsky_state = 2;
                 break;
 
@@ -363,7 +344,7 @@ void TIM3_IRQHandler(void) {
                 frsky_frame_counter++;
                 // after this tx we expect rx data,
                 // TX is finished after ~7.2ms -> next isr in 7.5ms
-                TIM_SetAutoreload(TIM3, 7500-1);
+                timer_set_period(TIM3, 7500-1);
                 frsky_state = 3;
                 break;
 
@@ -373,7 +354,7 @@ void TIM3_IRQHandler(void) {
                 // enable LNA
                 cc2500_enter_rxmode();
                 // the next hop will now in 1.3ms (after freq stabilised)
-                TIM_SetAutoreload(TIM3, 1300-1-0*200);
+                timer_set_period(TIM3, 1300-1-0*200);
                 frsky_state = 4;
                 break;
 
@@ -385,13 +366,13 @@ void TIM3_IRQHandler(void) {
                 frsky_frame_counter++;
                 // the next hop will now in 9.2ms
                 // 2*9 = 18 = 7.5 + 1.3 + 9.2
-                TIM_SetAutoreload(TIM3, 9200-1+0*200);
+                timer_set_period(TIM3, 9200-1+0*200);
                 frsky_state = 0;
                 break;
 
             case (0x80) :
                 // bind mode, set timeout to 9ms
-                TIM_SetAutoreload(TIM3, 9000);
+                timer_set_period(TIM3, 9000);
 
                 // get bind packet index
                 frsky_frame_counter++;
@@ -405,7 +386,6 @@ void TIM3_IRQHandler(void) {
                 break;
         }
     }
-    */
 }
 
 

@@ -29,9 +29,9 @@
 void console_init(void);
 void console_clear(void);
 
-static void console_render_str(uint8_t line, uint8_t color, uint8_t *str);
-void console_puts(uint8_t *str);
-void console_putc(uint8_t c);
+// static void console_render_str(uint8_t line, uint8_t color, char *str);
+void console_puts(char *str);
+void console_putc(char c);
 void console_render(void);
 
 // you can define the console font here. make sure to use FIXED WIDTH fonts!

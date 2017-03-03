@@ -31,21 +31,19 @@ static volatile __IO uint32_t timeout2_100us;
 static volatile __IO uint32_t timeout_100us_delay;
 
 void timeout_init(void) {
-    ///debug("timeout: init\n"); debug_flush();
+    debug("timeout: init\n"); debug_flush();
 
     // configure 0.1ms sys tick:
     systick_set_clocksource(STK_CSR_CLKSOURCE_AHB);
-
-    // clear counter so it starts right away
-    STK_CVR = 0;
-
     systick_set_reload(rcc_ahb_frequency / 10000);
     systick_interrupt_enable();
     systick_counter_enable();
 
+    // clear counter so it starts right away
+    STK_CVR = 0;
 
     // set prio
-    //nvic_set_priority(NVIC_SYSTICK_IRQ, NVIC_PRIO_SYSTICK);
+    nvic_set_priority(NVIC_SYSTICK_IRQ, NVIC_PRIO_SYSTICK);
 
     timeout_100us = 0;
     timeout2_100us = 0;
@@ -93,7 +91,7 @@ void sys_tick_handler(void) {
     if (timeout_100us_delay != 0) {
         timeout_100us_delay--;
     }
-    ///sound_handle_playback();
+    sound_handle_playback();
 }
 
 uint32_t timeout_time_remaining(void) {

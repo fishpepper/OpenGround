@@ -28,6 +28,12 @@
 #include <libopencm3/stm32/spi.h>
 #include <libopencm3/stm32/dma.h>
 
+// internal functions
+static void spi_init_gpio(void);
+static void spi_init_mode(void);
+static void spi_init_dma(void);
+static void spi_init_rcc(void);
+
 
 void spi_init(void) {
     debug("spi: init\n"); debug_flush();
@@ -40,15 +46,13 @@ void spi_init(void) {
 static void spi_init_rcc(void) {
     // enable clocks
     rcc_periph_clock_enable(GPIO_RCC(CC2500_SPI_GPIO));
-
     rcc_periph_clock_enable(CC2500_SPI_CLK);
-    rcc_periph_clock_enable(CC2500_SPI);
 }
 
 static void spi_init_mode(void) {
     // SPI NVIC
-    //nvic_set_priority(NVIC_SPI2_IRQ, 3);
-    //nvic_enable_irq(NVIC_SPI2_IRQ);
+    // nvic_set_priority(NVIC_SPI2_IRQ, 3);
+    // nvic_enable_irq(NVIC_SPI2_IRQ);
 
     // clean start
     spi_reset(CC2500_SPI);
@@ -84,8 +88,6 @@ static void spi_init_mode(void) {
 
 
 
-
-
 static void spi_init_dma(void) {
     debug("spi: init dma\n"); debug_flush();
 
@@ -93,13 +95,13 @@ static void spi_init_dma(void) {
     rcc_periph_clock_enable(RCC_DMA);
 
     // DMA NVIC
-    //nvic_set_priority(NVIC_DMA1_CHANNEL2_3_IRQ, NVIC_PRIO_FRSKY);
-    //nvic_enable_irq(NVIC_DMA1_CHANNEL2_3_IRQ);
+    nvic_set_priority(NVIC_DMA1_CHANNEL2_3_IRQ, NVIC_PRIO_FRSKY);
+    // nvic_enable_irq(NVIC_DMA1_CHANNEL2_3_IRQ); // NO IRQ beeing used here
 
     // start with clean init for RX channel
     dma_channel_reset(DMA1, CC2500_SPI_RX_DMA_CHANNEL);
     // source and destination 1Byte = 8bit
-    dma_set_memory_size    (DMA1, CC2500_SPI_RX_DMA_CHANNEL, DMA_CCR_MSIZE_8BIT);
+    dma_set_memory_size(DMA1, CC2500_SPI_RX_DMA_CHANNEL, DMA_CCR_MSIZE_8BIT);
     dma_set_peripheral_size(DMA1, CC2500_SPI_RX_DMA_CHANNEL, DMA_CCR_PSIZE_8BIT);
     // automatic memory destination increment enable.
     dma_enable_memory_increment_mode(DMA1, CC2500_SPI_RX_DMA_CHANNEL);
@@ -110,7 +112,7 @@ static void spi_init_dma(void) {
     // source and destination start addresses
     dma_set_peripheral_address(DMA1, CC2500_SPI_RX_DMA_CHANNEL, (uint32_t)&CC2500_SPI_DR);
     // target address will be set later
-    dma_set_memory_address    (DMA1, CC2500_SPI_RX_DMA_CHANNEL, 0);
+    dma_set_memory_address(DMA1, CC2500_SPI_RX_DMA_CHANNEL, 0);
     // chunk of data to be transfered, will be set later
     dma_set_number_of_data(DMA1, CC2500_SPI_RX_DMA_CHANNEL, 1);
     // very high prio
@@ -119,18 +121,18 @@ static void spi_init_dma(void) {
     // start with clean init for TX channel
     dma_channel_reset(DMA1, CC2500_SPI_TX_DMA_CHANNEL);
     // source and destination 1Byte = 8bit
-    dma_set_memory_size    (DMA1, CC2500_SPI_TX_DMA_CHANNEL, DMA_CCR_MSIZE_8BIT);
+    dma_set_memory_size(DMA1, CC2500_SPI_TX_DMA_CHANNEL, DMA_CCR_MSIZE_8BIT);
     dma_set_peripheral_size(DMA1, CC2500_SPI_TX_DMA_CHANNEL, DMA_CCR_PSIZE_8BIT);
     // automatic memory destination increment enable.
     dma_enable_memory_increment_mode(DMA1, CC2500_SPI_TX_DMA_CHANNEL);
     // source address increment disable
     dma_disable_peripheral_increment_mode(DMA1, CC2500_SPI_TX_DMA_CHANNEL);
     // Location assigned to peripheral register will be target
-    dma_set_read_from_memory (DMA1, CC2500_SPI_TX_DMA_CHANNEL);
+    dma_set_read_from_memory(DMA1, CC2500_SPI_TX_DMA_CHANNEL);
     // source and destination start addresses
     dma_set_peripheral_address(DMA1, CC2500_SPI_TX_DMA_CHANNEL, (uint32_t)&CC2500_SPI_DR);
     // target address will be set later
-    dma_set_memory_address    (DMA1, CC2500_SPI_TX_DMA_CHANNEL, 0);
+    dma_set_memory_address(DMA1, CC2500_SPI_TX_DMA_CHANNEL, 0);
     // chunk of data to be transfered, will be set later
     dma_set_number_of_data(DMA1, CC2500_SPI_TX_DMA_CHANNEL, 1);
     // very high prio
@@ -181,8 +183,8 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
 
 
     // wait for completion
-    while (!(SPI_SR(CC2500_SPI) & SPI_SR_TXE));
-    while (SPI_SR(CC2500_SPI) & SPI_SR_BSY);
+    while (!(SPI_SR(CC2500_SPI) & SPI_SR_TXE)) {}
+    while (SPI_SR(CC2500_SPI) & SPI_SR_BSY) {}
 
     // disable DMA
     dma_disable_channel(DMA1, CC2500_SPI_RX_DMA_CHANNEL);
@@ -194,7 +196,6 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
 
 
 static void spi_init_gpio(void) {
-
     // init sck, mosi and miso
     uint32_t spi_gpios = CC2500_SPI_SCK_PIN | CC2500_SPI_MOSI_PIN | CC2500_SPI_MISO_PIN;
     // set mode

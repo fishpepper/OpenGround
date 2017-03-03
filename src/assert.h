@@ -17,29 +17,12 @@
     author: fishpepper <AT> gmail.com
 */
 
-#ifndef TELEMETRY_H_
-#define TELEMETRY_H_
+#ifndef ASSERT_H__
+#define ASSERT_H__
 
-#include <stdint.h>
-#include "fifo.h"
+#include <libopencm3/cm3/common.h>
+#include <libopencm3/cm3/assert.h>
 
-void telemetry_init(void);
-void telemetry_enqueue(uint8_t byte);
-void telemetry_process(void);
+#define assert(x) cm3_assert(x)
 
-uint16_t telemetry_get_voltage(void);
-uint16_t telemetry_get_current(void);
-uint16_t telemetry_get_mah(void);
-
-// FrSky telemetry stream state machine
-typedef enum {
-  TELEMETRY_IDLE = 0,   // waiting for 0x5e frame marker
-  TELEMETRY_DATA_ID,    // waiting for dataID
-  TELEMETRY_DATA_LOW,   // waiting for data low byte
-  TELEMETRY_DATA_HIGH,  // waiting for data high byte
-  TELEMETRY_DATA_END,   // waiting for 0x5e end of frame marker
-  TELEMETRY_XOR = 0x80  // decode stuffed byte
-} telemetry_state_t;
-
-
-#endif  // TELEMETRY_H_
+#endif  // ASSERT_H_

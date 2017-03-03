@@ -22,6 +22,6 @@
 
 #include <stdint.h>
 
-uint16_t crc(uint8_t *buf, uint16_t len);
+uint16_t crc16(uint8_t *buf, uint16_t len);
 
 #endif  // CRC16_H_

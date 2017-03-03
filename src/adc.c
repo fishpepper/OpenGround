@@ -33,6 +33,13 @@
 static uint16_t adc_data[ADC_CHANNEL_COUNT];
 static uint16_t adc_battery_voltage_raw_filtered;
 
+// internal functions
+static void adc_init_rcc(void);
+static void adc_init_gpio(void);
+static void adc_init_mode(void);
+static void adc_init_dma(void);
+static void adc_dma_arm(void);
+
 void adc_init(void) {
     debug("adc: init\n"); debug_flush();
 
@@ -76,13 +83,13 @@ uint16_t adc_get_channel(uint32_t id) {
             case (CHANNEL_ID_CH2)      : return adc_data[6];
             case (CHANNEL_ID_CH3)      : return adc_data[4];
         }
-    } else {
-        // undefined!
-        debug("adc: invalid hw revision ");
-        debug_put_uint8(config_hw_revision);
-        debug(" given!\n"); debug_flush();
-        return 0;
     }
+
+    // else: undefined!
+    debug("adc: invalid hw revision ");
+    debug_put_uint8(config_hw_revision);
+    debug(" given!\n"); debug_flush();
+    return 0;
 }
 
 char *adc_get_channel_name(uint8_t i, bool short_descr) {
@@ -287,6 +294,7 @@ static void adc_init_dma(void) {
     // start conversion:
     adc_dma_arm();
 }
+
 
 static void adc_dma_arm(void) {
     // start conversion
