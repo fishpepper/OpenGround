@@ -1015,8 +1015,8 @@ void frsky_calib_pll(void) {
     debug("frsky: calib pll done\n");
 }
 
-/*
 
+#if 0
 void frsky_main(void) {
     uint8_t send_telemetry = 0;
     uint8_t requested_telemetry_id = 0;
@@ -1217,8 +1217,7 @@ void frsky_main(void) {
         }
     }
 }
-
-*/
+#endif
 
 void frsky_set_channel(uint8_t hop_index) {
     uint8_t ch = storage.frsky_hop_table[hop_index];

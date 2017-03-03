@@ -31,7 +31,7 @@
 static void cc2500_init_gpio(void);
 
 
-#define CC2500_DEBUG_STATUSBYTE 1
+#define CC2500_DEBUG_STATUSBYTE 0
 
 void cc2500_init(void) {
     debug("cc2500: init\n"); debug_flush();

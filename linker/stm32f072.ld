@@ -1,10 +1,22 @@
 EXTERN(vector_table)
 ENTRY(reset_handler)
+
+/* reserve two pages for eeprom emulation */
+_emulated_eeprom_page_size = 2048; /* do not change this, stm32f072 has 2k pagesize */
+_emulated_eeprom_size = 2*_emulated_eeprom_page_size;
+
 MEMORY
 {
  ram (rwx) : ORIGIN = 0x20000000, LENGTH = 16K
  rom (rx) : ORIGIN = 0x08000000, LENGTH = 128K
+ EMULATED_EEPROM (rwx) : ORIGIN = 0x8000000+128K-2*2048 LENGTH=2*2048
 }
+
+
+/*EMULATED_EEPROM;*/
+_emulated_eeprom = 0x08011800; /*ORIGIN(EMULATED_EEPROM);*/
+
+
 SECTIONS
 {
  .text : {

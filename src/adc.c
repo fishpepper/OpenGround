@@ -62,6 +62,7 @@ uint16_t adc_get_channel(uint32_t id) {
     if (config_hw_revision == CONFIG_HW_REVISION_I6S) {
         // FS-i6S mapping:
         switch (id) {
+            default : return adc_data[id];
             case (CHANNEL_ID_AILERON)  : return adc_data[0];
             case (CHANNEL_ID_ELEVATION): return adc_data[1];
             case (CHANNEL_ID_THROTTLE) : return adc_data[2];
@@ -74,6 +75,7 @@ uint16_t adc_get_channel(uint32_t id) {
     } else if (config_hw_revision == CONFIG_HW_REVISION_EVOLUTION) {
         // TGY Evolution mapping:
         switch (id) {
+            default : return adc_data[id];
             case (CHANNEL_ID_AILERON)  : return 4095 - adc_data[3];
             case (CHANNEL_ID_ELEVATION): return 4095 - adc_data[2];
             case (CHANNEL_ID_THROTTLE) : return 4095 - adc_data[1];
