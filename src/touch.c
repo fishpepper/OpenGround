@@ -60,7 +60,7 @@ void touch_init(void) {
     touch_init_i2c_rcc();
 
     // free bus with pulse train
-    if (0) touch_init_i2c_free_bus();
+    touch_init_i2c_free_bus();
 
     touch_init_i2c_gpio();
     touch_init_i2c_mode();
@@ -205,6 +205,12 @@ static void touch_init_i2c_free_bus(void) {
 
     gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, TOUCH_I2C_SDA_PIN);
     gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, TOUCH_I2C_SDA_PIN);
+
+
+    while (1) {
+        delay_ms(100);
+        gpio_toggle(TOUCH_I2C_GPIO, TOUCH_I2C_SCL_PIN);
+    }
 
     // send 100khz clock train for some 100ms
     timeout_set(100);
