@@ -206,12 +206,6 @@ static void touch_init_i2c_free_bus(void) {
     gpio_mode_setup(TOUCH_I2C_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, TOUCH_I2C_SDA_PIN);
     gpio_set_output_options(TOUCH_I2C_GPIO, GPIO_OTYPE_OD, GPIO_OSPEED_2MHZ, TOUCH_I2C_SDA_PIN);
 
-
-    while (1) {
-        delay_ms(100);
-        gpio_toggle(TOUCH_I2C_GPIO, TOUCH_I2C_SCL_PIN);
-    }
-
     // send 100khz clock train for some 100ms
     timeout_set(100);
     while (!timeout_timed_out()) {
@@ -252,11 +246,15 @@ static void touch_init_i2c_mode(void) {
     i2c_set_own_7bit_slave_address(TOUCH_I2C, 0x00);
     i2c_set_7bit_addr_mode(TOUCH_I2C);
 
+    // set sysclock as input for i2c
+    RCC_CFGR3 |= RCC_CFGR3_I2C1SW;
+
     // 400KHz | 8MHz-0x00310309; 16MHz-0x10320309; 48MHz-50330309
-    I2C_TIMINGR(TOUCH_I2C) = 0x50330309;
+    // I2C_TIMINGR(TOUCH_I2C) = 0x50330309;
+    // 100kHz for 48mhz
+    I2C_TIMINGR(TOUCH_I2C) = 0xB0420F13;
 
     i2c_peripheral_enable(TOUCH_I2C);
-
     // ACK ENABLE? set?? CR2 &= ~(I2C_CR2_NACK)
 }
 
