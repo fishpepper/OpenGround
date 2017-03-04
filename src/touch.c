@@ -45,7 +45,7 @@ static void touch_init_isr(void);
 static void touch_ft6236_init(void);
 
 
-#define TOUCH_I2C_DEBUG         1
+#define TOUCH_I2C_DEBUG         0
 #define TOUCH_I2C_TIMEOUT      20
 #define TOUCH_I2C_FLAG_TIMEOUT 10
 

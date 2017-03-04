@@ -85,7 +85,7 @@ void config_detect_hw_revision(void);
 #define NVIC_PRIO_TOUCH      3*64
 
 // touch
-#define TOUCH_FT6236_I2C_ADDRESS      0x70
+#define TOUCH_FT6236_I2C_ADDRESS      (0x70>>1)
 #define TOUCH_I2C                     I2C1
 #define TOUCH_I2C_CLK                 RCC_I2C1
 #define TOUCH_I2C_GPIO                GPIOB

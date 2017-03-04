@@ -65,13 +65,13 @@ int main(void) {
     adc_init();
     sound_init();
 
-    // touch_init();
+    touch_init();
     eeprom_init();
     storage_init();
     frsky_init();
 
     /// screen_test();
-    //touch_test();
+    touch_test();
     // adc_test();
     gui_init();
 
