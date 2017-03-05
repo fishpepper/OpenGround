@@ -42,6 +42,8 @@
 int main(void) {
     clocksource_init();
     config_init();
+
+
     delay_init();
 
 
@@ -68,6 +70,7 @@ int main(void) {
     touch_init();
     eeprom_init();
     storage_init();
+
     frsky_init();
 
     /// screen_test();

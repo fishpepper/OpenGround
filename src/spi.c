@@ -22,6 +22,7 @@
 #include "debug.h"
 #include "led.h"
 #include "config.h"
+#include "cc2500.h"
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/gpio.h>
@@ -41,6 +42,15 @@ void spi_init(void) {
     spi_init_gpio();
     spi_init_mode();
     spi_init_dma();
+    /*while(1) {
+        delay_ms(10);
+        // select device:
+        cc2500_csn_lo();
+        spi_tx(0xAB);
+        // select device:
+        cc2500_csn_hi();
+
+    }*/
 }
 
 static void spi_init_rcc(void) {
@@ -213,10 +223,12 @@ static void spi_init_gpio(void) {
 }
 
 uint8_t spi_tx(uint8_t data) {
-    return spi_xfer(CC2500_SPI, data);
+    spi_send8(CC2500_SPI, data);
+    spi_read8(CC2500_SPI);
 }
 
 
 uint8_t spi_rx(void) {
-    return spi_xfer(CC2500_SPI, 0xFF);
+    spi_send8(CC2500_SPI, 0xFF);
+    return spi_read8(CC2500_SPI);
 }
