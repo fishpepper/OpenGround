@@ -559,7 +559,7 @@ static void gui_render_bottombar(void) {
     screen_fill_rect(0, LCD_HEIGHT - 7, LCD_WIDTH, 7, 1);
 
     screen_set_font(font_tomthumb3x5, &h, 0);
-    screen_puts_centered(LCD_HEIGHT - 6 + h/2, 0,
+    screen_puts_centered(LCD_HEIGHT - 7 + h/2, 0,
                          storage.model[storage.current_model].name);
 }
 
