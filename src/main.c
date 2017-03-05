@@ -60,13 +60,13 @@ static void handle_bootloader_request(void) {
     //
     // Note that 0x1fffC800 is "System Memory" start address for STM32 F0xx
     //
-    if ( *((unsigned long *)0x20003FF0) == 0xDEADBEEF ) {
-         *((unsigned long *)0x20003FF0) =  0xCAFEFEED; // Reset our trigger
+    if ( *((uint32_t *)0x20003FF0) == 0xDEADBEEF ) {
+         *((uint32_t *)0x20003FF0) =  0xCAFEFEED;  // Reset our trigger
         // 0x1fffC800 is "System Memory" start address for STM32 F0xx
         // point the PC to the System Memory reset vector (+4)
         bootloader_jump = (void (*)(void)) (*((uint32_t *) 0x1fffC804));
         bootloader_jump();
-        while (1);
+        while (1) {}
     }
 }
 
@@ -116,7 +116,6 @@ int main(void) {
     gui_init();
 
     debug("main: init done.\n"); debug_flush();
-    //frsky_main();
 
     gui_loop();
 

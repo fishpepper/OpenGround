@@ -21,6 +21,7 @@
 #include "sound.h"
 #include "config.h"
 #include "debug.h"
+#include "delay.h"
 #include "clocksource.h"
 
 #include <libopencm3/stm32/rcc.h>
@@ -52,11 +53,11 @@ void sound_init(void) {
     sound_set_frequency(0);
 /*
     sound_queue[0].frequency   = 500;
-    sound_queue[0].duration_ms = 80;
+    sound_queue[0].duration_ms = 8000;
     sound_queue[1].frequency   = 890;
     sound_queue[1].duration_ms = 80;
     sound_queue[2].frequency   = 1000;
-    sound_queue[2].duration_ms = 80;
+    sound_queue[2].duration_ms = 8000;
     sound_queue[3].frequency   = 0;
     sound_queue[3].duration_ms = 0;
     sound_queue_state = 1;
@@ -99,6 +100,7 @@ static void sound_init_gpio(void) {
     // set all gpio directions to output
     gpio_mode_setup(SPEAKER_GPIO, GPIO_MODE_OUTPUT, GPIO_PUPD_NONE, SPEAKER_PIN);
     gpio_mode_setup(SPEAKER_GPIO, GPIO_MODE_AF, GPIO_PUPD_NONE, SPEAKER_PIN);
+
     // connect TIM1 pins to AF2 on gpio
     gpio_set_af(SPEAKER_GPIO, GPIO_AF2, SPEAKER_PIN);
 }
@@ -109,7 +111,7 @@ void sound_set_frequency(uint32_t freq) {
     if (freq <= 200) {
         // switch off pwm
         timer_disable_oc_output(TIM1, TIM_OC1);
-        return;
+        // return;
     }
 
     // reset TIMx peripheral
@@ -143,7 +145,6 @@ void sound_set_frequency(uint32_t freq) {
 
     // configure output mode
     timer_set_oc_mode(TIM1, TIM_OC1, TIM_OCM_PWM1);
-    timer_set_oc_value(TIM1, TIM_OC1, 0);
     // set period for 50/50 duty cycle
     timer_set_oc_value(TIM1, TIM_OC1, period / 2);
     // enable pwm output
