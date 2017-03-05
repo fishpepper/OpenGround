@@ -43,14 +43,6 @@
 // Define our function pointer
 void (*bootloader_jump)(void);
 
-__STATIC_INLINE void __set_MSP(uint32_t topOfMainStack)
-{
-  register uint32_t __regMainStackPointer     __asm("msp");
-  __regMainStackPointer = topOfMainStack;
-}
-
-
-
 static void handle_bootloader_request(void) {
     // Check if we should go into bootloader mode.
     //
@@ -70,11 +62,6 @@ static void handle_bootloader_request(void) {
     //
     if ( *((unsigned long *)0x20003FF0) == 0xDEADBEEF ) {
          *((unsigned long *)0x20003FF0) =  0xCAFEFEED; // Reset our trigger
-
-        //set MSP = 0x2000225
-        //breaks it
-        //asm("ldr    r3, = 0x2000225\n msr MSP, r3 \n" : : : "r3");
-
         // 0x1fffC800 is "System Memory" start address for STM32 F0xx
         // point the PC to the System Memory reset vector (+4)
         bootloader_jump = (void (*)(void)) (*((uint32_t *) 0x1fffC804));
