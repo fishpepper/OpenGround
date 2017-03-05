@@ -39,10 +39,60 @@
 #include "gui.h"
 #include "eeprom.h"
 
-int main(void) {
-    clocksource_init();
-    config_init();
 
+// Define our function pointer
+void (*bootloader_jump)(void);
+
+__STATIC_INLINE void __set_MSP(uint32_t topOfMainStack)
+{
+  register uint32_t __regMainStackPointer     __asm("msp");
+  __regMainStackPointer = topOfMainStack;
+}
+
+
+
+static void handle_bootloader_request(void) {
+    // Check if we should go into bootloader mode.
+    //
+    // Set the main stack pointer __set_MSP() to its default value.  The default
+    // value of the main stack pointer is found by looking at the default value
+    // in the System Memory start address. Do this in IAR View -> Memory.  I
+    // tried this and it showed address: 0x200014A8 which I then tried here.
+    // The IAR compiler complained that it was out of range.  After some
+    // research, I found the following from "The STM32 Cortex-M0 Programming
+    // Manual":
+    //         Main Stack Pointer (MSP)(reset value). On reset, the processor
+    //         loads the MSP with the value from address 0x00000000.
+    //
+    // So I then looked at the default value at address 0x0 and it was 0x20002250
+    //
+    // Note that 0x1fffC800 is "System Memory" start address for STM32 F0xx
+    //
+    if ( *((unsigned long *)0x20003FF0) == 0xDEADBEEF ) {
+         *((unsigned long *)0x20003FF0) =  0xCAFEFEED; // Reset our trigger
+
+        //set MSP = 0x2000225
+        //breaks it
+        //asm("ldr    r3, = 0x2000225\n msr MSP, r3 \n" : : : "r3");
+
+        // 0x1fffC800 is "System Memory" start address for STM32 F0xx
+        // point the PC to the System Memory reset vector (+4)
+        bootloader_jump = (void (*)(void)) (*((uint32_t *) 0x1fffC804));
+        bootloader_jump();
+        while (1);
+    }
+}
+
+
+int main(void) {
+    // if this was a reboot with bootloader request enter
+    // internal rom bootloader
+    handle_bootloader_request();
+
+    // init crystal osc & set clock options
+    clocksource_init();
+
+    config_init();
 
     delay_init();
 
@@ -74,7 +124,7 @@ int main(void) {
     frsky_init();
 
     /// screen_test();
-    touch_test();
+    // touch_test();
     // adc_test();
     gui_init();
 

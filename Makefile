@@ -11,9 +11,8 @@ BIN_DIR      = $(ROOT)/bin
 CFLAGS  = -O1 -g
 ASFLAGS = -g
 
-#delay.c assert.c led.c lcd.c screen.c console.c font.c debug.c io.c
-#SRC_FILES += adc.c sound.c timeout.c touch.c cc2500.c spi.c frsky.c storage.c wdt.c gui.c
-#SRC_FILES += eeprom.c telemetry.c fifo.c crc16.c config.c
+# dfu util path
+DFU_UTIL ?= dfu-util
 
 # opencm3 lib config
 LIBNAME         = opencm3_stm32f0
@@ -226,6 +225,11 @@ stflasherase : sterase stflash
 
 stflash : $(BIN_DIR)/$(TARGET).bin
 	st-flash --reset write $(BIN_DIR)/$(TARGET).bin 0x8000000 
+
+
+dfu : $(BIN_DIR)/$(TARGET).bin
+	$(DFU_UTIL) -a 0 -D $(BIN_DIR)/$(TARGET).bin -s 0x08000000:leave -R
+
 
 libopencm3 : libopencm3/lib/libopencm3_stm32f0.a submodules
 

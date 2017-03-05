@@ -224,7 +224,7 @@ static void spi_init_gpio(void) {
 
 uint8_t spi_tx(uint8_t data) {
     spi_send8(CC2500_SPI, data);
-    spi_read8(CC2500_SPI);
+    return spi_read8(CC2500_SPI);
 }
 
 

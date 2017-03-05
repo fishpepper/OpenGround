@@ -23,6 +23,7 @@
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/flash.h>
 
+uint32_t rcc_timer_frequency;
 
 void clocksource_init(void) {
     // set clock source
@@ -49,7 +50,7 @@ void clocksource_hse_in_8_out_48(void) {
     // set prescalers for AHB, ADC, ABP1, ABP2.
     // Do this before touching the PLL
     rcc_set_hpre(RCC_CFGR_HPRE_NODIV);      // 48Mhz (max 72)
-    rcc_set_ppre(RCC_CFGR_PPRE_DIV2);       // 24Mhz (max 36)a
+    rcc_set_ppre(RCC_CFGR_PPRE_DIV2);       // 24Mhz (max 36)
 
     // sysclk runs with 48MHz -> 1 waitstates.
     // * 0WS from 0-24MHz
@@ -75,5 +76,9 @@ void clocksource_hse_in_8_out_48(void) {
     // set the peripheral clock frequencies used */
     rcc_ahb_frequency  = 48000000;
     rcc_apb1_frequency = 24000000;
+
+    // When PPRE is set to something != NODIV
+    // TIM input clock is apb clkspeed*2 (see RM00091 p98)
+    rcc_timer_frequency = 2*rcc_apb1_frequency;
 }
 

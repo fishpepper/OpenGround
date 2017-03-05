@@ -28,6 +28,7 @@
 #include "wdt.h"
 #include "cc2500.h"
 #include "io.h"
+#include "clocksource.h"
 #include "storage.h"
 #include "adc.h"
 #include "telemetry.h"
@@ -139,12 +140,11 @@ void frsky_init_timer(void) {
     nvic_enable_irq(NVIC_TIM3_IRQ);
     nvic_set_priority(NVIC_TIM3_IRQ, NVIC_PRIO_FRSKY);
 
-
     // compute prescaler value
     // we want one ISR every 9ms
     // setting TIM_Period to 9000 will reuqire
     // a prescaler so that one timer tick is 1us (1MHz)
-    uint16_t prescaler = (uint16_t) (rcc_apb1_frequency  / 1000000) - 1;
+    uint16_t prescaler = (uint16_t) (rcc_timer_frequency  / 1000000) - 1;
 
     // time base as calculated above
     timer_set_prescaler(TIM3, prescaler);

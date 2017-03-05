@@ -21,6 +21,7 @@
 #include "sound.h"
 #include "config.h"
 #include "debug.h"
+#include "clocksource.h"
 
 #include <libopencm3/stm32/rcc.h>
 #include <libopencm3/stm32/timer.h>
@@ -115,7 +116,7 @@ void sound_set_frequency(uint32_t freq) {
     timer_reset(TIM1);
 
     // roughly factor into 16-bit
-    period    = (rcc_apb1_frequency / 1) / freq;
+    period    = (rcc_timer_frequency / 1) / freq;
     prescaler = (period / 65536) + 1;
     period    = (period / prescaler);
 
