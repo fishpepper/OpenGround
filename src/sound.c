@@ -44,11 +44,6 @@ void sound_init(void) {
     sound_init_rcc();
     sound_init_gpio();
 
-    /*uint32_t i;
-    for (i = 1; i < 10; i++) {
-        sound_set_frequency(i*100);
-        delay_us(1000*1000);
-    }*/
     sound_queue_state = 0;
     sound_set_frequency(0);
 /*
@@ -122,8 +117,6 @@ void sound_set_frequency(uint32_t freq) {
     prescaler = (period / 65536) + 1;
     period    = (period / prescaler);
 
-
-
     // Set the timers global mode to:
     // - use no divider
     // - alignment edge
@@ -142,6 +135,11 @@ void sound_set_frequency(uint32_t freq) {
 
     // start with disabled pwm output
     timer_disable_oc_output(TIM1, TIM_OC1);
+
+    // NOTE: on advanced timers as TIM1 we have
+    //       to break the main output, otherwise
+    //       no pwm output signal will be present on pin
+    timer_enable_break_main_output(TIM1);
 
     // configure output mode
     timer_set_oc_mode(TIM1, TIM_OC1, TIM_OCM_PWM1);

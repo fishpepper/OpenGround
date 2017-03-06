@@ -69,7 +69,7 @@ static void spi_init_mode(void) {
 
     // set up spi
     // - master mode
-    // - baud prescaler = 1/16 = 3MHz!
+    // - baud prescaler = apb_clk/16 = 24/16 = 1.5MHz!
     // - CPOL low
     // - CPHA 1
     // - 8 bit crc (?)
