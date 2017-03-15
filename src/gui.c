@@ -778,7 +778,7 @@ static void gui_render_main_screen(void) {
     // render background
     x = 51;
     y = 10;
-    uint32_t bg_w = (w + 1) +
+    uint32_t bg_w = (w/2) +
                  (w) * 4 + 3;
     uint32_t bg_h = h + 1;
     screen_fill_round_rect(x, y, bg_w, bg_h, 2, 1 - color);
