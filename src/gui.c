@@ -432,6 +432,10 @@ void gui_loop(void) {
         // doing warning beeps etc
         gui_process_logic();
 
+        if (gui_startup_counter < (2000/GUI_LOOP_DELAY_MS)){
+            gui_startup_counter++;
+        }
+
         // render ui
         if (adc_get_channel_rescaled(CHANNEL_ID_CH3) < 0) {
             // show console on switch down
@@ -446,7 +450,6 @@ void gui_loop(void) {
         } else if (gui_startup_counter < (2000/GUI_LOOP_DELAY_MS)) {
             // show logo
             lcd_show_logo();
-            gui_startup_counter++;
         } else {
             // render normal ui
             gui_render();
@@ -864,6 +867,9 @@ static void gui_setup_clonetx_render(void) {
     }
     if (gui_config_counter >= 7) screen_puts_xy(3, 9 + 7*h, 1, "done. please switch off now");
 
+    frsky_tx_set_enabled(0);
+    gui_page = GUI_PAGE_SETUP_MAIN;
+/*
     switch (gui_config_counter) {
         default:
         case (0) :
@@ -928,6 +934,7 @@ static void gui_setup_clonetx_render(void) {
             // DONE. REBOOT NECESSARY
             break;
     }
+    */
 }
 
 static void gui_setup_bindmode_render(void) {

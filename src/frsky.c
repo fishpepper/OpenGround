@@ -159,6 +159,7 @@ void frsky_init_timer(void) {
 }
 
 void frsky_tx_set_enabled(uint32_t enabled) {
+
     // TIM Interrupts enable? -> tx active
     if (enabled) {
         frsky_frame_counter = 0;
@@ -166,6 +167,7 @@ void frsky_tx_set_enabled(uint32_t enabled) {
         // enable ISR
         timer_enable_irq(TIM3, TIM_DIER_UIE);
     } else {
+THIS breaks the adc dma?!
         // stop ISR
         timer_disable_irq(TIM3, TIM_DIER_UIE);
         // make sure last packet was sent
