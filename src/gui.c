@@ -726,7 +726,7 @@ static void gui_config_header_render(char *str) {
     screen_draw_round_rect(0, 0, LCD_WIDTH, LCD_HEIGHT, 3, 1);
 
     screen_set_font(font_tomthumb3x5, &h, 0);
-    screen_puts_centered(1 + h/2, 0, str);
+    screen_puts_centered(h/2, 0, str);
 }
 
 static void gui_render_main_screen(void) {
