@@ -174,7 +174,6 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
     spi_enable_tx_dma(CC2500_SPI);
     spi_enable_rx_dma(CC2500_SPI);
 
-    // debug("TRIG\n"); debug_flush();
 #if 0
     // Wait until the command is sent to the DR
     while (!DMA_GetFlagStatus(CC2500_SPI_TX_DMA_TC_FLAG)) {}
