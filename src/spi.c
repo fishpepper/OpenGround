@@ -69,13 +69,13 @@ static void spi_init_mode(void) {
 
     // set up spi
     // - master mode
-    // - baud prescaler = apb_clk/16 = 24/16 = 1.5MHz!
+    // - baud prescaler = apb_clk/8 = 24/8 = 3MHz!
     // - CPOL low
     // - CPHA 1
     // - 8 bit crc (?)
     // - MSB first
     spi_init_master(CC2500_SPI,
-                    SPI_CR1_BAUDRATE_FPCLK_DIV_16,
+                    SPI_CR1_BAUDRATE_FPCLK_DIV_8,
                     SPI_CR1_CPOL_CLK_TO_0_WHEN_IDLE,
                     SPI_CR1_CPHA_CLK_TRANSITION_1,
                     SPI_CR1_CRCL_8BIT,
@@ -166,14 +166,13 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
     dma_set_memory_address(DMA1, CC2500_SPI_RX_DMA_CHANNEL, (uint32_t)buffer);
     dma_set_number_of_data(DMA1, CC2500_SPI_RX_DMA_CHANNEL, len);
 
-    // enable both dma channels - this will trigger the transfer
+    // enable both dma channels
     dma_enable_channel(DMA1, CC2500_SPI_RX_DMA_CHANNEL);
     dma_enable_channel(DMA1, CC2500_SPI_TX_DMA_CHANNEL);
 
-    // debug("DMA EN\n"); debug_flush();
-
     // trigger the SPI TX + RX dma
-    // FIXME ?!? SPI_I2S_DMACmd(CC2500_SPI, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, ENABLE);
+    spi_enable_tx_dma(CC2500_SPI);
+    spi_enable_rx_dma(CC2500_SPI);
 
     // debug("TRIG\n"); debug_flush();
 #if 0
@@ -191,7 +190,6 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
     // debug("!BUSY\n"); debug_flush();
 #endif  // 0
 
-
     // wait for completion
     while (!(SPI_SR(CC2500_SPI) & SPI_SR_TXE)) {}
     while (SPI_SR(CC2500_SPI) & SPI_SR_BSY) {}
@@ -199,9 +197,6 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
     // disable DMA
     dma_disable_channel(DMA1, CC2500_SPI_RX_DMA_CHANNEL);
     dma_disable_channel(DMA1, CC2500_SPI_TX_DMA_CHANNEL);
-
-    // clear DMA flags
-    // FIOXME ?? SPI_I2S_DMACmd(CC2500_SPI, SPI_I2S_DMAReq_Rx | SPI_I2S_DMAReq_Tx, DISABLE);
 }
 
 

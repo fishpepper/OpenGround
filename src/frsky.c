@@ -471,6 +471,7 @@ uint8_t frsky_check_transceiver(void) {
         return 1;
     }
 
+    // else
     debug("frsky: got INVALID part and version info?!\n");
     debug_flush();
     return 0;
