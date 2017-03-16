@@ -167,7 +167,6 @@ void frsky_tx_set_enabled(uint32_t enabled) {
         // enable ISR
         timer_enable_irq(TIM3, TIM_DIER_UIE);
     } else {
-THIS breaks the adc dma?!
         // stop ISR
         timer_disable_irq(TIM3, TIM_DIER_UIE);
         // make sure last packet was sent
