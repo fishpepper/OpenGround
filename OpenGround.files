@@ -849,3 +849,5 @@ src/eeprom_emulation/st_eeprom.c
 src/eeprom_emulation/st_eeprom.h
 src/clocksource.h
 src/clocksource.c
+src/usb.c
+src/usb.h

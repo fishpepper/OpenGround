@@ -22,6 +22,7 @@
 #include "delay.h"
 #include "led.h"
 #include "sound.h"
+#include "usb.h"
 #include <libopencm3/cm3/nvic.h>
 #include <libopencm3/cm3/systick.h>
 #include <libopencm3/stm32/rcc.h>
@@ -80,7 +81,6 @@ void timeout_delay_ms(uint32_t timeout) {
     }
 }
 
-
 void sys_tick_handler(void) {
     if (timeout_100us != 0) {
         timeout_100us--;
@@ -92,6 +92,8 @@ void sys_tick_handler(void) {
         timeout_100us_delay--;
     }
     sound_handle_playback();
+
+    usb_handle_systick();
 }
 
 uint32_t timeout_time_remaining(void) {

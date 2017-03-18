@@ -159,7 +159,6 @@ void frsky_init_timer(void) {
 }
 
 void frsky_tx_set_enabled(uint32_t enabled) {
-
     // TIM Interrupts enable? -> tx active
     if (enabled) {
         frsky_frame_counter = 0;

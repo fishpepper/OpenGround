@@ -432,7 +432,7 @@ void gui_loop(void) {
         // doing warning beeps etc
         gui_process_logic();
 
-        if (gui_startup_counter < (2000/GUI_LOOP_DELAY_MS)){
+        if (gui_startup_counter < (2000/GUI_LOOP_DELAY_MS)) {
             gui_startup_counter++;
         }
 

@@ -159,5 +159,8 @@ void config_detect_hw_revision(void);
 // BUTTON_BACK_RIGHT = PA10
 // BUTTON_BACK_LEFT  = PA9
 
+#define USB_GPIO GPIOA
+#define USB_DP_PIN GPIO12
+#define USB_DM_PIN GPIO11
 
 #endif  // CONFIG_H_
