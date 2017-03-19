@@ -86,6 +86,7 @@ static void gui_cb_setup_exit(void);
 // rendering
 static void gui_render_main_screen(void);
 static void gui_render(void);
+static void gui_render_usb(void);
 static void gui_render_sliders(void);
 static void gui_render_battery(void);
 static void gui_render_statusbar(void);
@@ -442,6 +443,9 @@ void gui_loop(void) {
             // show console on switch down
             console_render();
             screen_update();
+        } else if (usb_enabled()) {
+            // in usb mode
+            gui_render_usb();
         } else if (gui_page & GUI_PAGE_SETUP_FLAG) {
             // render setup ui
             gui_setup_render();
@@ -691,7 +695,6 @@ static void gui_config_render(void) {
 }
 
 
-
 static void gui_setup_render(void) {
     // start with an empty page
     screen_fill(0);
@@ -827,6 +830,36 @@ static void gui_setup_main_render(void) {
 
     // exit button, go back to main
     gui_add_button_smallfont(74, 10 + 2*17, 50, 15, "EXIT", &gui_cb_setup_exit);
+}
+
+static void gui_render_usb(void) {
+    screen_fill(0);
+
+    screen_set_font(font_tomthumb3x5, 0, 0);
+
+    // header
+    gui_config_header_render("USB JOYSTICK MODE");
+
+    // show joystick data
+    uint16_t w = 50;
+    uint16_t h = 50;
+    uint16_t sx = (128-2*w)/3;
+    screen_draw_round_rect(sx,10,w,h,3,1);
+    screen_draw_round_rect(128-sx-w,10,w,h,3,1);
+
+    // left
+    uint16_t x = w/2 + (w/2 * adc_get_channel_rescaled(CHANNEL_ID_RUDDER))/3200 - 2;
+    uint16_t y = h/2 - (h/2 * adc_get_channel_rescaled(CHANNEL_ID_THROTTLE))/3200;
+    screen_set_pixels(10+x-1, 10+y-1, 10+x+1, 10+y+1, 1);
+
+    // right
+    x = w/2 + (w/2 * adc_get_channel_rescaled(CHANNEL_ID_AILERON))/3200 - 2;
+    y = h/2 - (h/2 * adc_get_channel_rescaled(CHANNEL_ID_ELEVATION))/3200;
+    screen_set_pixels(128-sx-w+x-1, 10+y-1, 128-sx-w+x+1, 10+y+1, 1);
+
+
+
+    screen_update();
 }
 
 static void gui_setup_bootloader_render(void) {

@@ -35,11 +35,7 @@
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/usb/hid.h>
 
-#define USB_ISTR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x44))
-#define USB_ISTR_SUSP		0x0800 /* Suspend mode request */
-
 static bool usb_init_done;
-static bool usb_cable_detected;
 static uint32_t usb_systick_count;
 
 // internal data storage
@@ -50,14 +46,12 @@ static void usb_init_rcc(void);
 static void usb_init_core(void);
 //static void usb_loop(void);
 void usb_handle_data(void);
-static bool usb_detect(void);
 static void usb_send_data(void);
 
 void usb_init(void) {
     debug("usb: init\n"); debug_flush();
 
     usb_systick_count = 0;
-    usb_cable_detected = false;
     usb_init_done = false;
 
     usb_init_rcc();
@@ -74,28 +68,6 @@ void usb_init_rcc(void) {
     rcc_periph_clock_enable(RCC_USB);
 }
 
-// test usb GPIO to see if the usb cable was plugged in
-bool usb_detect(void) {
-
-    uint16_t istr = *USB_ISTR_REG;
-
-    while(1){
-        istr =*USB_ISTR_REG;
-        debug_put_hex32(istr);
-        debug_put_newline();
-        debug_flush();
-    }
-
-    if (istr & USB_ISTR_SUSP) {
-        debug("usb: not connected");
-        debug_put_newline(); debug_flush();
-        return false;
-    } else {
-        debug("usb: connected!");
-        debug_put_newline(); debug_flush();
-        return true;
-    }
-}
 
 
 const struct usb_device_descriptor usb_dev_descr = {
@@ -293,13 +265,10 @@ void usb_init_core(void) {
                          sizeof(usbd_control_buffer));
 
     usbd_register_set_config_callback(usbd_dev, usb_hid_set_config);
-
 }
 
 void usb_handle_data(void) {
-    if (usb_cable_detected) {
-        usbd_poll(usbd_dev);
-    }
+    usbd_poll(usbd_dev);
 }
 
 void usb_handle_systick(void) {
@@ -314,6 +283,10 @@ void usb_handle_systick(void) {
         usb_systick_count = 0;
         usb_send_data();
     }
+}
+
+bool usb_enabled(void) {
+    return usb_init_done;
 }
 
 void usb_send_data(void) {
