@@ -173,13 +173,13 @@ int main(void) {
 
 
     led_init();
-    led_backlight_on();
 
 
 //    wdt_init();
 
     io_init();
     timeout_init();
+
 
     lcd_init();
 
@@ -189,11 +189,14 @@ int main(void) {
 
 
     console_init();
+
+
     debug_init();
 
 
     adc_init();
     sound_init();
+
 
     touch_init();
     eeprom_init();
@@ -201,12 +204,13 @@ int main(void) {
 
     frsky_init();
 
+    usb_init();
+
     /// screen_test();
     // touch_test();
     // adc_test();
     gui_init();
 
-    usb_init();
 
     debug("main: init done.\n"); debug_flush();
 

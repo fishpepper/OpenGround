@@ -25,5 +25,6 @@
 
 void usb_init(void);
 void usb_handle_systick(void);
+void usb_handle_data(void);
 
 #endif  // USB_H_

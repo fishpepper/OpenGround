@@ -24,6 +24,7 @@
 #include "console.h"
 #include "storage.h"
 #include "led.h"
+#include "usb.h"
 #include "io.h"
 #include "storage.h"
 #include "telemetry.h"
@@ -463,6 +464,9 @@ void gui_loop(void) {
         while (!timeout_timed_out()) {
             // do some processing instead of wasting cpu cycles
             frsky_handle_telemetry();
+
+            usb_handle_data();
+
         }
 
         // prepare next timeout:

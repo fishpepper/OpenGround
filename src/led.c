@@ -41,6 +41,7 @@ void led_init(void) {
 
     led_button_l_on();
     led_button_r_on();
-    led_backlight_off();
+
+    led_backlight_on();
 }
 

@@ -35,8 +35,11 @@
 #include <libopencm3/usb/usbd.h>
 #include <libopencm3/usb/hid.h>
 
+#define USB_ISTR_REG		(&MMIO32(USB_DEV_FS_BASE + 0x44))
+#define USB_ISTR_SUSP		0x0800 /* Suspend mode request */
 
 static bool usb_init_done;
+static bool usb_cable_detected;
 static uint32_t usb_systick_count;
 
 // internal data storage
@@ -45,7 +48,8 @@ static usbd_device *usbd_dev;
 // internal functions
 static void usb_init_rcc(void);
 static void usb_init_core(void);
-static void usb_loop(void);
+//static void usb_loop(void);
+void usb_handle_data(void);
 static bool usb_detect(void);
 static void usb_send_data(void);
 
@@ -53,41 +57,36 @@ void usb_init(void) {
     debug("usb: init\n"); debug_flush();
 
     usb_systick_count = 0;
+    usb_cable_detected = false;
     usb_init_done = false;
-
-    //rcc_clock_setup_in_hsi_out_48mhz();
-
 
     usb_init_rcc();
 
-    if (1) {  // usb_detect()) {
-        // detected USB connection on startup, set up usb core:
-        usb_init_core();
-        usb_loop();
-    }
+    // set up usb core
+    usb_init_core();
 }
-
 
 void usb_init_rcc(void) {
     // USB I/Os are on port A
     rcc_periph_clock_enable(GPIO_RCC(USB_GPIO));
+
+    // USB clock
+    rcc_periph_clock_enable(RCC_USB);
 }
 
 // test usb GPIO to see if the usb cable was plugged in
 bool usb_detect(void) {
-    uint8_t i;
 
-    // set GPIO as input and activate pullup resistor:
-    gpio_mode_setup(USB_GPIO, GPIO_MODE_INPUT, GPIO_PUPD_PULLUP, USB_DP_PIN);
-    gpio_set_output_options(USB_GPIO, GPIO_OTYPE_PP, GPIO_OSPEED_2MHZ, USB_DP_PIN);
+    uint16_t istr = *USB_ISTR_REG;
 
-    // some delay (~100ms) to stabilize on the pullup
-    for (i = 0; i < 100; i++) {
-        delay_us(1000);
+    while(1){
+        istr =*USB_ISTR_REG;
+        debug_put_hex32(istr);
+        debug_put_newline();
+        debug_flush();
     }
 
-    // check gpio:
-    if (gpio_get(USB_GPIO, USB_DP_PIN) == 1) {
+    if (istr & USB_ISTR_SUSP) {
         debug("usb: not connected");
         debug_put_newline(); debug_flush();
         return false;
@@ -134,7 +133,7 @@ static const uint8_t usb_hid_report_descriptor[] = {
 
      0x05, 0x01,  // USAGE_PAGE (Generic Desktop)
      0x15, 0x00,  // LOGICAL_MINIMUM (0)
-     0x26, 0xff, 0x0f,  // LOGICAL_MAXIMUM
+     0x26, 0x00, 0x19,  // LOGICAL_MAXIMUM (6400 = 0x1900)
      0x75, 0x10,  // REPORT_SIZE
 
      0x09, 0x30,  // USAGE (X)
@@ -217,14 +216,13 @@ const struct usb_config_descriptor usb_config = {
 };
 
 static const char *usb_strings[] = {
-    "fishpepper",
+    "fishpepper.de",
     "OpenGround",
     "HID Joystick",
 };
 
 // buffer to be used for control requests
 uint8_t usbd_control_buffer[128];
-
 
 static int usb_hid_control_request(usbd_device * UNUSED(dev),
                                    struct usb_setup_data *req,
@@ -243,6 +241,7 @@ static int usb_hid_control_request(usbd_device * UNUSED(dev),
     *buf = (uint8_t *)usb_hid_report_descriptor;
     *len = sizeof(usb_hid_report_descriptor);
 
+    usb_init_done = true;
     return 1;
 }
 
@@ -270,8 +269,8 @@ static void usb_hid_set_config(usbd_device *dev, uint16_t UNUSED(wValue)) {
 void usb_init_core(void) {
     /*
      * This is a somewhat common cheap hack to trigger device re-enumeration
-     * on startup.  Assuming a fixed external pullup on D+, (For USB-FS)
-     * setting the pin to output, and driving it explicitly low effectively
+     * on startup.  Assuming a fixed external pullup on D+ (F0 seems to have it internally),
+     * (For USB-FS) setting the pin to output, and driving it explicitly low effectively
      * "removes" the pullup.  The subsequent USB init will "take over" the
      * pin, and it will appear as a proper pullup to the host.
      * The magic delay is somewhat arbitrary, no guarantees on USBIF
@@ -295,14 +294,11 @@ void usb_init_core(void) {
 
     usbd_register_set_config_callback(usbd_dev, usb_hid_set_config);
 
-    usb_init_done = true;
 }
 
-void usb_loop(void) {
-    while (1) {
+void usb_handle_data(void) {
+    if (usb_cable_detected) {
         usbd_poll(usbd_dev);
-        //console_render();
-        //screen_update();
     }
 }
 
@@ -324,16 +320,15 @@ void usb_send_data(void) {
     static uint16_t adc_data = 0;
     static uint8_t buf[1 + 16];
 
-    debug("usb: tx data th=");
-    debug_put_hex32(adc_get_channel_rescaled(CHANNEL_ID_THROTTLE));
-    debug_put_newline(); debug_flush();
+    // buttons
+    buf[0] = 0;  // adc_data~(gpio_get(GPIOB, BUTTONS_PINS) >> BUTTONS_SHIFT);
 
+    // sticks
     for (unsigned int i = 0; i < 8; i++) {
-        int16_t res = adc_get_channel_rescaled(i);
+        uint16_t res = 3200 + adc_get_channel_rescaled(i);
         buf[1 + i * 2] = res & 0xff;
         buf[1 + i * 2 + 1] = res >> 8;
     }
 
-        buf[0] = 0;  // adc_data~(gpio_get(GPIOB, BUTTONS_PINS) >> BUTTONS_SHIFT);
     usbd_ep_write_packet(usbd_dev, 0x81, buf, sizeof(buf));
 }

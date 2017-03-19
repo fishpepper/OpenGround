@@ -91,6 +91,7 @@ void sys_tick_handler(void) {
     if (timeout_100us_delay != 0) {
         timeout_100us_delay--;
     }
+
     sound_handle_playback();
 
     usb_handle_systick();
