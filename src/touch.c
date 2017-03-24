@@ -181,9 +181,6 @@ void EXTI4_15_IRQHandler(void) {
                 }
             }
         }
-
-        // clear the EXTI line pending bit
-        // EXTI_ClearITPendingBit(TOUCH_INT_EXTI_SOURCE_LINE);
     }
 }
 

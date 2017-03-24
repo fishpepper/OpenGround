@@ -470,7 +470,6 @@ void gui_loop(void) {
             frsky_handle_telemetry();
 
             usb_handle_data();
-
         }
 
         // prepare next timeout:
@@ -844,8 +843,8 @@ static void gui_render_usb(void) {
     uint16_t w = 50;
     uint16_t h = 50;
     uint16_t sx = (128-2*w)/3;
-    screen_draw_round_rect(sx,10,w,h,3,1);
-    screen_draw_round_rect(128-sx-w,10,w,h,3,1);
+    screen_draw_round_rect(sx, 10, w, h, 3, 1);
+    screen_draw_round_rect(128-sx-w, 10, w, h, 3, 1);
 
     // left
     uint16_t x = w/2 + (w/2 * adc_get_channel_rescaled(CHANNEL_ID_RUDDER))/3200 - 2;

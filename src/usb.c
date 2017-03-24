@@ -44,8 +44,8 @@ static usbd_device *usbd_dev;
 // internal functions
 static void usb_init_rcc(void);
 static void usb_init_core(void);
-//static void usb_loop(void);
-void usb_handle_data(void);
+// static void usb_loop(void);
+// void usb_handle_data(void);
 static void usb_send_data(void);
 
 void usb_init(void) {
@@ -199,10 +199,11 @@ uint8_t usbd_control_buffer[128];
 static int usb_hid_control_request(usbd_device * UNUSED(dev),
                                    struct usb_setup_data *req,
                                    uint8_t **buf, uint16_t *len,
-                                   void (** complete)(
-                                       usbd_device *,
+                                   void (** complete)(usbd_device *,
                                        struct usb_setup_data *)
                                    ) {
+    (void)complete;  // disable unused param warning
+
     if ((req->bmRequestType != 0x81) ||
        (req->bRequest != USB_REQ_GET_DESCRIPTOR) ||
        (req->wValue != 0x2200)) {
@@ -290,7 +291,7 @@ bool usb_enabled(void) {
 }
 
 void usb_send_data(void) {
-    static uint16_t adc_data = 0;
+    // static uint16_t adc_data = 0;
     static uint8_t buf[1 + 16];
 
     // buttons
