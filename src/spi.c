@@ -120,7 +120,7 @@ static void spi_init_dma(void) {
     // Location assigned to peripheral register will be source
     dma_set_read_from_peripheral(DMA1, CC2500_SPI_RX_DMA_CHANNEL);
     // source and destination start addresses
-    dma_set_peripheral_address(DMA1, CC2500_SPI_RX_DMA_CHANNEL, (uint32_t)&CC2500_SPI_DR);
+    dma_set_peripheral_address(DMA1, CC2500_SPI_RX_DMA_CHANNEL, (uint32_t)&(SPI_DR(CC2500_SPI)));
     // target address will be set later
     dma_set_memory_address(DMA1, CC2500_SPI_RX_DMA_CHANNEL, 0);
     // chunk of data to be transfered, will be set later
@@ -140,7 +140,7 @@ static void spi_init_dma(void) {
     // Location assigned to peripheral register will be target
     dma_set_read_from_memory(DMA1, CC2500_SPI_TX_DMA_CHANNEL);
     // source and destination start addresses
-    dma_set_peripheral_address(DMA1, CC2500_SPI_TX_DMA_CHANNEL, (uint32_t)&CC2500_SPI_DR);
+    dma_set_peripheral_address(DMA1, CC2500_SPI_TX_DMA_CHANNEL, (uint32_t)&(SPI_DR(CC2500_SPI)));
     // target address will be set later
     dma_set_memory_address(DMA1, CC2500_SPI_TX_DMA_CHANNEL, 0);
     // chunk of data to be transfered, will be set later
