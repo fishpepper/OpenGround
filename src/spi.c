@@ -190,8 +190,10 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
 #endif  // 0
 
     // wait for completion
-    while (!(SPI_SR(CC2500_SPI) & SPI_SR_TXE)) {}
-    while (SPI_SR(CC2500_SPI) & SPI_SR_BSY) {}
+    while(!dma_get_interrupt_flag(DMA1, CC2500_SPI_RX_DMA_CHANNEL, DMA_TCIF)) {}
+    while(!dma_get_interrupt_flag(DMA1, CC2500_SPI_TX_DMA_CHANNEL, DMA_TCIF)) {}
+    //while (!(SPI_SR(CC2500_SPI) & SPI_SR_TXE)) {}
+    //while (SPI_SR(CC2500_SPI) & SPI_SR_BSY) {}
 
     // disable DMA
     dma_disable_channel(DMA1, CC2500_SPI_RX_DMA_CHANNEL);
