@@ -132,9 +132,7 @@ void config_detect_hw_revision(void);
 #define CC2500_SPI_CLK              RCC_SPI1
 #define CC2500_SPI_DMA_CLOCK        RCC_DMA1
 #define CC2500_SPI_TX_DMA_CHANNEL   DMA_CHANNEL3
-#define CC2500_SPI_TX_DMA_TC_FLAG   DMA1_FLAG_TC3
 #define CC2500_SPI_RX_DMA_CHANNEL   DMA_CHANNEL2
-#define CC2500_SPI_RX_DMA_TC_FLAG   DMA1_FLAG_TC2
 
 // LABELED RF1
 #define CC2500_GDO1_PIN            GPIO11

@@ -174,26 +174,10 @@ void spi_dma_xfer(uint8_t *buffer, uint8_t len) {
     spi_enable_tx_dma(CC2500_SPI);
     spi_enable_rx_dma(CC2500_SPI);
 
-#if 0
-    // Wait until the command is sent to the DR
-    while (!DMA_GetFlagStatus(CC2500_SPI_TX_DMA_TC_FLAG)) {}
-
-    // debug("ACTIVE\n"); debug_flush();
-
-    // wait for tx to be finished:
-    while (DMA_GetFlagStatus(CC2500_SPI_TX_DMA_TC_FLAG)) {}
-    while (DMA_GetFlagStatus(CC2500_SPI_RX_DMA_TC_FLAG)) {}
-
-    // wait for SPI to be no longer busy
-    while (SPI_I2S_GetFlagStatus(CC2500_SPI, SPI_I2S_FLAG_BSY) != RESET) {}
-    // debug("!BUSY\n"); debug_flush();
-#endif  // 0
 
     // wait for completion
-    while(!dma_get_interrupt_flag(DMA1, CC2500_SPI_RX_DMA_CHANNEL, DMA_TCIF)) {}
-    while(!dma_get_interrupt_flag(DMA1, CC2500_SPI_TX_DMA_CHANNEL, DMA_TCIF)) {}
-    //while (!(SPI_SR(CC2500_SPI) & SPI_SR_TXE)) {}
-    //while (SPI_SR(CC2500_SPI) & SPI_SR_BSY) {}
+    while (!(SPI_SR(CC2500_SPI) & SPI_SR_TXE)) {}
+    while (SPI_SR(CC2500_SPI) & SPI_SR_BSY) {}
 
     // disable DMA
     dma_disable_channel(DMA1, CC2500_SPI_RX_DMA_CHANNEL);
