@@ -905,7 +905,7 @@ static void gui_setup_clonetx_render(void) {
 
     frsky_tx_set_enabled(0);
     gui_page = GUI_PAGE_SETUP_MAIN;
-/*
+
     switch (gui_config_counter) {
         default:
         case (0) :
@@ -970,7 +970,7 @@ static void gui_setup_clonetx_render(void) {
             // DONE. REBOOT NECESSARY
             break;
     }
-    */
+    
 }
 
 static void gui_setup_bindmode_render(void) {
