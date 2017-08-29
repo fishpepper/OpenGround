@@ -904,7 +904,6 @@ static void gui_setup_clonetx_render(void) {
     if (gui_config_counter >= 7) screen_puts_xy(3, 9 + 7*h, 1, "done. please switch off now");
 
     frsky_tx_set_enabled(0);
-    gui_page = GUI_PAGE_SETUP_MAIN;
 
     switch (gui_config_counter) {
         default:
